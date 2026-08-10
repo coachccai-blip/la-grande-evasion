@@ -45,11 +45,17 @@ L'onglet **Historique** conserve toutes les questions jouées (avec la bonne
 réponse mise en évidence) pour servir de carnet de révision. Tout est sauvegardé
 localement sur l'appareil et survit aux nouvelles parties.
 
+Les pions (le tien et ceux des robots) sautent de case en case, comme sur un
+échiquier en ligne : tu vois chaque animal bondir jusqu'à sa case d'arrivée, y
+compris pendant le tour des adversaires. Un bouton **« Abandonner »** permet de
+quitter la partie en cours et de revenir à la configuration.
+
 ## 🔊 Son
 
 Musique d'ambiance et bruitages sont générés en direct (Web Audio, sans aucun
-fichier audio), et fonctionnent hors-ligne. Le bouton 🔊 / 🔇 en haut à droite
-coupe ou réactive le son (la préférence est mémorisée).
+fichier audio), et fonctionnent hors-ligne. Le dé s'accompagne d'un petit
+jingle de loterie avant de s'arrêter sur le chiffre. Le bouton 🔊 / 🔇 en haut à
+droite coupe ou réactive le son (la préférence est mémorisée).
 
 ## 📁 Structure du projet
 

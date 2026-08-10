@@ -139,19 +139,17 @@
   .cat-btn.active{opacity:1; border-color:#fff; box-shadow:0 0 10px rgba(255,255,255,.25);}
 
   #boardWrap{flex:1 1 auto; overflow-y:auto; overflow-x:hidden; background:#0e0a1c; position:relative;}
-  #board{display:block; width:100%; height:auto;}
+  #boardInner{position:relative; width:100%; line-height:0;}
+  #board{display:block; width:100%; height:auto; image-rendering:pixelated;}
+  #pawnLayer{position:absolute; top:0; left:0; width:100%; height:100%; image-rendering:auto; pointer-events:none;}
 
   .gamebar{
     flex:0 0 auto; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
     background:linear-gradient(0deg,rgba(0,0,0,.35),transparent);
     display:flex; align-items:center; gap:10px;
   }
-  .players-mini{flex:1; display:flex; gap:8px; overflow-x:auto;}
-  .pm{display:flex; align-items:center; gap:5px; background:rgba(0,0,0,.28); border-radius:10px; padding:4px 7px; font-size:11px; white-space:nowrap;}
-  .pm canvas{width:22px; height:22px;}
-  .pm .emoji{font-size:18px; line-height:1;}
-  .pm.you{outline:2px solid var(--accent);}
-  .pm .pos{font-weight:800; color:var(--accent2);}
+  .gamebar #rollBtn{flex:1;}
+  .gamebar #abandonBtn{flex:0 0 auto; padding:10px 12px; font-size:12px; white-space:nowrap;}
 
   /* ============================== Dé ================================= */
   #dice{
@@ -305,9 +303,9 @@
     <!-- ======================= Écran : Jeu ======================== -->
     <section id="gameScreen" class="screen">
       <div id="infoBar" class="infobar"></div>
-      <div id="boardWrap"><canvas id="board"></canvas></div>
+      <div id="boardWrap"><div id="boardInner"><canvas id="board"></canvas><canvas id="pawnLayer"></canvas></div></div>
       <div class="gamebar">
-        <div id="playersMini" class="players-mini"></div>
+        <button id="abandonBtn" class="btn secondary">✖ Abandonner</button>
         <div id="dice"></div>
         <button id="rollBtn" class="btn">Lancer le dé</button>
       </div>
@@ -543,7 +541,14 @@ var Sound=(function(){
     whoosh:function(){ tone(300,0.28,"triangle",0.12,null,1400); },
     lock:function(){ tone(500,0.09,"square",0.16,null,880); setTimeout(function(){ tone(950,0.08,"square",0.14); },90); },
     win:function(){ seqAt([[0,523,0.18,"square",0.22],[150,659,0.18,"square",0.22],[300,784,0.18,"square",0.22],[450,1047,0.32,"square",0.24],[520,659,0.32,"square",0.16],[520,784,0.32,"square",0.16]]); },
-    lose:function(){ seqAt([[0,440,0.26,"triangle",0.2],[180,392,0.26,"triangle",0.2],[360,330,0.28,"triangle",0.2],[540,262,0.4,"triangle",0.2]]); }
+    lose:function(){ seqAt([[0,440,0.26,"triangle",0.2],[180,392,0.26,"triangle",0.2],[360,330,0.28,"triangle",0.2],[540,262,0.4,"triangle",0.2]]); },
+    hop:function(){ tone(680,0.05,"square",0.06); },   // petit saut de case
+    // jingle de loterie pendant que le dé tourne
+    diceSpin:function(){
+      var base=[523,587,659,784,880,988];
+      for(var i=0;i<12;i++){ (function(k){ setTimeout(function(){ tone(base[k%base.length]+k*6,0.06,"square",0.09); }, k*55); })(i); }
+    },
+    diceStop:function(){ tone(880,0.10,"square",0.20); setTimeout(function(){ tone(1319,0.20,"square",0.22); },90); }
   };
 })();
 
@@ -719,11 +724,13 @@ function caseCenter(i){ return atLen((i+0.5)*CTOTAL/NCASE); }
 function boundary(j){ var p=atLen(j*CTOTAL/NCASE); return {x:p.x,y:p.y,nx:-p.ty,ny:p.tx}; }
 function cellOf(s){ var c=caseCenter(s); return {cx:c.x, cy:c.y, x:c.x, y:c.y}; }
 
+var pctx=null, PS=3;   // couche des pions (emojis HD) : sur-échantillonnée, lissée
 function initBoard(){
   initPath();
   var cv=$("board"); cv.width=boardW*SCALE; cv.height=boardH*SCALE; bctx=cv.getContext("2d");
   bctx.imageSmoothingEnabled=false;
   boardStatic=document.createElement("canvas"); boardStatic.width=boardW*SCALE; boardStatic.height=boardH*SCALE;
+  var pl=$("pawnLayer"); pl.width=boardW*PS; pl.height=boardH*PS; pctx=pl.getContext("2d"); pctx.imageSmoothingEnabled=true;
   buildStaticBoard();
 }
 function roundRect(ctx,x,y,w,h,r,fill,stroke){
@@ -760,6 +767,13 @@ function paintGrass(ctx){
   }
 }
 function paintGround(ctx){
+  // herbe plus claire devant la clôture de départ (bas du plateau)
+  var fy=Y_BOT+34, rng=mulberry32(55);
+  ctx.fillStyle="#6ab04c"; ctx.fillRect(0, fy, boardW, boardH-fy);
+  for(var y=fy;y<boardH;y+=4) for(var x=0;x<boardW;x+=4){
+    if(rng()<0.16){ ctx.fillStyle="#84c765"; ctx.fillRect(x,y,2,2); }
+    else if(rng()<0.24){ ctx.fillStyle="#57a244"; ctx.fillRect(x+2,y+2,2,2); }
+  }
   DECO.pond(ctx, 28, laneY(2)+20, 18, 11);
   DECO.pond(ctx, boardW-26, laneY(4)-4, 20, 12);
   DECO.pond(ctx, 24, laneY(5)+24, 15, 9);
@@ -937,10 +951,39 @@ function gatePadlock(ctx,x,y){
   ctx.fillStyle="#c9971f"; ctx.fillRect(x-8,y+13,16,3);
   ctx.fillStyle="#3a2f10"; ctx.fillRect(x-1,y+7,3,5);
 }
+// Clôture de départ en bois, cassée en son centre (par où les animaux s'échappent).
 function drawZooBottom(ctx){
-  DECO.zoo(ctx, boardW/2, Y_BOT+52, 1.5);
-  ctx.fillStyle="#f3ead2"; ctx.font="bold 11px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText("DÉPART", boardW/2, Y_BOT+112);
+  var cx=boardW/2, fy=Y_BOT+40, gap=46;
+  fenceSection(ctx, 14, cx-gap, fy);
+  fenceSection(ctx, cx+gap, boardW-14, fy);
+  // planches cassées au sol dans la brèche centrale
+  ctx.save(); ctx.translate(cx-14, fy+16); ctx.rotate(-0.32);
+  ctx.fillStyle="#9a5a2b"; ctx.fillRect(0,0,26,5); ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,26,5); ctx.restore();
+  ctx.save(); ctx.translate(cx+2, fy+22); ctx.rotate(0.26);
+  ctx.fillStyle="#8a5024"; ctx.fillRect(0,0,22,5); ctx.strokeStyle="#3a2410"; ctx.strokeRect(0.5,0.5,22,5); ctx.restore();
+  // poteaux pointus (dont deux qui bordent la brèche)
+  fencePost(ctx,14,fy); fencePost(ctx,cx-gap,fy); fencePost(ctx,cx+gap,fy); fencePost(ctx,boardW-14,fy);
+  ctx.fillStyle="#f3ead2"; ctx.font="bold 12px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("DÉPART", cx, boardH-16);
+}
+function fencePost(ctx,x,fy){
+  ctx.fillStyle="#7a4520"; ctx.fillRect(x-4,fy-6,8,34);
+  ctx.fillStyle="#a2632f"; ctx.fillRect(x-4,fy-6,3,34);              // reflet
+  ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(x-4+0.5,fy-6+0.5,8,34);
+  ctx.fillStyle="#7a4520"; ctx.beginPath(); ctx.moveTo(x-4,fy-6); ctx.lineTo(x,fy-12); ctx.lineTo(x+4,fy-6); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle="#3a2410"; ctx.stroke();                          // pointe
+}
+function fenceSection(ctx,x1,x2,fy){
+  var w=x2-x1;
+  ctx.lineWidth=5; ctx.strokeStyle="#8a5024";                       // croix (X)
+  ctx.beginPath(); ctx.moveTo(x1+4,fy+22); ctx.lineTo(x2-4,fy+2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2-4,fy+22); ctx.lineTo(x1+4,fy+2); ctx.stroke();
+  var rails=[fy, fy+10, fy+20];                                     // barres horizontales
+  rails.forEach(function(ry){
+    ctx.fillStyle="#9a5a2b"; ctx.fillRect(x1,ry,w,5);
+    ctx.fillStyle="#b8763a"; ctx.fillRect(x1,ry,w,2);
+    ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(x1+0.5,ry+0.5,w,5);
+  });
 }
 function panel(ctx,x,y,w,h){
   ctx.fillStyle="#5a3618"; ctx.fillRect(x-2,y-2,w+4,h+4);
@@ -975,46 +1018,65 @@ function drawBoard(){
   if(!boardStatic) buildStaticBoard();
   bctx.setTransform(1,0,0,1,0,0);
   bctx.clearRect(0,0,boardW*SCALE,boardH*SCALE);
-  bctx.drawImage(boardStatic,0,0);          // copie 1:1 (déjà en résolution device)
-  bctx.setTransform(SCALE,0,0,SCALE,0,0);   // pions en coordonnées logiques
-  if(G){
-    var byCell={};
-    G.players.forEach(function(p,i){ (byCell[p.pos]=byCell[p.pos]||[]).push(i); });
-    Object.keys(byCell).forEach(function(pos){
-      var occ=byCell[pos], c=cellOf(+pos), u=2, sz=16*u;   // pions pixel art
-      occ.forEach(function(pi,k){
-        var p=G.players[pi];
-        var dx=(occ.length>1)?((k%2)?10:-10):0;
-        var dy=(occ.length>2)?((k<2)?-7:7):0;
-        var cx=c.cx+dx, cy=c.cy+dy-4;
-        ELL(bctx, cx, cy+sz*0.42, sz*0.34, sz*0.15, "rgba(0,0,0,.32)");   // ombre
-        if(pi===0){ DECO.star(bctx, cx, cy-sz*0.5, 5, "#ffd94a"); }        // marqueur "toi"
-        SPRITES.animal(bctx, p.animalId, Math.round(cx-sz/2), Math.round(cy-sz/2), u);
-      });
-    });
-  }
+  bctx.drawImage(boardStatic,0,0);          // décor pixel art (statique)
+  drawPawns();
   autoScroll();
 }
-function autoScroll(){
+// Pions = emojis HD dessinés sur la couche lissée (pawnLayer).
+function drawPawn(pi, cx, groundY, jump){
+  var p=G.players[pi], sz=26;
+  ELL(pctx, cx, groundY+sz*0.42, sz*0.34, sz*0.14, "rgba(0,0,0,.30)");   // ombre au sol
+  var yy=groundY-(jump||0);
+  if(pi===0){ DECO.star(pctx, cx, yy-sz*0.52, 5, "#ffd94a"); }            // marqueur "toi"
+  drawEmoji(pctx, EMOJI[p.animalId], cx, yy, sz);
+}
+function drawPawns(){
+  if(!pctx) return;
+  pctx.setTransform(1,0,0,1,0,0);
+  pctx.clearRect(0,0,boardW*PS,boardH*PS);
+  pctx.setTransform(PS,0,0,PS,0,0);
   if(!G) return;
+  var byCell={};
+  G.players.forEach(function(p,i){ if(!p.anim){ (byCell[p.pos]=byCell[p.pos]||[]).push(i); } });
+  Object.keys(byCell).forEach(function(pos){
+    var occ=byCell[pos], c=cellOf(+pos);
+    occ.forEach(function(pi,k){
+      var dx=(occ.length>1)?((k%2)?10:-10):0, dy=(occ.length>2)?((k<2)?-7:7):0;
+      drawPawn(pi, c.cx+dx, c.cy+dy, 0);
+    });
+  });
+  G.players.forEach(function(p,i){ if(p.anim) drawPawn(i, p.anim.x, p.anim.y, p.anim.jump); });
+}
+function autoScrollTo(x,y,smooth){
   var wrap=$("boardWrap"), cv=$("board");
   if(!cv.clientWidth) return;
   var scale=cv.clientWidth/boardW;
-  var c=cellOf(G.players[0].pos);
-  var target=c.cy*scale - wrap.clientHeight/2;
-  wrap.scrollTo({top:clamp(target,0,cv.scrollHeight-wrap.clientHeight), behavior:"smooth"});
+  var target=y*scale - wrap.clientHeight/2;
+  wrap.scrollTo({top:clamp(target,0,wrap.scrollHeight-wrap.clientHeight), behavior:smooth?"smooth":"auto"});
 }
+function autoScroll(){ if(!G) return; var c=cellOf(G.players[0].pos); autoScrollTo(c.cx,c.cy,true); }
 
-/* mini-tableau des joueurs */
-function drawPlayersMini(){
-  var wrap=$("playersMini"); wrap.innerHTML="";
-  G.players.forEach(function(p,i){
-    var d=document.createElement("div"); d.className="pm"+(i===0?" you":"");
-    d.appendChild(animalEl(p.animalId));
-    var s=document.createElement("span"); s.innerHTML=(i===0?"Toi":animalById(p.animalId).name)+" <span class='pos'>"+p.pos+"</span>";
-    d.appendChild(s); wrap.appendChild(d);
+// Saut animé d'une case à l'autre (style chess.com).
+function hop(pi, aCase, bCase, dur){
+  return new Promise(function(resolve){
+    var A=cellOf(aCase), B=cellOf(bCase), t0=null, H=13;
+    Sound.hop();
+    function frame(ts){
+      if(t0===null) t0=ts;
+      var t=Math.min(1,(ts-t0)/dur);
+      var e = t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;      // easeInOut
+      var x=A.cx+(B.cx-A.cx)*e, y=A.cy+(B.cy-A.cy)*e;
+      G.players[pi].anim={x:x, y:y, jump:H*Math.sin(Math.PI*t)};
+      drawPawns(); autoScrollTo(x,y,false);
+      if(t<1) requestAnimationFrame(frame);
+      else { G.players[pi].anim=null; G.players[pi].pos=bCase; drawPawns(); resolve(); }
+    }
+    requestAnimationFrame(frame);
   });
 }
+
+/* (mini-tableau supprimé : remplacé par le bouton « Abandonner ») */
+function drawPlayersMini(){}
 
 /* barre d'info en jeu : matière · thème · difficulté (lecture seule) */
 function buildInfoBar(){
@@ -1039,9 +1101,10 @@ function renderDice(v){
 function rollDiceAnim(){
   return new Promise(function(resolve){
     var final=1+randint(6), n=0;
+    Sound.diceSpin();                        // petite musique de loterie
     var iv=setInterval(function(){
-      renderDice(1+randint(6)); Sound.roll(); n++;
-      if(n>=10){ clearInterval(iv); renderDice(final); Sound.step(); resolve(final); }
+      renderDice(1+randint(6)); n++;
+      if(n>=10){ clearInterval(iv); renderDice(final); Sound.diceStop(); resolve(final); }
     }, 70);
   });
 }
@@ -1222,10 +1285,9 @@ async function moveTo(pi, target, silent){
 }
 async function stepTo(pi, target){
   var p=G.players[pi]; target=clamp(target,0,BOARD);
+  var dur=(pi===0)?190:150;                 // le joueur voit les bots sauter aussi
   var dir = target>p.pos ? 1 : -1;
-  while(p.pos!==target){
-    p.pos+=dir; Sound.step(); drawBoard(); drawPlayersMini(); await sleep(150);
-  }
+  while(p.pos!==target){ await hop(pi, p.pos, p.pos+dir, dur); }
 }
 
 /* Effets des cases spéciales sur la case d'arrivée (RG06, ne se cumulent pas). */
@@ -1346,11 +1408,8 @@ async function botTurn(i){
     else { await botStep(i, start); }
   }
 }
-async function botStep(i, target){
-  var b=G.players[i]; target=clamp(target,0,BOARD);
-  var dir=target>b.pos?1:-1;
-  while(b.pos!==target){ b.pos+=dir; drawBoard(); await sleep(45); }
-  drawPlayersMini();
+async function botStep(i, target){          // même animation de saut que le joueur
+  await stepTo(i, target);
 }
 async function botSpecial(i){
   var b=G.players[i]; if(b.pos<=0||b.pos>=BOARD) return;
@@ -1453,6 +1512,16 @@ function toggleSound(){
   updateSoundBtn();
 }
 
+/* Abandonner la partie en cours → retour à la configuration. */
+function abandonGame(){
+  if(busy) return;
+  Sound.click();
+  if(!confirm("Abandonner la partie en cours ?")) return;
+  if(G) G.over=true;
+  store.game=null; persist(); G=null; selectedAnimal=null;
+  buildSetup(); showScreen("select"); setTab("game");
+}
+
 /* ============================== INIT =============================== */
 function init(){
   loadSave();
@@ -1461,6 +1530,7 @@ function init(){
   buildSetup();
 
   $("soundBtn").onclick=toggleSound;
+  $("abandonBtn").onclick=abandonGame;
 
   $("startBtn").onclick=function(){ Sound.click(); if(selectedAnimal) startGame(selectedAnimal); };
 
