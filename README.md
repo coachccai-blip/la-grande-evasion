@@ -36,6 +36,12 @@ Ensuite, la course commence :
 - Arrivé au **portail** (case 50), ouvre les 3 serrures : 3 bonnes réponses
   d'affilée, sans dé. La moindre erreur referme tout !
 
+**Duel « Questions pour un champion » :** à ton tour, au lieu de lancer le dé, tu
+peux **défier un adversaire**. Pendant **1 minute**, vous répondez chacun au plus
+grand nombre de questions possible (écran *versus* avec les deux emojis face à
+face et les scores en direct). Le **gagnant avance de 6 cases**, le **perdant
+recule de 6**.
+
 **Collection :** gagner libère ton animal pour la combinaison
 *matière · thème · difficulté* jouée (coche verte). Le vrai défi est de libérer
 **tous les animaux, dans toutes les matières, tous les thèmes et toutes les

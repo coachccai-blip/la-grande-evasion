@@ -111,6 +111,11 @@
   .animal-card canvas{width:64px; height:64px; display:block; margin:0 auto;}
   .animal-card .emoji{font-size:46px; line-height:1; display:block; height:58px; margin-top:2px;
     display:flex; align-items:center; justify-content:center;}
+  /* Pile de polices emoji COULEUR (sinon certains emojis, ex. 🐵, s'affichent en
+     noir et blanc car le navigateur choisit une police symbole monochrome). */
+  .emoji, #endArt, .duel-op .em, .vs-emoji{
+    font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji","Twemoji Mozilla","EmojiOne Color","Segoe UI Symbol",sans-serif;
+  }
   .animal-card .nm{font-size:12px; font-weight:700; margin-top:4px;}
   .animal-card .mission{
     position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%;
@@ -264,6 +269,40 @@
   }
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
+  /* ============================== Duel ============================== */
+  .gamebar #abandonBtn{flex:0 0 auto; padding:10px 12px; font-size:15px;}
+  .btn.duel{flex:0 0 auto; padding:12px 12px; font-size:14px; color:#fff;
+    background:linear-gradient(180deg,#ff7a6b,#e0574a); box-shadow:0 4px 0 #9c2f24,0 6px 10px rgba(0,0,0,.35);}
+  .btn.duel:active{box-shadow:0 1px 0 #9c2f24;}
+  #duelScreen{z-index:55;}
+  .duel-card{max-width:420px;}
+  .duel-op{display:flex; align-items:center; gap:12px; width:100%; text-align:left; cursor:pointer;
+    border:2px solid var(--line); background:var(--panel2); color:var(--ink); border-radius:14px;
+    padding:10px 12px; margin-bottom:8px; font-family:var(--font); font-weight:700; font-size:15px;}
+  .duel-op:active{transform:scale(.98);}
+  .duel-op .em{font-size:34px; line-height:1;}
+  .duel-op .pos{margin-left:auto; font-size:12px; color:var(--ink-soft);}
+  .vs-wrap{display:flex; align-items:stretch; gap:8px; margin-bottom:10px;}
+  .vs-side{flex:1; border-radius:16px; padding:10px 6px; text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .vs-side.you{background:linear-gradient(180deg,rgba(59,130,246,.28),rgba(59,130,246,.10)); border:2px solid #3b82f6;}
+  .vs-side.foe{background:linear-gradient(180deg,rgba(224,87,74,.28),rgba(224,87,74,.10)); border:2px solid #e0574a;}
+  .vs-emoji{font-size:56px; line-height:1;}
+  .vs-emoji.flip{transform:scaleX(-1);}
+  .vs-name{font-size:12px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--ink-soft);}
+  .vs-score{font-size:40px; font-weight:900; color:#7fb2ff; text-shadow:0 2px 0 rgba(0,0,0,.35); transition:transform .12s;}
+  .vs-score.foe{color:#ff9182;}
+  .vs-score.bump{transform:scale(1.4);}
+  .vs-mid{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:0 2px;}
+  .vs-badge{font-size:16px; font-weight:900; color:var(--accent2); background:#241a2f; border:2px solid var(--accent);
+    border-radius:10px; padding:3px 8px; box-shadow:0 2px 0 #000;}
+  .vs-time{font-size:26px; font-weight:900; color:var(--ink); min-width:44px;}
+  .vs-time.low{color:var(--ko2);}
+  .vs-result{margin-top:10px; text-align:center; font-size:20px; font-weight:900; min-height:24px; letter-spacing:1px;}
+  .vs-result.win{color:var(--accent2);} .vs-result.lose{color:var(--ko2);} .vs-result.tie{color:var(--ink-soft);}
+  #vsText{margin:6px 2px 10px;}
+  #vsOpts .opt{padding:11px 12px;}
+
   .hidden{display:none !important;}
 </style>
 </head>
@@ -308,9 +347,10 @@
       <div id="infoBar" class="infobar"></div>
       <div id="boardWrap"><div id="boardInner"><canvas id="board"></canvas><canvas id="pawnLayer"></canvas></div></div>
       <div class="gamebar">
-        <button id="abandonBtn" class="btn secondary">✖ Abandonner</button>
+        <button id="abandonBtn" class="btn secondary" title="Abandonner">✖</button>
         <div id="dice"></div>
         <button id="rollBtn" class="btn">Lancer le dé</button>
+        <button id="duelBtn" class="btn duel" title="Défier un adversaire en duel">⚔️ Duel</button>
       </div>
     </section>
 
@@ -366,6 +406,42 @@
         <div id="endMsg" style="font-size:14px;color:var(--ink-soft);margin-bottom:14px;"></div>
         <button id="rematchBtn" class="btn wide">Rejouer</button>
         <button id="backSelectBtn" class="btn secondary wide" style="margin-top:8px;">Changer d'animal</button>
+      </div>
+    </div>
+
+    <!-- =================== Duel : choix de l'adversaire ============ -->
+    <div id="duelChoose" class="overlay">
+      <div class="card">
+        <div style="font-size:20px;font-weight:800;letter-spacing:1px;text-align:center;margin-bottom:4px;">⚔️ Défier en duel</div>
+        <div style="font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:12px;">Choisis ton adversaire pour un duel de rapidité (1 min). Le gagnant avance de 6, le perdant recule de 6.</div>
+        <div id="duelOpponents"></div>
+        <button id="duelCancel" class="btn secondary wide" style="margin-top:6px;">Annuler</button>
+      </div>
+    </div>
+
+    <!-- =================== Duel : le VERSUS ======================== -->
+    <div id="duelScreen" class="overlay">
+      <div class="card duel-card">
+        <div class="vs-wrap">
+          <div class="vs-side you">
+            <div id="vsYouEmoji" class="vs-emoji flip"></div>
+            <div class="vs-name">TOI</div>
+            <div id="vsYouScore" class="vs-score">0</div>
+          </div>
+          <div class="vs-mid">
+            <div class="vs-badge">VS</div>
+            <div id="vsTimeNum" class="vs-time">60</div>
+          </div>
+          <div class="vs-side foe">
+            <div id="vsFoeEmoji" class="vs-emoji"></div>
+            <div id="vsFoeName" class="vs-name">Adversaire</div>
+            <div id="vsFoeScore" class="vs-score foe">0</div>
+          </div>
+        </div>
+        <div id="vsTimer" class="timer" style="display:block;"><i></i></div>
+        <div id="vsText" class="qtext"></div>
+        <div id="vsOpts" class="opts"></div>
+        <div id="vsResult" class="vs-result"></div>
       </div>
     </div>
 
@@ -552,7 +628,9 @@ var Sound=(function(){
       var base=[523,587,659,784,880,988];
       for(var i=0;i<12;i++){ (function(k){ setTimeout(function(){ tone(base[k%base.length]+k*6,0.06,"square",0.09); }, k*55); })(i); }
     },
-    diceStop:function(){ tone(880,0.10,"square",0.20); setTimeout(function(){ tone(1319,0.20,"square",0.22); },90); }
+    diceStop:function(){ tone(880,0.10,"square",0.20); setTimeout(function(){ tone(1319,0.20,"square",0.22); },90); },
+    duelStart:function(){ seqAt([[0,392,0.12,"square",0.18],[120,523,0.12,"square",0.18],[240,659,0.2,"square",0.2]]); },
+    tick:function(){ tone(760,0.04,"square",0.06); }
   };
 })();
 
@@ -1218,7 +1296,7 @@ function enterGame(){
   buildInfoBar(); drawPlayersMini(); renderDice(1);
   showScreen("game"); setTab("game");
   drawBoard();
-  $("rollBtn").disabled=false;
+  $("rollBtn").disabled=false; $("duelBtn").disabled=false;
 }
 
 /* ==================================================================== */
@@ -1226,9 +1304,11 @@ function enterGame(){
 /* ==================================================================== */
 var me = function(){ return G.players[0]; };
 
+function setActions(on){ $("rollBtn").disabled=!on; $("duelBtn").disabled=!on; }
+
 async function playerRoll(){
   if(busy || !G || G.over) return;
-  busy=true; $("rollBtn").disabled=true;
+  busy=true; setActions(false);
 
   // sieste surprise éventuelle (case mystère)
   if(me().skip){ me().skip=false; toast("Sieste surprise… tu passes ton tour 😴"); saveGameState(); await sleep(900); await botsPlay(); return endTurn(); }
@@ -1255,7 +1335,148 @@ async function playerRoll(){
 
 function endTurn(){
   saveGameState(); drawPlayersMini();
-  busy=false; if(!G.over) $("rollBtn").disabled=false;
+  busy=false; if(!G.over) setActions(true);
+}
+
+/* ==================================================================== */
+/*                     DUEL « QUESTIONS POUR UN CHAMPION »              */
+/* ==================================================================== */
+var DUEL_TIME = 60;  // secondes
+
+// Ouvre le choix de l'adversaire à défier.
+function openDuelChooser(){
+  if(busy || !G || G.over) return;
+  Sound.click();
+  var box=$("duelOpponents"); box.innerHTML="";
+  for(var i=1;i<G.players.length;i++){ (function(idx){
+    var p=G.players[idx], a=animalById(p.animalId);
+    var b=document.createElement("button"); b.className="duel-op";
+    var em=document.createElement("span"); em.className="em"; em.textContent=EMOJI[p.animalId];
+    var nm=document.createElement("span"); nm.textContent=a.name;
+    var ps=document.createElement("span"); ps.className="pos"; ps.textContent="case "+p.pos;
+    b.appendChild(em); b.appendChild(nm); b.appendChild(ps);
+    b.onclick=function(){ Sound.click(); $("duelChoose").classList.remove("show"); playerDuel(idx); };
+    box.appendChild(b);
+  })(i); }
+  $("duelChoose").classList.add("show");
+}
+
+// Le duel de rapidité (1 min) : renvoie {you, foe}.
+function runDuel(botIndex){
+  return new Promise(function(resolve){
+    var foe=G.players[botIndex], foeA=animalById(foe.animalId), ds=$("duelScreen");
+    $("vsYouEmoji").textContent=EMOJI[me().animalId];
+    $("vsFoeEmoji").textContent=EMOJI[foe.animalId];
+    $("vsFoeName").textContent=foeA.name.toUpperCase();
+    var youScore=0, foeScore=0, over=false, timeLeft=DUEL_TIME, answering=false, botT=null;
+    $("vsYouScore").textContent="0"; $("vsFoeScore").textContent="0";
+    $("vsResult").textContent=""; $("vsResult").className="vs-result";
+    $("vsTimeNum").textContent=DUEL_TIME; $("vsTimeNum").className="vs-time";
+    var bar=$("vsTimer").querySelector("i"); bar.style.width="100%";
+    ds.classList.add("show"); Sound.duelStart();
+
+    function bump(el){ el.classList.add("bump"); setTimeout(function(){ el.classList.remove("bump"); },130); }
+
+    // Adversaire : tente une question toutes les ~1,6–3,2 s, réussite = difficulté.
+    function scheduleBot(){
+      botT=setTimeout(function(){
+        if(over) return;
+        if(Math.random()<G.botSuccess){ foeScore++; $("vsFoeScore").textContent=foeScore; bump($("vsFoeScore")); Sound.tick(); }
+        scheduleBot();
+      }, 1600+Math.random()*1600);
+    }
+    scheduleBot();
+
+    // Joueur : enchaîne les questions le plus vite possible.
+    function nextQ(){
+      if(over) return;
+      var q=pickQuestion().q;
+      if(typeof window!=="undefined") window.__q=q;   // (aide aux tests)
+      $("vsText").innerHTML=q.phrase.replace("___","<span class='blank'>___</span>");
+      var order=shuffle(q.options.map(function(_,i){return i;})), box=$("vsOpts"); box.innerHTML=""; answering=true;
+      order.forEach(function(oi,k){
+        var b=document.createElement("button"); b.className="opt";
+        var lt=document.createElement("span"); lt.className="lt"; lt.textContent=String.fromCharCode(65+k);
+        var tx=document.createElement("span"); tx.textContent=q.options[oi];
+        b.appendChild(lt); b.appendChild(tx);
+        b.onclick=function(){
+          if(!answering||over) return; answering=false;
+          var correct=(oi===q.answer), btns=box.querySelectorAll(".opt");
+          for(var i=0;i<btns.length;i++){ btns[i].setAttribute("disabled",""); }
+          if(oi!==q.answer){ for(var j=0;j<btns.length;j++){ if(+order[j]===q.answer) btns[j].classList.add("correct"); } }
+          b.classList.add(correct?"correct":"wrong");
+          if(correct){ youScore++; $("vsYouScore").textContent=youScore; bump($("vsYouScore")); Sound.good(); }
+          else Sound.bad();
+          store.history.unshift({result:correct,cat:q.cat,sub:q.sub,hint:q.hint,phrase:q.phrase,options:q.options.slice(),answer:q.answer,chosen:oi});
+          setTimeout(nextQ, correct?240:480);
+        };
+        box.appendChild(b);
+      });
+    }
+    nextQ();
+
+    var iv=setInterval(function(){
+      timeLeft-=0.1; if(timeLeft<0) timeLeft=0;
+      bar.style.width=(timeLeft/DUEL_TIME*100)+"%";
+      var s=Math.ceil(timeLeft); $("vsTimeNum").textContent=s;
+      $("vsTimeNum").className="vs-time"+(s<=10?" low":"");
+      if(s<=5 && s>0 && Math.abs(timeLeft-s)<0.06) Sound.tick();
+      if(timeLeft<=0) finish();
+    },100);
+
+    function finish(){
+      if(over) return; over=true;
+      clearInterval(iv); if(botT) clearTimeout(botT); answering=false;
+      var btns=$("vsOpts").querySelectorAll(".opt"); for(var i=0;i<btns.length;i++){ btns[i].setAttribute("disabled",""); }
+      persist();
+      var r=$("vsResult");
+      if(youScore>foeScore){ r.textContent="🏆 Tu gagnes le duel !"; r.className="vs-result win"; Sound.win(); }
+      else if(foeScore>youScore){ r.textContent="Défaite… "+foeA.name+" l'emporte"; r.className="vs-result lose"; Sound.lose(); }
+      else { r.textContent="Égalité !"; r.className="vs-result tie"; }
+      setTimeout(function(){ ds.classList.remove("show"); resolve({you:youScore, foe:foeScore}); }, 2000);
+    }
+  });
+}
+
+// Fait avancer un bot de n cases (avec tentative de portail éventuelle).
+async function duelBotAdvance(i, n){
+  var b=G.players[i], start=b.pos;
+  await stepTo(i, Math.min(BOARD, b.pos+n));
+  if(b.pos>=BOARD){
+    var pass=Math.random()<G.botSuccess && Math.random()<G.botSuccess && Math.random()<G.botSuccess;
+    if(pass){ return finishGame(false, i); }
+    await stepTo(i, start); toast(animalById(b.animalId).name+" a raté le portail !");
+  }
+}
+
+// Tour « duel » : remplace le lancer de dé.
+async function playerDuel(botIndex){
+  if(busy || !G || G.over) return;
+  busy=true; setActions(false);
+  if(me().skip){ me().skip=false; toast("Sieste surprise… tu passes ton tour 😴"); saveGameState(); await sleep(900); await botsPlay(); return endTurn(); }
+  G.turnStartPos=me().pos;
+  var foe=G.players[botIndex];
+  var sc=await runDuel(botIndex);
+  if(sc.you>sc.foe){
+    toast("Duel remporté "+sc.you+"–"+sc.foe+" ! Tu avances de 6.");
+    await stepTo(botIndex, Math.max(0, foe.pos-6));      // l'adversaire recule
+    await stepTo(0, Math.min(BOARD, me().pos+6));         // tu avances de 6 (déplacement simple)
+  } else if(sc.foe>sc.you){
+    toast("Duel perdu "+sc.you+"–"+sc.foe+"… Tu recules de 6.");
+    await moveTo(0, Math.max(0, me().pos-6), true);        // tu recules
+    await duelBotAdvance(botIndex, 6);                     // l'adversaire avance
+    if(G.over) return;
+  } else {
+    toast("Égalité "+sc.you+"–"+sc.foe+" : personne ne bouge.");
+  }
+  if(!G.over && me().pos>=BOARD){
+    var won=await portalChallenge();
+    if(won) return finishGame(true, 0);
+    await moveTo(0, G.turnStartPos, true); toast("Le portail s'est refermé…"); await sleep(400);
+  }
+  if(G.over) return;
+  await botsPlay();
+  endTurn();
 }
 
 /* Déplacement avant en gérant les obstacles (RG07). */
@@ -1535,6 +1756,8 @@ function init(){
   $("startBtn").onclick=function(){ Sound.click(); if(selectedAnimal) startGame(selectedAnimal); };
 
   $("rollBtn").onclick=function(){ Sound.click(); playerRoll(); };
+  $("duelBtn").onclick=openDuelChooser;
+  $("duelCancel").onclick=function(){ Sound.click(); $("duelChoose").classList.remove("show"); };
 
   $("tabGame").onclick=function(){
     Sound.click(); setTab("game");
