@@ -1155,17 +1155,84 @@
     {d:5,ph:"La ___ des deux voitures a fait du bruit (choc).",good:"collision",bad:["collusion","collation","colision"],note:"« collision » = choc ; « collusion » = entente secrète."},
     {d:6,ph:"On soupçonne une ___ entre les deux sociétés (entente secrète).",good:"collusion",bad:["collision","collation","colusion"],note:"« collusion » = entente frauduleuse ; « collision » = choc."}
   ];
+  /* --- Synonymes & Contraires : générateurs PARTITIONNÉS par difficulté --- */
+  var SYN_SETS=[
+    // d1
+    {d:1,w:["content","heureux","joyeux"]},{d:1,w:["grand","immense","géant"]},{d:1,w:["petit","minuscule","riquiqui"]},
+    {d:1,w:["beau","joli","mignon"]},{d:1,w:["gentil","aimable","sympathique"]},{d:1,w:["rapide","vif","pressé"]},
+    {d:1,w:["manger","dévorer","avaler"]},{d:1,w:["parler","discuter","bavarder"]},{d:1,w:["regarder","observer","fixer"]},
+    {d:1,w:["drôle","amusant","rigolo"]},{d:1,w:["calme","tranquille","paisible"]},{d:1,w:["triste","malheureux","chagriné"]},{d:1,w:["fatigué","épuisé","las"]},
+    // d2
+    {d:2,w:["finir","terminer","achever"]},{d:2,w:["commencer","débuter","démarrer"]},{d:2,w:["crier","hurler","brailler"]},
+    {d:2,w:["tomber","chuter","dégringoler"]},{d:2,w:["joli","ravissant","charmant"]},{d:2,w:["méchant","cruel","vilain"]},
+    {d:2,w:["fort","puissant","robuste"]},{d:2,w:["facile","simple","aisé"]},{d:2,w:["aimer","adorer","apprécier"]},
+    {d:2,w:["garder","conserver","préserver"]},{d:2,w:["montrer","présenter","exhiber"]},{d:2,w:["cacher","dissimuler","masquer"]},{d:2,w:["laid","moche","affreux"]},
+    // d3
+    {d:3,w:["peur","frayeur","crainte"]},{d:3,w:["maison","demeure","logis"]},{d:3,w:["dire","déclarer","affirmer"]},
+    {d:3,w:["riche","fortuné","aisé"]},{d:3,w:["pauvre","démuni","miséreux"]},{d:3,w:["bête","stupide","idiot"]},
+    {d:3,w:["malin","rusé","astucieux"]},{d:3,w:["courageux","brave","vaillant"]},{d:3,w:["bizarre","étrange","curieux"]},
+    {d:3,w:["fabriquer","construire","bâtir"]},{d:3,w:["briller","luire","scintiller"]},{d:3,w:["vieux","âgé","ancien"]},{d:3,w:["chaud","brûlant","bouillant"]},
+    // d4
+    {d:4,w:["important","essentiel","crucial"]},{d:4,w:["difficile","ardu","compliqué"]},{d:4,w:["sombre","lugubre","morne"]},
+    {d:4,w:["faible","fragile","chétif"]},{d:4,w:["rapidement","vite","promptement"]},{d:4,w:["comprendre","saisir","assimiler"]},
+    {d:4,w:["énerver","agacer","irriter"]},{d:4,w:["détruire","démolir","anéantir"]},{d:4,w:["augmenter","accroître","intensifier"]},
+    {d:4,w:["diminuer","réduire","baisser"]},{d:4,w:["célèbre","connu","renommé"]},{d:4,w:["étrange","insolite","singulier"]},{d:4,w:["gros","corpulent","volumineux"]},
+    // d5
+    {d:5,w:["audacieux","téméraire","intrépide"]},{d:5,w:["généreux","charitable","magnanime"]},{d:5,w:["avare","radin","pingre"]},
+    {d:5,w:["paresseux","fainéant","indolent"]},{d:5,w:["travailleur","assidu","laborieux"]},{d:5,w:["honnête","intègre","probe"]},
+    {d:5,w:["menteur","trompeur","fourbe"]},{d:5,w:["mélancolique","nostalgique","morose"]},{d:5,w:["abondant","copieux","foisonnant"]},
+    {d:5,w:["rare","inhabituel","exceptionnel"]},{d:5,w:["ancien","antique","vétuste"]},{d:5,w:["brillant","éclatant","étincelant"]},{d:5,w:["puissant","fort","dominant"]},
+    // d6
+    {d:6,w:["éphémère","fugace","passager"]},{d:6,w:["sournois","hypocrite","perfide"]},{d:6,w:["loquace","bavard","volubile"]},
+    {d:6,w:["taciturne","silencieux","renfermé"]},{d:6,w:["opulent","luxueux","fastueux"]},{d:6,w:["indigent","nécessiteux","besogneux"]},
+    {d:6,w:["véloce","rapide","prompt"]},{d:6,w:["placide","serein","imperturbable"]},{d:6,w:["irascible","coléreux","irritable"]},
+    {d:6,w:["sagace","perspicace","avisé"]},{d:6,w:["prodigue","dépensier","dispendieux"]},{d:6,w:["tenace","persévérant","opiniâtre"]},{d:6,w:["fallacieux","mensonger","trompeur"]}
+  ];
+  var CONTR_PAIRS=[
+    {d:1,a:"grand",b:"petit"},{d:1,a:"jour",b:"nuit"},{d:1,a:"chaud",b:"froid"},{d:1,a:"rapide",b:"lent"},{d:1,a:"content",b:"triste"},
+    {d:1,a:"propre",b:"sale"},{d:1,a:"plein",b:"vide"},{d:1,a:"ouvrir",b:"fermer"},{d:1,a:"monter",b:"descendre"},
+    {d:2,a:"vrai",b:"faux"},{d:2,a:"gagner",b:"perdre"},{d:2,a:"entrer",b:"sortir"},{d:2,a:"acheter",b:"vendre"},{d:2,a:"aimer",b:"détester"},
+    {d:2,a:"jeune",b:"vieux"},{d:2,a:"haut",b:"bas"},{d:2,a:"dur",b:"mou"},{d:2,a:"riche",b:"pauvre"},
+    {d:3,a:"clair",b:"sombre"},{d:3,a:"lourd",b:"léger"},{d:3,a:"devant",b:"derrière"},{d:3,a:"début",b:"fin"},{d:3,a:"premier",b:"dernier"},
+    {d:3,a:"large",b:"étroit"},{d:3,a:"mouillé",b:"sec"},{d:3,a:"tôt",b:"tard"},{d:3,a:"avancer",b:"reculer"},
+    {d:4,a:"autoriser",b:"interdire"},{d:4,a:"aimable",b:"désagréable"},{d:4,a:"courageux",b:"peureux"},{d:4,a:"généreux",b:"avare"},{d:4,a:"accepter",b:"refuser"},
+    {d:4,a:"réussir",b:"échouer"},{d:4,a:"construire",b:"détruire"},{d:4,a:"apparaître",b:"disparaître"},{d:4,a:"augmenter",b:"diminuer"},
+    {d:5,a:"optimiste",b:"pessimiste"},{d:5,a:"sincère",b:"hypocrite"},{d:5,a:"prudent",b:"imprudent"},{d:5,a:"patient",b:"impatient"},{d:5,a:"actif",b:"passif"},
+    {d:5,a:"souple",b:"rigide"},{d:5,a:"présent",b:"absent"},{d:5,a:"ancien",b:"récent"},{d:5,a:"visible",b:"invisible"},
+    {d:6,a:"prolixe",b:"laconique"},{d:6,a:"docile",b:"rebelle"},{d:6,a:"épargner",b:"dilapider"},{d:6,a:"éphémère",b:"éternel"},{d:6,a:"humble",b:"orgueilleux"},
+    {d:6,a:"licite",b:"illicite"},{d:6,a:"vénérer",b:"mépriser"},{d:6,a:"abonder",b:"manquer"},{d:6,a:"limpide",b:"opaque"}
+  ];
+  var SYN_FRAMES=["Un synonyme de « {W} » est ___.","« {W} » veut dire à peu près ___.","Trouve un mot proche de « {W} » : ___.","Quel mot ressemble le plus à « {W} » ? ___."];
+  var CONTR_FRAMES=["Le contraire de « {W} » est ___.","« {W} », c'est l'inverse de ___.","Trouve le contraire de « {W} » : ___.","L'opposé de « {W} » est ___."];
+  var _synAll=null, _contrAll=null;
+  function synAll(){ if(!_synAll){ _synAll=[]; SYN_SETS.forEach(function(s){ s.w.forEach(function(x){ _synAll.push(x); }); }); } return _synAll; }
+  function contrAll(){ if(!_contrAll){ _contrAll=[]; CONTR_PAIRS.forEach(function(p){ _contrAll.push(p.a,p.b); }); } return _contrAll; }
+  function sampleAway(pool, exclude, k){
+    var out=[], seen={}; exclude.forEach(function(x){ seen[norm(x)]=1; });
+    for(var t=0;t<300 && out.length<k;t++){ var x=pick(pool); if(!seen[norm(x)]){ seen[norm(x)]=1; out.push(x); } }
+    return out;
+  }
+  function bandFilter(list, diff, key){
+    var pool=list.filter(function(x){return x[key]===diff;});
+    for(var w=1;w<=5 && pool.length<3;w++) pool=list.filter(function(x){return Math.abs(x[key]-diff)<=w;});
+    return pool;
+  }
+  function genSynonymes(diff,cat,sub){
+    var g=pick(bandFilter(SYN_SETS,diff,"d")), word=g.w[0], good=pick(g.w.slice(1));
+    return { cat:cat, sub:sub, phrase:pick(SYN_FRAMES).replace("{W}",word), hint:"Trouve un mot de sens PROCHE",
+      note:"Un synonyme est un mot de sens PROCHE : « "+g.w.slice(1).join(" », « ")+" » ≈ « "+word+" ».",
+      options:build(good, sampleAway(synAll(), g.w, 3)), answer:0 };
+  }
+  function genContraires(diff,cat,sub){
+    var c=pick(bandFilter(CONTR_PAIRS,diff,"d")), fwd=rint(2), w=fwd?c.a:c.b, good=fwd?c.b:c.a;
+    var bad=sampleAway(contrAll().concat(["pareil","identique","semblable"]), [c.a,c.b], 3);
+    return { cat:cat, sub:sub, phrase:pick(CONTR_FRAMES).replace("{W}",w), hint:"Trouve le mot de sens OPPOSÉ",
+      note:"Un antonyme a le sens OPPOSÉ : « "+c.a+" » ↔ « "+c.b+" ».", options:build(good,bad), answer:0 };
+  }
+
   function genVoc(sub, diff, cat){
-    if(sub==="Synonymes"){
-      var g=pickByDiff(SYN,diff), word=g.w[0], good=pick(g.w.slice(1));
-      var bad=shuffle(SYN_DIST.filter(function(x){return x!==word && g.w.indexOf(x)<0;})).slice(0,3);
-      return { cat:cat, sub:sub, phrase:"Un synonyme de « "+word+" » est ___.", hint:"Trouve un mot de sens PROCHE", note:"Un synonyme est un mot de sens PROCHE. Ici, « "+g.w.slice(1).join(" », « ")+" » sont des synonymes de « "+word+" ».", options:build(good,bad), answer:0 };
-    }
-    if(sub==="Contraires"){
-      var c=pickByDiff(CONTR,diff), fwd=rint(2), w=fwd?c.a:c.b, good=fwd?c.b:c.a;
-      var bad=shuffle(["pareil","semblable","identique"].concat(SYN_DIST).filter(function(x){return x!==good&&x!==w;})).slice(0,3);
-      return { cat:cat, sub:sub, phrase:"Le contraire de « "+w+" » est ___.", hint:"Trouve le mot de sens OPPOSÉ", note:"Un antonyme (contraire) a le sens OPPOSÉ : « "+c.a+" » ↔ « "+c.b+" ».", options:build(good,bad), answer:0 };
-    }
+    if(sub==="Synonymes") return genSynonymes(diff,cat,sub);
+    if(sub==="Contraires") return genContraires(diff,cat,sub);
     if(sub==="Homonymes") return fromGood(pickByDiff(HOMO,diff),"Choisis le bon homonyme",cat,sub);
     if(sub==="Familles de mots") return fromGood(pickByDiff(FAMILLE,diff),"Même famille de mots",cat,sub);
     if(sub==="Expressions idiomatiques") return fromGood(pickByDiff(IDIOM,diff),"Complète l'expression imagée",cat,sub);
