@@ -24,7 +24,7 @@
     background:radial-gradient(120% 80% at 50% 0%,#2a1c4d 0%,var(--bg) 60%,#0f0a1c 100%);
     overflow:hidden; user-select:none;
   }
-  canvas{image-rendering:auto;}
+  canvas{image-rendering:pixelated; image-rendering:crisp-edges;}
 
   /* Cadre appli : portrait, centré, plein écran mobile */
   #app{
@@ -671,22 +671,60 @@ function updateMissionProgress(){
 /* ==================================================================== */
 /*                          PLATEAU (canvas)                            */
 /* ==================================================================== */
-var COLS=5, ROWS=11, COLW=64, ROWH=64, SIDE=60, TOPPAD=150, BOTPAD=120;
-var boardW=SIDE*2+COLS*COLW, boardH=TOPPAD+ROWS*ROWH+BOTPAD;
+var boardW, boardH;
 var bctx=null, boardStatic=null;
 var DECO=SPRITES.deco, ELL=SPRITES.ellipse, CIR=SPRITES.circle, RQ=SPRITES.R;
-var SCALE=2;   // sur-échantillonnage pour un rendu net (emojis HD, tracés lisses)
+var SCALE=1;   // rendu pixel art : 1 px logique agrandi en "nearest" (image-rendering:pixelated)
+
+/* ---- Chemin serpentin défini par une courbe centrale échantillonnée ---- */
+var W=340, HW=23, STONE=6;                 // demi-largeur route + bordure de pierre
+var LANE_XL=82, LANE_XR=252, TURN_R=34, LANES=7;
+var GATE_H=112, LGAP=2*TURN_R, Y_TOP=GATE_H+40, Y_BOT=Y_TOP+(LANES-1)*LGAP, BOTTOM_H=150;
+var NCASE=51;                              // cases 0..50
+var CENTER=null, CLEN=null, CTOTAL=0;
+function laneY(l){ return Y_BOT - l*LGAP; }
+function buildCenterline(){
+  var pts=[], cx=W/2, y=Y_BOT, side="R";
+  pts.push([cx, Y_BOT+44]); pts.push([cx, Y_BOT]);       // départ (centre bas)
+  pts.push([LANE_XR, Y_BOT]);                             // 1re ligne : centre → droite
+  for(var lane=0; lane<LANES-1; lane++){
+    var sx=(side==="R")?LANE_XR:LANE_XL, sgn=(side==="R")?1:-1, N=16;
+    for(var k=1;k<=N;k++){ var a=Math.PI*(k/N);          // demi-cercle du virage
+      pts.push([sx+sgn*TURN_R*Math.sin(a), (y-TURN_R)+TURN_R*Math.cos(a)]); }
+    y-=LGAP;
+    var last=(lane===LANES-2);                            // dernière ligne : vers le centre
+    pts.push([ last ? cx : ((side==="R")?LANE_XL:LANE_XR), y]);
+    side=(side==="R")?"L":"R";
+  }
+  pts.push([cx, y-44]);                                   // rejoint le portail (centre haut)
+  return pts;
+}
+function initPath(){
+  CENTER=buildCenterline(); CLEN=[0];
+  for(var i=1;i<CENTER.length;i++){
+    var dx=CENTER[i][0]-CENTER[i-1][0], dy=CENTER[i][1]-CENTER[i-1][1];
+    CLEN.push(CLEN[i-1]+Math.sqrt(dx*dx+dy*dy));
+  }
+  CTOTAL=CLEN[CLEN.length-1];
+  boardW=W; boardH=Y_BOT+BOTTOM_H;
+}
+function atLen(s){
+  s=Math.max(0,Math.min(CTOTAL,s));
+  var i=1; while(i<CLEN.length-1 && CLEN[i]<s) i++;
+  var a=CENTER[i-1], b=CENTER[i], seg=(CLEN[i]-CLEN[i-1])||1, t=(s-CLEN[i-1])/seg;
+  var dx=b[0]-a[0], dy=b[1]-a[1], L=Math.sqrt(dx*dx+dy*dy)||1;
+  return {x:a[0]+dx*t, y:a[1]+dy*t, tx:dx/L, ty:dy/L};
+}
+function caseCenter(i){ return atLen((i+0.5)*CTOTAL/NCASE); }
+function boundary(j){ var p=atLen(j*CTOTAL/NCASE); return {x:p.x,y:p.y,nx:-p.ty,ny:p.tx}; }
+function cellOf(s){ var c=caseCenter(s); return {cx:c.x, cy:c.y, x:c.x, y:c.y}; }
 
 function initBoard(){
+  initPath();
   var cv=$("board"); cv.width=boardW*SCALE; cv.height=boardH*SCALE; bctx=cv.getContext("2d");
+  bctx.imageSmoothingEnabled=false;
   boardStatic=document.createElement("canvas"); boardStatic.width=boardW*SCALE; boardStatic.height=boardH*SCALE;
   buildStaticBoard();
-}
-function cellOf(s){
-  var row=Math.floor(s/COLS), idx=s%COLS;
-  var col=(row%2===0)? idx : (COLS-1-idx);
-  var x=SIDE+col*COLW, y=TOPPAD+(ROWS-1-row)*ROWH;
-  return {x:x, y:y, cx:x+COLW/2, cy:y+ROWH/2};
 }
 function roundRect(ctx,x,y,w,h,r,fill,stroke){
   ctx.beginPath(); ctx.moveTo(x+r,y);
@@ -698,126 +736,238 @@ function roundRect(ctx,x,y,w,h,r,fill,stroke){
 // PRNG déterministe pour un décor stable
 function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 
-// Le décor (statique) est peint une seule fois hors-écran.
+// Le décor (statique) est peint une seule fois hors-écran, couche par couche.
 function buildStaticBoard(){
   var ctx=boardStatic.getContext("2d");
-  var rng=mulberry32(20260810);
   ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,boardW*SCALE,boardH*SCALE);
-  ctx.setTransform(SCALE,0,0,SCALE,0,0);
+  ctx.setTransform(SCALE,0,0,SCALE,0,0); ctx.imageSmoothingEnabled=false;
+  paintGrass(ctx);          // herbe + dithering
+  paintGround(ctx);         // mares, sable, neige
+  drawScenery(ctx);         // arbres et props (sans animaux ni panneaux)
+  drawExitGate(ctx);        // portail de sortie en bois (haut) — dessiné sous les cases
+  drawPathAndTiles(ctx);    // chemin serpentin + cases (trapèzes) + numéros
+  drawZooBottom(ctx);       // entrée ZOO / DÉPART
+}
 
-  // --- fond herbe ---
-  var g=ctx.createLinearGradient(0,0,0,boardH);
-  g.addColorStop(0,"#5aa64f"); g.addColorStop(.45,"#3f8f45"); g.addColorStop(1,"#357a3a");
-  ctx.fillStyle=g; ctx.fillRect(0,0,boardW,boardH);
-  // texture herbe
-  for(var i=0;i<520;i++){ var x=rng()*boardW, y=rng()*boardH; ctx.fillStyle=rng()<.5?"rgba(255,255,255,.05)":"rgba(0,0,0,.06)"; ctx.fillRect(x,y,2,2); }
-
-  // --- plans d'eau / patchs de sol par zone ---
-  DECO.pond(ctx, 30, cellOf(6).cy, 20, 12);
-  DECO.pond(ctx, boardW-30, cellOf(15).cy, 18, 11);
-  ctx.fillStyle="rgba(226,205,120,.35)"; ELL(ctx, 34, cellOf(13).cy+18, 30, 16, "rgba(226,205,120,.30)"); // sable savane
-  ctx.fillStyle="#dff2fb"; ELL(ctx, 32, cellOf(35).cy, 34, 20, "rgba(215,238,250,.55)"); // neige polaire
-  DECO.pond(ctx, boardW-32, cellOf(37).cy, 20, 12);
-
-  // --- forêt sur tout le pourtour ---
-  function edgeTree(x,y){ var t=rng(); if(t<.5) DECO.tree(ctx,x,y,1.4); else if(t<.75) DECO.pine(ctx,x,y,1.2); else DECO.tree(ctx,x,y,1.1); }
-  for(var yy=TOPPAD-30; yy<boardH-40; yy+=34){
-    edgeTree(8+rng()*10, yy+rng()*10);
-    edgeTree(boardW-8-rng()*10, yy+rng()*10);
+/* ---------- fond ---------- */
+function paintGrass(ctx){
+  var rng=mulberry32(7);
+  ctx.fillStyle="#4a8f3c"; ctx.fillRect(0,0,boardW,boardH);
+  for(var y=0;y<boardH;y+=4) for(var x=0;x<boardW;x+=4){
+    var r=rng();
+    if(r<0.16){ ctx.fillStyle="#6ab04c"; ctx.fillRect(x,y,2,2); }
+    else if(r<0.30){ ctx.fillStyle="#2d6b25"; ctx.fillRect(x+2,y+2,2,2); }
   }
-  // frange d'arbres tout en haut (derrière le portail)
-  for(var xx=14; xx<boardW-10; xx+=26){ DECO.tree(ctx, xx+rng()*8, 26+rng()*10, 1.3); }
+}
+function paintGround(ctx){
+  DECO.pond(ctx, 28, laneY(2)+20, 18, 11);
+  DECO.pond(ctx, boardW-26, laneY(4)-4, 20, 12);
+  DECO.pond(ctx, 24, laneY(5)+24, 15, 9);
+  ELL(ctx, boardW-30, laneY(5)+6, 30, 18, "rgba(214,240,251,.65)"); // neige
+  ELL(ctx, 30, laneY(1)+4, 26, 15, "rgba(226,205,120,.40)");        // sable
+}
 
-  // --- décor thématique par zone + panneaux ---
-  DECO.acacia(ctx, boardW-40, cellOf(14).cy-6, 1.5);
-  DECO.acacia(ctx, 46, cellOf(19).cy, 1.2);
-  DECO.bamboo(ctx, boardW-42, cellOf(24).cy, 1.3); DECO.bamboo(ctx, 44, cellOf(27).cy, 1.2);
-  DECO.palm(ctx, boardW-38, cellOf(22).cy-8, 1.5);
-  DECO.ice(ctx, 40, cellOf(33).cy, 1.4); DECO.ice(ctx, boardW-40, cellOf(40).cy, 1.2);
-  DECO.fountain(ctx, boardW-40, cellOf(46).cy, 1.3);
-  DECO.fence(ctx, cellOf(0).cx-6, cellOf(0).cy-26, 130, 1.2);
-
-  // bancs, lampadaires, buissons, fleurs (semés)
-  DECO.bench(ctx, boardW-40, cellOf(43).cy+16, 1.2);
-  DECO.bench(ctx, 40, cellOf(9).cy, 1.1);
-  DECO.lamp(ctx, boardW-16, cellOf(48).cy+10, 1.1);
-  DECO.lamp(ctx, 18, cellOf(2).cy+6, 1.1);
-  var flowerCols=["#e0574a","#f2c14e","#ec78ac","#8b5cf6","#ffffff"];
-  for(var f=0; f<70; f++){
-    var fx, side=rng()<.5;
-    fx = side ? (6+rng()*(SIDE-14)) : (boardW-6-rng()*(SIDE-14));
-    var fy=TOPPAD+rng()*(ROWS*ROWH);
-    if(rng()<.5) DECO.flower(ctx, fx, fy, flowerCols[(rng()*flowerCols.length)|0]);
-    else DECO.tuft(ctx, fx, fy, 1);
+/* ---------- décor & animaux ---------- */
+function A(ctx,id,cx,cy){                    // grand animal pixel art (u=3 → 48px)
+  ELL(ctx, cx, cy+20, 18, 6, "rgba(20,16,30,.22)");
+  SPRITES.animal(ctx, id, Math.round(cx-24), Math.round(cy-24), 3);
+}
+function drawScenery(ctx){
+  var rng=mulberry32(20260810);
+  function treeAt(x,y){ var t=rng(); if(t<.45)DECO.tree(ctx,x,y,1.6); else if(t<.72)DECO.tree(ctx,x,y,1.2); else DECO.pine(ctx,x,y,1.4); }
+  // forêt sur tout le pourtour
+  for(var y=Y_TOP-14; y<Y_BOT+46; y+=24){
+    treeAt(9+rng()*8, y+rng()*8);
+    treeAt(boardW-9-rng()*8, y+rng()*8);
   }
-  for(var bsh=0; bsh<16; bsh++){
-    var bx = rng()<.5 ? (14+rng()*(SIDE-20)) : (boardW-14-rng()*(SIDE-20));
-    DECO.bush(ctx, bx, TOPPAD+20+rng()*(ROWS*ROWH-40), 1+rng()*0.4);
+  // buissons / fleurs / touffes semés dans les marges (densité élevée)
+  var fc=["#e0574a","#f2c14e","#ec78ac","#8b5cf6","#ffffff"];
+  for(var i=0;i<120;i++){
+    var left=rng()<.5, x= left ? (5+rng()*46) : (boardW-5-rng()*46);
+    var yy=Y_TOP-8+rng()*(Y_BOT-Y_TOP+52);
+    var r=rng();
+    if(r<.45) DECO.flower(ctx,x,yy,fc[(rng()*fc.length)|0]);
+    else if(r<.78) DECO.tuft(ctx,x,yy,1);
+    else DECO.bush(ctx,x,yy,1+rng()*0.4);
   }
-  DECO.rock(ctx, boardW-46, cellOf(40).cy-14, 1.4);
-  DECO.rock(ctx, 44, cellOf(30).cy, 1.2);
+  // props thématiques
+  DECO.acacia(ctx, 46, laneY(1)-6, 1.4);
+  DECO.palm(ctx, boardW-46, laneY(3)-8, 1.5);
+  DECO.bamboo(ctx, boardW-48, laneY(2)+6, 1.3);
+  DECO.bamboo(ctx, 48, laneY(2)-8, 1.1);
+  DECO.ice(ctx, boardW-40, laneY(5)+2, 1.3);
+  DECO.ice(ctx, 40, laneY(5)-10, 1.1);
+  DECO.rock(ctx, 48, laneY(4)+10, 1.3);
+  DECO.rock(ctx, boardW-48, laneY(1)+6, 1.2);
+  DECO.fence(ctx, LANE_XL-8, Y_BOT-2, 120, 1.1);
+  DECO.bench(ctx, 40, laneY(0)+10, 1.1);
+  DECO.lamp(ctx, boardW-14, laneY(6)+6, 1.1);
+  DECO.lamp(ctx, 16, laneY(0)+16, 1.1);
+  // (animaux latéraux et panneaux de zone retirés à la demande)
+}
 
-  // --- grands animaux décoratifs (emojis HD, dans les marges) ---
-  function bigAnimal(id,cx,cy){
-    ctx.save(); ctx.shadowColor="rgba(0,0,0,.25)"; ctx.shadowBlur=3; ctx.shadowOffsetY=2;
-    drawEmoji(ctx, EMOJI[id], cx, cy, 46); ctx.restore();
+/* ---------- chemin serpentin + cases ---------- */
+function ribbon(ctx,B,half,color){
+  ctx.beginPath();
+  ctx.moveTo(B[0].x+B[0].nx*half, B[0].y+B[0].ny*half);
+  for(var j=1;j<B.length;j++) ctx.lineTo(B[j].x+B[j].nx*half, B[j].y+B[j].ny*half);
+  for(var k=B.length-1;k>=0;k--) ctx.lineTo(B[k].x-B[k].nx*half, B[k].y-B[k].ny*half);
+  ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+}
+function fillQuad(ctx,q,color){
+  ctx.beginPath(); ctx.moveTo(q[0][0],q[0][1]);
+  for(var i=1;i<q.length;i++) ctx.lineTo(q[i][0],q[i][1]);
+  ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+}
+function specialVisual(type){
+  if(type==="piege")   return {kind:"red",  col:"#c0392b", label:"-3"};
+  if(type==="tornade") return {kind:"red",  col:"#c0392b", label:"-2"};
+  if(type==="toboggan")return {kind:"blue", col:"#2980b9", label:"+4"};
+  if(type==="banane"||type==="ressort"||type==="cadeau") return {kind:"blue", col:"#2980b9", label:"+"};
+  return {kind:"star"};                       // gardien, defi, duel, mystere
+}
+function drawNumber(ctx,i,c,color){
+  var ang=Math.atan2(c.ty,c.tx);
+  if(ang>Math.PI/2) ang-=Math.PI; if(ang<-Math.PI/2) ang+=Math.PI;
+  ang=Math.max(-0.5,Math.min(0.5,ang));
+  ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(ang);
+  ctx.fillStyle=color||"#3d2b1f"; ctx.font="bold 15px monospace";
+  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(String(i),0,0);
+  ctx.restore();
+}
+function drawPathAndTiles(ctx){
+  var B=[]; for(var j=0;j<=NCASE;j++) B.push(boundary(j));
+  // bordure de pierre puis route sable
+  ribbon(ctx,B,HW+STONE,"#5c5c64");
+  ribbon(ctx,B,HW+STONE-2,"#8a8a92");
+  ribbon(ctx,B,HW,"#e8d5a8");
+  // texture de dalles (dithering léger sur la route)
+  var rng=mulberry32(99);
+  for(var t=0;t<900;t++){
+    var s=rng()*CTOTAL, p=atLen(s), off=(rng()*2-1)*HW*0.9;
+    var px=p.x-p.ty*off, py=p.y+p.tx*off;
+    ctx.fillStyle=rng()<.5?"rgba(180,150,95,.35)":"rgba(255,244,210,.35)";
+    ctx.fillRect(px|0,py|0,2,2);
   }
-  var LX=34, RX=boardW-34;
-  bigAnimal("lion",     LX, cellOf(11).cy);
-  bigAnimal("girafe",   RX, cellOf(17).cy);
-  bigAnimal("singe",    LX, cellOf(23).cy);
-  bigAnimal("panda",    RX, cellOf(27).cy);
-  bigAnimal("manchot",  LX, cellOf(34).cy);
-  bigAnimal("elephant", RX, cellOf(32).cy);
-  bigAnimal("crocodile",RX, cellOf(38).cy);
-  bigAnimal("flamant",  LX, cellOf(44).cy);
-
-  // panneaux de zone
-  DECO.sign(ctx, RX, cellOf(4).cy, "Les enclos");
-  DECO.sign(ctx, LX, cellOf(15).cy+20, "La savane");
-  DECO.sign(ctx, RX, cellOf(21).cy, "La serre");
-  DECO.sign(ctx, LX, cellOf(31).cy, "Le bassin");
-  DECO.sign(ctx, RX, cellOf(43).cy, "L'esplanade");
-
-  // --- portail LIBERTÉ (haut) et entrée du ZOO (bas) ---
-  DECO.gate(ctx, boardW/2, 48, 1.5);
-  DECO.zoo(ctx, boardW/2, boardH-BOTPAD+30, 1.5);
-  ctx.fillStyle="#f3ead2"; ctx.font="bold 12px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText("DÉPART", boardW/2, boardH-BOTPAD+92);
-
-  // --- chemin (liens en pierre) ---
-  for(var s=0;s<BOARD;s++){
-    var a=cellOf(s), b=cellOf(s+1);
-    linkSeg(ctx,a.cx,a.cy,b.cx,b.cy,13,"#6f7a63");   // bordure
-    linkSeg(ctx,a.cx,a.cy,b.cx,b.cy,10,"#d9c79a");   // remplissage
-  }
-
-  // --- cases ---
-  for(var s2=0;s2<=BOARD;s2++){
-    var c=cellOf(s2);
-    var tw=COLW-14, th=ROWH-18, tx=c.cx-tw/2, ty=c.cy-th/2;
-    // ombre
-    roundRect(ctx, tx+2, ty+3, tw, th, 8, "rgba(0,0,0,.22)", null);
-    // bordure pierre + remplissage sable
-    roundRect(ctx, tx, ty, tw, th, 8, "#7c8168", null);
-    roundRect(ctx, tx+2, ty+2, tw-4, th-4, 6, "#ecdcae", null);
-    roundRect(ctx, tx+2, ty+2, tw-4, (th-4)/2, 6, "#f5ecc9", null);
-    // numéro
-    ctx.fillStyle="#4a3a1c"; ctx.font="bold 17px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
-    ctx.fillText(String(s2), c.cx, c.cy+1);
-    // marqueurs
-    if(s2===BOARD){ roundRect(ctx,tx+2,ty+2,tw-4,th-4,6,"#f2c14e",null); ctx.fillStyle="#4a3a1c"; ctx.fillText("50",c.cx,c.cy+1); DECO.star(ctx,c.cx+tw/2-8,ty+8,6,"#fff2b0"); }
-    else if(OBSTACLES[s2]){ DECO.rockPile(ctx, c.cx, c.cy-2, 1.1); }
-    else if(SPECIALS[s2]){ DECO.star(ctx, c.cx+tw/2-8, ty+9, 7, "#ffd94a"); }
-    if(s2===0){ ctx.fillStyle="#2c7a3a"; ctx.font="bold 8px monospace"; ctx.fillText("★",c.cx-tw/2+8,ty+9); }
+  // cases
+  for(var i=0;i<NCASE;i++){
+    var b0=B[i], b1=B[i+1];
+    var quad=[[b0.x+b0.nx*HW,b0.y+b0.ny*HW],[b1.x+b1.nx*HW,b1.y+b1.ny*HW],
+              [b1.x-b1.nx*HW,b1.y-b1.ny*HW],[b0.x-b0.nx*HW,b0.y-b0.ny*HW]];
+    var kind=null, col=null, lab=null;
+    if(i>0 && i<50){
+      if(OBSTACLES[i]) kind="rock";
+      else if(SPECIALS[i]){ var v=specialVisual(SPECIALS[i]); kind=v.kind; col=v.col; lab=v.label; }
+    }
+    if(kind==="red"||kind==="blue") fillQuad(ctx,quad,col);
+    // séparateur (bord entre case i et i+1)
+    ctx.strokeStyle="rgba(90,70,40,.55)"; ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(b1.x+b1.nx*HW,b1.y+b1.ny*HW); ctx.lineTo(b1.x-b1.nx*HW,b1.y-b1.ny*HW); ctx.stroke();
+    var c=caseCenter(i);
+    if(kind==="rock") DECO.rockPile(ctx, c.x, c.y, 1.15);
+    if(kind==="star") DECO.star(ctx, c.x, c.y, 10, "#ffd94a");
+    var numCol=(kind==="red"||kind==="blue")?"#ffffff":(kind==="star"?"#5a3d10":"#3d2b1f");
+    drawNumber(ctx, i, c, numCol);
+    if(lab){ ctx.fillStyle=(kind==="red")?"#ffd7d1":"#d6ecff"; ctx.font="bold 8px monospace";
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText(lab, c.x - c.ty*13, c.y + c.tx*13); }
   }
 }
 
-// Segment de chemin (capsule) entre deux centres, axes alignés.
-function linkSeg(ctx,x1,y1,x2,y2,half,color){
-  var minx=Math.min(x1,x2)-half, miny=Math.min(y1,y2)-half;
-  var w=Math.abs(x2-x1)+2*half, h=Math.abs(y2-y1)+2*half;
-  roundRect(ctx,minx,miny,w,h,half,color,null);
+/* ---------- portails & panneaux ---------- */
+// Portail de sortie « LIBERTÉ » : grande grille en bois à deux battants,
+// encadrée de grands arbres (inspiré de la photo fournie), en pixel art.
+function drawExitGate(ctx){
+  var cx=boardW/2;
+  // grands arbres derrière le portail
+  DECO.tree(ctx, 42, 52, 3.2);
+  DECO.tree(ctx, boardW-42, 46, 3.7);
+  DECO.tree(ctx, 96, 34, 2.0);
+  DECO.tree(ctx, boardW-96, 30, 2.2);
+  // sol sable au pied du portail (chemin qui passe dessous)
+  ELL(ctx, cx, 104, 94, 15, "#e8d5a8");
+  ELL(ctx, cx, 104, 70, 10, "#f0e2bc");
+  // poteaux en bois
+  gatePost(ctx, 100, 28, 84);
+  gatePost(ctx, boardW-100, 28, 84);
+  // deux battants
+  var gy=40, gh=60;
+  gateLeaf(ctx, 112, gy, cx-2-112, gh, +1);
+  gateLeaf(ctx, cx+2, gy, (boardW-112)-(cx+2), gh, -1);
+  // ferrures + cadenas doré au centre
+  ctx.fillStyle="#2f2f37"; ctx.fillRect(cx-16, gy+14, 12, 5); ctx.fillRect(cx+4, gy+14, 12, 5);
+  ctx.fillStyle="#2f2f37"; ctx.fillRect(cx-16, gy+34, 12, 5); ctx.fillRect(cx+4, gy+34, 12, 5);
+  gatePadlock(ctx, cx, gy+28);
+  // bannière LIBERTÉ
+  ctx.fillStyle="#7a1f1f"; ctx.fillRect(cx-54, 4, 108, 16);
+  ctx.fillStyle="#5a1414"; ctx.fillRect(cx-54,20,5,5); ctx.fillRect(cx+49,20,5,5);
+  ctx.fillStyle="#f2c14e"; ctx.font="bold 12px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("LIBERTÉ !", cx, 12);
+  // végétation à la base des poteaux
+  DECO.bush(ctx, 104, 112, 1.4); DECO.bush(ctx, boardW-104, 112, 1.4);
+  DECO.tuft(ctx, 118, 114, 1.2); DECO.tuft(ctx, boardW-118, 114, 1.2);
+}
+function gatePost(ctx,x,y,h){
+  ctx.fillStyle="#5f3a16"; ctx.fillRect(x-8,y,16,h);
+  ctx.fillStyle="#8a5a2b"; ctx.fillRect(x-6,y,9,h);
+  ctx.fillStyle="#a06a37"; ctx.fillRect(x-6,y,3,h);           // reflet
+  ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(x-8+0.5,y+0.5,16,h);
+  CIR(ctx,x,y-1,6,"#8a5a2b"); CIR(ctx,x-2,y-2,2,"#a06a37");   // boule (finial)
+  ctx.strokeStyle="#3a2410"; ctx.beginPath(); ctx.arc(x,y-1,6,0,6.2832); ctx.stroke();
+  ctx.fillStyle="#6b6b73"; ctx.fillRect(x-9,y+24,18,6);       // ferrure métallique
+  ctx.fillStyle="#4a4a52"; ctx.fillRect(x-9,y+24,18,2);
+}
+function gateLeaf(ctx,x,y,w,h,dir){
+  ctx.fillStyle="#7a4a24"; ctx.fillRect(x,y,w,h);             // fond
+  ctx.fillStyle="#b07b3e";                                    // barreaux verticaux
+  for(var bx=x+4; bx<x+w-3; bx+=8){ ctx.fillRect(bx,y,3,h); }
+  ctx.fillStyle="#8a5a2b"; ctx.fillRect(x,y+3,w,6); ctx.fillRect(x,y+h-11,w,6); // rails
+  ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=5;                 // diagonale
+  ctx.beginPath();
+  if(dir>0){ ctx.moveTo(x+3,y+h-4); ctx.lineTo(x+w-3,y+7); }
+  else { ctx.moveTo(x+w-3,y+h-4); ctx.lineTo(x+3,y+7); }
+  ctx.stroke();
+  ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1);
+}
+function gatePadlock(ctx,x,y){
+  ctx.strokeStyle="#c9c9d1"; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y-1,5,Math.PI,0); ctx.stroke();
+  ctx.fillStyle="#e0c04a"; ctx.fillRect(x-8,y+3,16,13);
+  ctx.fillStyle="#f2d876"; ctx.fillRect(x-8,y+3,16,3);
+  ctx.fillStyle="#c9971f"; ctx.fillRect(x-8,y+13,16,3);
+  ctx.fillStyle="#3a2f10"; ctx.fillRect(x-1,y+7,3,5);
+}
+function drawZooBottom(ctx){
+  DECO.zoo(ctx, boardW/2, Y_BOT+52, 1.5);
+  ctx.fillStyle="#f3ead2"; ctx.font="bold 11px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("DÉPART", boardW/2, Y_BOT+112);
+}
+function panel(ctx,x,y,w,h){
+  ctx.fillStyle="#5a3618"; ctx.fillRect(x-2,y-2,w+4,h+4);
+  ctx.fillStyle="#8b5a2b"; ctx.fillRect(x,y,w,h);
+  ctx.fillStyle="#c98f57"; ctx.fillRect(x+3,y+3,w-6,h-6);
+  ctx.fillStyle="#6b4423"; ctx.fillRect(x+3,y+3,w-6,2);
+}
+function drawLegend(ctx,x,y){
+  panel(ctx,x,y,150,110);
+  ctx.fillStyle="#3a2410"; ctx.font="bold 12px monospace"; ctx.textAlign="left"; ctx.textBaseline="middle";
+  ctx.fillText("RÈGLES", x+12, y+16);
+  var ly=y+38;
+  // flèche verte
+  ctx.fillStyle="#2c8342"; tri(ctx,x+14,ly,5,-1); ctx.fillStyle="#3a2410"; ctx.font="9px monospace";
+  ctx.fillText("Bonne réponse : avance", x+26, ly);
+  ly+=22; ctx.fillStyle="#c0392b"; tri(ctx,x+14,ly,5,1); ctx.fillStyle="#3a2410"; ctx.fillText("Mauvaise : recule", x+26, ly);
+  ly+=22; DECO.star(ctx,x+14,ly,6,"#ffd94a"); ctx.fillStyle="#3a2410"; ctx.fillText("Case spéciale", x+26, ly);
+  ly+=22; DECO.rock(ctx,x+14,ly,0.8); ctx.fillStyle="#3a2410"; ctx.fillText("Obstacle", x+26, ly);
+}
+function tri(ctx,x,y,r,dir){ ctx.beginPath(); ctx.moveTo(x-r,y-dir*r); ctx.lineTo(x+r,y-dir*r); ctx.lineTo(x,y+dir*r); ctx.closePath(); ctx.fill(); }
+function drawOwl(ctx,x,y){
+  panel(ctx,x,y,86,110);
+  SPRITES.animal(ctx,"hibou", x+43-16, y+8, 2);
+  ctx.fillStyle="#3a2410"; ctx.font="bold 10px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("APPRENDS", x+43, y+56);
+  ctx.fillText("JOUE", x+43, y+72);
+  ctx.fillText("T'ÉCHAPPE !", x+43, y+88);
 }
 
 function drawBoard(){
@@ -831,15 +981,15 @@ function drawBoard(){
     var byCell={};
     G.players.forEach(function(p,i){ (byCell[p.pos]=byCell[p.pos]||[]).push(i); });
     Object.keys(byCell).forEach(function(pos){
-      var occ=byCell[pos], c=cellOf(+pos);
+      var occ=byCell[pos], c=cellOf(+pos), u=2, sz=16*u;   // pions pixel art
       occ.forEach(function(pi,k){
-        var p=G.players[pi], sz=30;
+        var p=G.players[pi];
         var dx=(occ.length>1)?((k%2)?10:-10):0;
-        var dy=(occ.length>2)?((k<2)?-8:8):0;
-        var cx=c.cx+dx, cy=c.cy+dy-2;
-        ELL(bctx, cx, cy+sz*0.42, sz*0.36, sz*0.15, "rgba(0,0,0,.30)");  // ombre
-        if(pi===0){ DECO.star(bctx, cx, cy-sz*0.55, 6, "#ffd94a"); }     // marqueur "toi"
-        drawEmoji(bctx, EMOJI[p.animalId], cx, cy, sz);
+        var dy=(occ.length>2)?((k<2)?-7:7):0;
+        var cx=c.cx+dx, cy=c.cy+dy-4;
+        ELL(bctx, cx, cy+sz*0.42, sz*0.34, sz*0.15, "rgba(0,0,0,.32)");   // ombre
+        if(pi===0){ DECO.star(bctx, cx, cy-sz*0.5, 5, "#ffd94a"); }        // marqueur "toi"
+        SPRITES.animal(bctx, p.animalId, Math.round(cx-sz/2), Math.round(cy-sz/2), u);
       });
     });
   }
