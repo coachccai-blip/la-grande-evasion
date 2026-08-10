@@ -54,10 +54,14 @@ plus grand nombre de questions possible (écran *versus* avec les deux emojis fa
 à face et les scores en direct). Le bot répond **plus ou moins vite selon la
 difficulté** choisie. Le **gagnant avance de 6 cases**, le **perdant recule de 6**.
 
-**Collection :** gagner libère ton animal pour la combinaison
-*matière · thème · difficulté* jouée (coche verte). Le vrai défi est de libérer
-**tous les animaux, dans toutes les matières, tous les thèmes et toutes les
-difficultés** — de quoi jouer très longtemps !
+**Collection & progression :** sur la carte de sélection, chaque animal affiche
+son statut pour la combinaison *matière · thème · difficulté* choisie :
+- **🔒 enfermé** : tu as tenté mais pas encore gagné (l'animal est grisé) ;
+- **✓ libéré** (coche verte) : tu as gagné → il est libre !
+
+Gagner transforme le 🔒 en ✓. Le vrai défi est de libérer **tous les animaux,
+dans toutes les matières, tous les thèmes et toutes les difficultés** — de quoi
+jouer très longtemps !
 
 L'onglet **Historique** conserve toutes les questions jouées (avec la bonne
 réponse mise en évidence) pour servir de carnet de révision. Les pastilles

@@ -139,11 +139,15 @@
   }
   .animal-card .nm{font-size:12px; font-weight:700; margin-top:4px;}
   .animal-card .mission{
-    position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%;
-    background:var(--ok); color:#fff; font-size:13px; line-height:20px; font-weight:900;
-    display:none; box-shadow:0 2px 4px rgba(0,0,0,.4);
+    position:absolute; top:5px; right:5px; width:22px; height:22px; border-radius:50%;
+    font-size:13px; line-height:22px; text-align:center; font-weight:900;
+    display:none; box-shadow:0 2px 4px rgba(40,50,25,.25);
   }
-  .animal-card.done .mission{display:block;}
+  .animal-card.done .mission{display:block; background:var(--ok); color:#fff;}
+  .animal-card.jailed .mission{display:block; background:#eaeef0; font-size:12px; box-shadow:0 1px 3px rgba(40,50,25,.2);}
+  .animal-card.jailed{border-color:#cdd6cf;}
+  .animal-card.jailed .emoji{filter:grayscale(.4) opacity(.85);}
+  .animal-card.done{border-color:var(--ok2);}
   .trait-box{
     min-height:40px; margin:14px 2px 6px; padding:10px 12px; border-radius:12px;
     background:var(--panel); border:1px dashed var(--line); font-size:13px; color:var(--ink-soft);
@@ -643,13 +647,13 @@ function zoneOf(s){ if(s<=0) return 0; return Math.min(4, Math.floor((s-1)/10));
 
 /* --------------------------- Sauvegarde ---------------------------- */
 var SAVE_KEY = "lge_save_v1";
-var store = {history:[], missions:{}, game:null, seen:{}, seenN:0};
+var store = {history:[], missions:{}, game:null, seen:{}, seenN:0, attempts:{}};
 function loadSave(){
   try{
     var raw = localStorage.getItem(SAVE_KEY);
     if(raw){ var o = JSON.parse(raw);
       store.history = o.history||[]; store.missions = o.missions||{}; store.game = o.game||null;
-      store.seen = o.seen||{}; store.seenN = o.seenN||0; }
+      store.seen = o.seen||{}; store.seenN = o.seenN||0; store.attempts = o.attempts||{}; }
   }catch(e){ /* repli silencieux si localStorage indisponible (§12) */ }
 }
 function persist(){
@@ -892,12 +896,17 @@ function buildSelect(){
   var grid=$("animalGrid"); grid.innerHTML="";
   var ready = setup.cat && setup.sub && setup.diff;
   ANIMAUX.forEach(function(a){
-    var doneHere = ready && store.missions[missionKey(a.id, setup.cat, setup.sub, setup.diff)];
+    var key=missionKey(a.id, setup.cat, setup.sub, setup.diff);
+    var freed = ready && store.missions[key];                         // libéré (gagné)
+    var jailed = ready && !freed && store.attempts && store.attempts[key]; // enfermé (joué, pas gagné)
     var card=document.createElement("div");
-    card.className="animal-card"+(doneHere?" done":"")+(selectedAnimal===a.id?" selected":"");
+    card.className="animal-card"+(freed?" done":"")+(jailed?" jailed":"")+(selectedAnimal===a.id?" selected":"");
     card.appendChild(animalEl(a.id));
     var nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.name; card.appendChild(nm);
-    var m=document.createElement("div"); m.className="mission"; m.textContent="✓"; card.appendChild(m);
+    var m=document.createElement("div"); m.className="mission";
+    m.textContent = freed ? "✓" : (jailed ? "🔒" : "");
+    m.title = freed ? "Libéré ici ✓" : (jailed ? "Enfermé — gagne pour le libérer" : "");
+    card.appendChild(m);
     card.onclick=function(){ Sound.click(); selectAnimal(a.id); };
     grid.appendChild(card);
   });
@@ -905,9 +914,12 @@ function buildSelect(){
 function selectAnimal(id){
   selectedAnimal=id; buildSelect();
   var a=animalById(id);
-  var done = store.missions[missionKey(id, setup.cat, setup.sub, setup.diff)];
+  var key=missionKey(id, setup.cat, setup.sub, setup.diff);
+  var done = store.missions[key];
+  var jailed = !done && store.attempts && store.attempts[key];
   $("traitBox").innerHTML = "<b>"+a.name+"</b> — "+a.trait +
-    (done ? " <span style='color:var(--ok2)'>(déjà libéré ici ✓)</span>" : "");
+    (done ? " <span style='color:var(--ok2)'>(déjà libéré ici ✓)</span>"
+          : (jailed ? " <span style='color:var(--ink-soft)'>(enfermé 🔒 — gagne pour le libérer)</span>" : ""));
   refreshLocks();
 }
 function refreshLocks(){
@@ -1834,6 +1846,9 @@ function finishGame(playerWon, winnerIndex){
   G.over=true; busy=false; $("rollBtn").disabled=true;
   var winner=G.players[winnerIndex];
   var a=animalById(winner.animalId);
+  // mémorise la tentative pour L'ANIMAL DU JOUEUR (gagnée ou perdue) → 🔒 enfermé / ✓ libéré
+  var myKey=missionKey(G.players[0].animalId, G.setup.cat, G.setup.sub, G.setup.diffKey);
+  store.attempts=store.attempts||{}; store.attempts[myKey]=true;
   if(playerWon){
     store.missions[missionKey(a.id, G.setup.cat, G.setup.sub, G.setup.diffKey)]=true;   // RG14
     Sound.win();
@@ -1852,7 +1867,10 @@ function finishGame(playerWon, winnerIndex){
     updateMissionProgress(); buildSetup();
   } else {
     title.textContent="Presque !"; title.className="lose";
-    $("endMsg").textContent=a.name+" s'est échappé avant toi. Tente une revanche !";
+    var mine=animalById(G.players[0].animalId);
+    $("endMsg").innerHTML=a.name+" s'est échappé avant toi. "+mine.name+" reste enfermé 🔒<br>"+
+      "<span style='font-size:12px;color:var(--ink-soft)'>Gagne pour le libérer !</span>";
+    buildSetup();   // rafraîchit les cartes (badge 🔒 enfermé)
   }
   $("endScreen").classList.add("show");
 }
