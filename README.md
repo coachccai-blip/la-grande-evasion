@@ -63,6 +63,27 @@ fichier audio), et fonctionnent hors-ligne. Le dé s'accompagne d'un petit
 jingle de loterie avant de s'arrêter sur le chiffre. Le bouton 🔊 / 🔇 en haut à
 droite coupe ou réactive le son (la préférence est mémorisée).
 
+## 📲 Installer l'application (PWA)
+
+L'application est une **PWA** : une fois installée, elle se lance **en plein
+écran, en dehors du navigateur**, comme une vraie application, et fonctionne
+**hors-ligne** (toutes les ressources sont mises en cache par un *service
+worker*).
+
+- **Android / Chrome** : ouvre le site, puis touche **📲 Installer** (en haut à
+  droite) ou le menu ⋮ → *Ajouter à l'écran d'accueil*.
+- **iPhone / iPad (Safari)** : bouton *Partager* → *Sur l'écran d'accueil*.
+- **Ordinateur (Chrome/Edge)** : icône d'installation dans la barre d'adresse,
+  ou le bouton **📲**.
+
+> ⚠️ L'installation nécessite une adresse **HTTPS** (l'URL Netlify convient).
+> En ouvrant simplement le fichier `index.html` (`file://`), l'app fonctionne
+> mais ne peut pas être installée.
+
+L'icône de l'application se trouve dans `assets/` (`icon-512.png`,
+`icon-192.png`, `apple-touch-icon.png`) et peut être remplacée par votre propre
+logo (mêmes noms, mêmes dimensions).
+
 ## 📁 Structure du projet
 
 | Fichier        | Rôle |
@@ -71,6 +92,9 @@ droite coupe ou réactive le son (la préférence est mémorisée).
 | `questions.js` | **Générateur** de questions (banques de mots + moteur de conjugaison). |
 | `animaux.js`   | Les 10 animaux : nom, trait de caractère et répliques de libération. |
 | `sprites.js`   | Décor du plateau dessiné de façon procédurale (les animaux sont des emojis HD). |
+| `manifest.webmanifest` | Manifeste PWA (nom, icônes, lancement autonome plein écran). |
+| `sw.js`        | *Service worker* : mise en cache pour un fonctionnement hors-ligne. |
+| `assets/`      | Icônes de l'application (logo). |
 
 ## ✏️ Enrichir les questions
 
