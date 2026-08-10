@@ -462,99 +462,209 @@ function updateMissionProgress(){
 /* ==================================================================== */
 /*                          PLATEAU (canvas)                            */
 /* ==================================================================== */
-var COLS=5, ROWS=11, COLW=54, ROWH=44, TOP=8;
-var boardW=COLS*COLW, boardH=ROWS*ROWH+TOP*2;
-var bctx=null;
+var COLS=5, ROWS=11, COLW=64, ROWH=64, SIDE=60, TOPPAD=150, BOTPAD=176;
+var boardW=SIDE*2+COLS*COLW, boardH=TOPPAD+ROWS*ROWH+BOTPAD;
+var bctx=null, boardStatic=null;
+var DECO=SPRITES.deco, ELL=SPRITES.ellipse, CIR=SPRITES.circle, RQ=SPRITES.R;
+
 function initBoard(){
   var cv=$("board"); cv.width=boardW; cv.height=boardH; bctx=cv.getContext("2d");
+  boardStatic=document.createElement("canvas"); boardStatic.width=boardW; boardStatic.height=boardH;
+  buildStaticBoard();
 }
 function cellOf(s){
   var row=Math.floor(s/COLS), idx=s%COLS;
   var col=(row%2===0)? idx : (COLS-1-idx);
-  var x=col*COLW, y=(ROWS-1-row)*ROWH+TOP;
+  var x=SIDE+col*COLW, y=TOPPAD+(ROWS-1-row)*ROWH;
   return {x:x, y:y, cx:x+COLW/2, cy:y+ROWH/2};
 }
-function drawBoard(){
-  if(!bctx) return;
-  var ctx=bctx;
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  if(fill){ ctx.fillStyle=fill; ctx.fill(); }
+  if(stroke){ ctx.strokeStyle=stroke; ctx.stroke(); }
+}
+// PRNG déterministe pour un décor stable
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+// Le décor (statique) est peint une seule fois hors-écran.
+function buildStaticBoard(){
+  var ctx=boardStatic.getContext("2d");
+  var rng=mulberry32(20260810);
   ctx.clearRect(0,0,boardW,boardH);
-  // fond dégradé nuit
-  ctx.fillStyle="#0e0a1c"; ctx.fillRect(0,0,boardW,boardH);
 
-  // bandes de zones (teinte de fond par tranche de lignes)
-  for(var s0=0;s0<=BOARD;s0++){
-    var cc=cellOf(s0), zz=ZONES[zoneOf(s0)];
-    ctx.fillStyle=zz.band; ctx.globalAlpha=0.18;
-    ctx.fillRect(cc.x, cc.y, COLW, ROWH);
-    ctx.globalAlpha=1;
+  // --- fond herbe ---
+  var g=ctx.createLinearGradient(0,0,0,boardH);
+  g.addColorStop(0,"#5aa64f"); g.addColorStop(.45,"#3f8f45"); g.addColorStop(1,"#357a3a");
+  ctx.fillStyle=g; ctx.fillRect(0,0,boardW,boardH);
+  // texture herbe
+  for(var i=0;i<520;i++){ var x=rng()*boardW, y=rng()*boardH; ctx.fillStyle=rng()<.5?"rgba(255,255,255,.05)":"rgba(0,0,0,.06)"; ctx.fillRect(x,y,2,2); }
+
+  // --- plans d'eau / patchs de sol par zone ---
+  DECO.pond(ctx, 30, cellOf(6).cy, 20, 12);
+  DECO.pond(ctx, boardW-30, cellOf(15).cy, 18, 11);
+  ctx.fillStyle="rgba(226,205,120,.35)"; ELL(ctx, 34, cellOf(13).cy+18, 30, 16, "rgba(226,205,120,.30)"); // sable savane
+  ctx.fillStyle="#dff2fb"; ELL(ctx, 32, cellOf(35).cy, 34, 20, "rgba(215,238,250,.55)"); // neige polaire
+  DECO.pond(ctx, boardW-32, cellOf(37).cy, 20, 12);
+
+  // --- forêt sur tout le pourtour ---
+  function edgeTree(x,y){ var t=rng(); if(t<.5) DECO.tree(ctx,x,y,1.4); else if(t<.75) DECO.pine(ctx,x,y,1.2); else DECO.tree(ctx,x,y,1.1); }
+  for(var yy=TOPPAD-30; yy<boardH-40; yy+=34){
+    edgeTree(8+rng()*10, yy+rng()*10);
+    edgeTree(boardW-8-rng()*10, yy+rng()*10);
   }
+  // frange d'arbres tout en haut (derrière le portail)
+  for(var xx=14; xx<boardW-10; xx+=26){ DECO.tree(ctx, xx+rng()*8, 26+rng()*10, 1.3); }
 
-  // connecteurs
-  ctx.strokeStyle="rgba(255,255,255,.08)";
+  // --- décor thématique par zone + panneaux ---
+  DECO.acacia(ctx, boardW-40, cellOf(14).cy-6, 1.5);
+  DECO.acacia(ctx, 46, cellOf(19).cy, 1.2);
+  DECO.bamboo(ctx, boardW-42, cellOf(24).cy, 1.3); DECO.bamboo(ctx, 44, cellOf(27).cy, 1.2);
+  DECO.palm(ctx, boardW-38, cellOf(22).cy-8, 1.5);
+  DECO.ice(ctx, 40, cellOf(33).cy, 1.4); DECO.ice(ctx, boardW-40, cellOf(40).cy, 1.2);
+  DECO.fountain(ctx, boardW-40, cellOf(46).cy, 1.3);
+  DECO.fence(ctx, cellOf(0).cx-6, cellOf(0).cy-26, 130, 1.2);
+
+  // bancs, lampadaires, buissons, fleurs (semés)
+  DECO.bench(ctx, boardW-40, cellOf(43).cy+16, 1.2);
+  DECO.bench(ctx, 40, cellOf(9).cy, 1.1);
+  DECO.lamp(ctx, boardW-16, cellOf(48).cy+10, 1.1);
+  DECO.lamp(ctx, 18, cellOf(2).cy+6, 1.1);
+  var flowerCols=["#e0574a","#f2c14e","#ec78ac","#8b5cf6","#ffffff"];
+  for(var f=0; f<70; f++){
+    var fx, side=rng()<.5;
+    fx = side ? (6+rng()*(SIDE-14)) : (boardW-6-rng()*(SIDE-14));
+    var fy=TOPPAD+rng()*(ROWS*ROWH);
+    if(rng()<.5) DECO.flower(ctx, fx, fy, flowerCols[(rng()*flowerCols.length)|0]);
+    else DECO.tuft(ctx, fx, fy, 1);
+  }
+  for(var bsh=0; bsh<16; bsh++){
+    var bx = rng()<.5 ? (14+rng()*(SIDE-20)) : (boardW-14-rng()*(SIDE-20));
+    DECO.bush(ctx, bx, TOPPAD+20+rng()*(ROWS*ROWH-40), 1+rng()*0.4);
+  }
+  DECO.rock(ctx, boardW-46, cellOf(40).cy-14, 1.4);
+  DECO.rock(ctx, 44, cellOf(30).cy, 1.2);
+
+  // --- grands animaux décoratifs (dans les marges) ---
+  function bigAnimal(id,cx,cy,u){ SPRITES.animal(ctx, id, cx-8*u, cy-8*u, u); }
+  var LX=34, RX=boardW-34;
+  bigAnimal("lion",     LX, cellOf(11).cy, 3);
+  bigAnimal("girafe",   RX, cellOf(17).cy, 3);
+  bigAnimal("singe",    LX, cellOf(23).cy, 3);
+  bigAnimal("panda",    RX, cellOf(27).cy, 3);
+  bigAnimal("manchot",  LX, cellOf(34).cy, 3);
+  bigAnimal("elephant", RX, cellOf(32).cy, 3);
+  bigAnimal("crocodile",RX, cellOf(38).cy, 3);
+  bigAnimal("flamant",  LX, cellOf(44).cy, 3);
+
+  // panneaux de zone
+  DECO.sign(ctx, RX, cellOf(4).cy, "Les enclos");
+  DECO.sign(ctx, LX, cellOf(15).cy+20, "La savane");
+  DECO.sign(ctx, RX, cellOf(21).cy, "La serre");
+  DECO.sign(ctx, LX, cellOf(31).cy, "Le bassin");
+  DECO.sign(ctx, RX, cellOf(43).cy, "L'esplanade");
+
+  // --- portail LIBERTÉ (haut) et entrée du ZOO (bas) ---
+  DECO.gate(ctx, boardW/2, 48, 1.5);
+  DECO.zoo(ctx, boardW/2, boardH-BOTPAD+30, 1.5);
+  ctx.fillStyle="#f3ead2"; ctx.font="bold 12px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("DÉPART", boardW/2, boardH-BOTPAD+92);
+
+  // --- chemin (liens en pierre) ---
   for(var s=0;s<BOARD;s++){
     var a=cellOf(s), b=cellOf(s+1);
-    var minx=Math.min(a.cx,b.cx), maxx=Math.max(a.cx,b.cx);
-    var miny=Math.min(a.cy,b.cy), maxy=Math.max(a.cy,b.cy);
-    ctx.fillStyle="rgba(255,255,255,.10)";
-    ctx.fillRect(minx-3, miny-3, (maxx-minx)+6, (maxy-miny)+6);
+    linkSeg(ctx,a.cx,a.cy,b.cx,b.cy,13,"#6f7a63");   // bordure
+    linkSeg(ctx,a.cx,a.cy,b.cx,b.cy,10,"#d9c79a");   // remplissage
   }
 
-  // cases
+  // --- cases ---
   for(var s2=0;s2<=BOARD;s2++){
-    var c=cellOf(s2); var z2=zoneOf(s2); var zc=ZONES[z2];
-    var tx=c.x+6, ty=c.y+5, tw=COLW-12, th=ROWH-12;
-    // tuile
-    roundRect(ctx, tx, ty, tw, th, 6, zc.tile, "rgba(0,0,0,.35)");
+    var c=cellOf(s2);
+    var tw=COLW-14, th=ROWH-18, tx=c.cx-tw/2, ty=c.cy-th/2;
+    // ombre
+    roundRect(ctx, tx+2, ty+3, tw, th, 8, "rgba(0,0,0,.22)", null);
+    // bordure pierre + remplissage sable
+    roundRect(ctx, tx, ty, tw, th, 8, "#7c8168", null);
+    roundRect(ctx, tx+2, ty+2, tw-4, th-4, 6, "#ecdcae", null);
+    roundRect(ctx, tx+2, ty+2, tw-4, (th-4)/2, 6, "#f5ecc9", null);
     // numéro
-    ctx.fillStyle="rgba(20,15,30,.75)";
-    ctx.font="bold 9px monospace"; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
-    ctx.fillText(String(s2), tx+3, ty+th-3);
-    // icône
-    if(s2===0){ SPRITES.icon(ctx,"start", tx+tw/2-8, ty+2, 1); }
-    else if(s2===BOARD){ SPRITES.icon(ctx,"portal", tx+tw/2-8, ty+2, 1); }
-    else if(OBSTACLES[s2]){ SPRITES.icon(ctx,"obstacle", tx+tw/2-8, ty+3, 1); }
-    else if(SPECIALS[s2]){ SPRITES.icon(ctx, SPECIALS[s2], tx+tw/2-8, ty+3, 1); }
+    ctx.fillStyle="#4a3a1c"; ctx.font="bold 17px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(String(s2), c.cx, c.cy+1);
+    // marqueurs
+    if(s2===BOARD){ roundRect(ctx,tx+2,ty+2,tw-4,th-4,6,"#f2c14e",null); ctx.fillStyle="#4a3a1c"; ctx.fillText("50",c.cx,c.cy+1); DECO.star(ctx,c.cx+tw/2-8,ty+8,6,"#fff2b0"); }
+    else if(OBSTACLES[s2]){ DECO.rockPile(ctx, c.cx, c.cy-2, 1.1); }
+    else if(SPECIALS[s2]){ DECO.star(ctx, c.cx+tw/2-8, ty+9, 7, "#ffd94a"); }
+    if(s2===0){ ctx.fillStyle="#2c7a3a"; ctx.font="bold 8px monospace"; ctx.fillText("★",c.cx-tw/2+8,ty+9); }
   }
 
-  // pions
+  // --- panneau RÈGLES (bas-gauche) ---
+  drawLegend(ctx, 10, boardH-150);
+  // --- panneau hibou (bas-droite) ---
+  drawOwlPanel(ctx, boardW-118, boardH-150);
+}
+
+// Segment de chemin (capsule) entre deux centres, axes alignés.
+function linkSeg(ctx,x1,y1,x2,y2,half,color){
+  var minx=Math.min(x1,x2)-half, miny=Math.min(y1,y2)-half;
+  var w=Math.abs(x2-x1)+2*half, h=Math.abs(y2-y1)+2*half;
+  roundRect(ctx,minx,miny,w,h,half,color,null);
+}
+
+function drawLegend(ctx,x,y){
+  roundRect(ctx,x,y,150,140,8,"#7a4a24",null);
+  roundRect(ctx,x+3,y+3,144,134,6,"#6b431f",null);
+  roundRect(ctx,x+6,y+6,138,128,6,"#c98f57",null);
+  ctx.fillStyle="#3a2410"; ctx.font="bold 12px monospace"; ctx.textAlign="left"; ctx.textBaseline="middle";
+  ctx.fillText("RÈGLES", x+16, y+20);
+  var ly=y+42;
+  ctx.fillStyle="#2c8342"; ctx.fillText("▲", x+16, ly); ctx.fillStyle="#3a2410"; ctx.font="10px monospace"; ctx.fillText("Bonne réponse : avance", x+30, ly);
+  ly+=26; ctx.font="bold 12px monospace"; ctx.fillStyle="#c0392b"; ctx.fillText("▼", x+16, ly); ctx.fillStyle="#3a2410"; ctx.font="10px monospace"; ctx.fillText("Mauvaise : recule", x+30, ly);
+  ly+=26; DECO.star(ctx, x+18, ly, 6, "#ffd94a"); ctx.fillStyle="#3a2410"; ctx.fillText("Case spéciale", x+30, ly);
+  ly+=26; DECO.rock(ctx, x+18, ly, 0.8); ctx.fillStyle="#3a2410"; ctx.fillText("Obstacle", x+30, ly);
+}
+function drawOwlPanel(ctx,x,y){
+  roundRect(ctx,x,y,108,140,8,"#7a4a24",null);
+  roundRect(ctx,x+4,y+4,100,132,6,"#c98f57",null);
+  SPRITES.animal(ctx,"hibou", x+34, y+14, 2.4);
+  ctx.fillStyle="#3a2410"; ctx.font="bold 11px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("APPRENDS", x+54, y+78);
+  ctx.fillText("JOUE", x+54, y+96);
+  ctx.fillText("ÉCHAPPE !", x+54, y+114);
+}
+
+function drawBoard(){
+  if(!bctx) return;
+  if(!boardStatic) buildStaticBoard();
+  bctx.clearRect(0,0,boardW,boardH);
+  bctx.drawImage(boardStatic,0,0);
   if(G){
-    // regrouper par case
     var byCell={};
     G.players.forEach(function(p,i){ (byCell[p.pos]=byCell[p.pos]||[]).push(i); });
     Object.keys(byCell).forEach(function(pos){
-      var occ=byCell[pos]; var c=cellOf(+pos);
-      occ.forEach(function(pi, k){
-        var p=G.players[pi];
-        var ox=c.cx-8 + (k%2)*10 - (occ.length>1?5:0);
-        var oy=c.cy-8 + Math.floor(k/2)*8 - (occ.length>2?4:0);
-        // ombre + marqueur joueur
-        if(pi===0){
-          ctx.fillStyle="rgba(242,193,78,.9)";
-          ctx.fillRect(ox+5, oy-4, 6, 3); // petite étoile/marqueur "toi"
-        }
-        SPRITES.animal(ctx, p.animalId, ox, oy, 1);
+      var occ=byCell[pos], c=cellOf(+pos);
+      occ.forEach(function(pi,k){
+        var p=G.players[pi], u=2, sz=16*u;
+        var dx=(occ.length>1)?((k%2)?9:-9):0;
+        var dy=(occ.length>2)?((k<2)?-7:7):0;
+        var cx=c.cx+dx, cy=c.cy+dy-4;
+        var ox=cx-sz/2, oy=cy-sz/2;
+        bctx.fillStyle="rgba(0,0,0,.28)"; ELL(bctx, cx, oy+sz-1, sz*0.34, sz*0.14, "rgba(0,0,0,.28)");
+        if(pi===0){ DECO.star(bctx, cx, oy-4, 5, "#ffd94a"); }  // marqueur "toi"
+        SPRITES.animal(bctx, p.animalId, ox, oy, u);
       });
     });
   }
-
   autoScroll();
-}
-function roundRect(ctx,x,y,w,h,r,fill,stroke){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-  if(fill){ ctx.fillStyle=fill; ctx.fill(); }
-  if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=1; ctx.stroke(); }
 }
 function autoScroll(){
   if(!G) return;
-  var wrap=$("boardWrap"); var cv=$("board");
-  var scale=cv.clientWidth / boardW;
+  var wrap=$("boardWrap"), cv=$("board");
+  if(!cv.clientWidth) return;
+  var scale=cv.clientWidth/boardW;
   var c=cellOf(G.players[0].pos);
   var target=c.cy*scale - wrap.clientHeight/2;
-  wrap.scrollTo({top:clamp(target,0,cv.clientHeight-wrap.clientHeight), behavior:"smooth"});
+  wrap.scrollTo({top:clamp(target,0,cv.scrollHeight-wrap.clientHeight), behavior:"smooth"});
 }
 
 /* mini-tableau des joueurs */
