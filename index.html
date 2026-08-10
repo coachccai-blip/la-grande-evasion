@@ -177,6 +177,9 @@
   .qhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
   .badge{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px;
     color:#fff; padding:4px 10px; border-radius:20px;}
+  .qhint{font-size:13px; font-weight:700; color:var(--accent2); background:rgba(242,193,78,.12);
+    border:1px solid rgba(242,193,78,.35); border-radius:10px; padding:6px 10px; margin-bottom:10px; text-align:center;}
+  .qhint:empty{display:none;}
   .timer{height:8px; border-radius:6px; background:rgba(0,0,0,.35); overflow:hidden; margin-bottom:10px; display:none;}
   .timer > i{display:block; height:100%; width:100%; background:linear-gradient(90deg,var(--ko),var(--accent)); transition:width .1s linear;}
   .qtext{font-size:18px; line-height:1.5; margin:6px 2px 14px; text-align:center;}
@@ -332,6 +335,7 @@
           <span id="qBadge" class="badge">Catégorie</span>
           <span id="qContext" style="font-size:12px;color:var(--ink-soft)"></span>
         </div>
+        <div id="qHint" class="qhint"></div>
         <div id="qTimer" class="timer"><i></i></div>
         <div id="qText" class="qtext"></div>
         <div id="qOpts" class="opts"></div>
@@ -552,28 +556,20 @@ var Sound=(function(){
   };
 })();
 
-/* Choix d'une question selon la matière/thème/difficulté choisis (G.setup),
-   en respectant RG10 (pas de répétition prématurée) et en visant la difficulté. */
+/* Génère une question selon la matière/thème/difficulté choisis (G.setup),
+   en évitant de répéter les dernières questions posées (RG10). */
 function pickQuestion(){
   var cat=G.setup.cat, sub=G.setup.sub, target=G.setup.diffVal;
-  var pool=QUESTIONS.filter(function(q){
-    return (cat==="tout" || q.cat===cat) && (!sub || sub==="Tout" || q.sub===sub);
-  });
-  if(!pool.length) pool=QUESTIONS.filter(function(q){ return cat==="tout"||q.cat===cat; });
-  if(!pool.length) pool=QUESTIONS.slice();
-
-  var key=cat+"|"+sub;
-  var used=usedQ[key]||(usedQ[key]=[]);
-  var fresh=pool.filter(function(q){ return used.indexOf(q)<0; });
-  if(!fresh.length){ used.length=0; fresh=pool.slice(); }   // cycle recommencé
-
-  // biais difficulté : on privilégie les questions les plus proches de la cible
-  var minD=Infinity;
-  fresh.forEach(function(q){ var d=Math.abs(q.diff-target); if(d<minD) minD=d; });
-  var near=fresh.filter(function(q){ return Math.abs(q.diff-target)===minD; });
-  var chosen=near[randint(near.length)];
-  used.push(chosen);
-  return {q:chosen, cat:chosen.cat};
+  var recent=usedQ.recent||(usedQ.recent=[]);
+  var q=null;
+  for(var t=0;t<15;t++){
+    q=Questions.generate(cat, sub, target);
+    var k=q.phrase+"§"+q.options[q.answer];
+    if(recent.indexOf(k)<0){ recent.push(k); break; }
+  }
+  if(!q) q=Questions.generate(cat, sub, target);
+  if(recent.length>80) recent.shift();
+  return {q:q, cat:q.cat};
 }
 
 /* Clé de mission : un animal libéré pour une combinaison matière/thème/difficulté donnée. */
@@ -1115,9 +1111,11 @@ function askQuestion(opts){
   return new Promise(function(resolve){
     var picked=pickQuestion();
     var q=picked.q, realCat=picked.cat;
+    if(typeof window!=="undefined") window.__q=q;   // (aide aux tests)
     var ov=$("questionOverlay");
     $("qBadge").textContent=CAT_LABEL[realCat]; $("qBadge").style.background=CAT_COLOR[realCat];
     $("qContext").textContent=opts.contextLabel||"";
+    $("qHint").textContent = q.hint ? ("👉 "+q.hint) : "";   // temps/notion attendu (lève l'ambiguïté)
     // phrase avec trou
     $("qText").innerHTML = q.phrase.replace("___","<span class='blank' id='blankSpot'>___</span>");
     var note=$("qNote"); note.textContent=""; note.className="qnote";
@@ -1148,7 +1146,7 @@ function askQuestion(opts){
       // historique (RG12)
       if(opts.record){
         store.history.unshift({
-          result:correct, cat:realCat, phrase:q.phrase, options:q.options.slice(),
+          result:correct, cat:realCat, sub:q.sub, hint:q.hint, phrase:q.phrase, options:q.options.slice(),
           answer:q.answer, chosen:(timedOut? null : chosenIdx)
         });
         persist();
@@ -1472,11 +1470,13 @@ function renderHistory(){
     var it=document.createElement("div"); it.className="hist-item";
     var res=document.createElement("div"); res.className="hist-res "+(h.result?"ok":"ko"); res.textContent=h.result?"✓":"✗";
     var main=document.createElement("div"); main.className="hist-main";
-    var cat=document.createElement("span"); cat.className="hist-cat"; cat.textContent=CAT_LABEL[h.cat]||h.cat;
+    var cat=document.createElement("span"); cat.className="hist-cat";
+    cat.textContent=(CAT_LABEL[h.cat]||h.cat)+(h.sub&&h.sub!=="Tout"?" · "+h.sub:"");
     cat.style.background=CAT_COLOR[h.cat]||"#888";
     var ph=document.createElement("div"); ph.className="hist-phrase";
     ph.innerHTML=escapeHtml(h.phrase).replace("___","<span class='fill'>"+escapeHtml(h.options[h.answer])+"</span>");
     main.appendChild(cat); main.appendChild(ph);
+    if(h.hint){ var hn=document.createElement("div"); hn.style.cssText="font-size:11px;color:var(--ink-soft);margin-top:2px;"; hn.textContent="👉 "+h.hint; main.appendChild(hn); }
     if(!h.result){
       var w=document.createElement("div"); w.className="hist-wrong";
       w.textContent = (h.chosen==null) ? "Ta réponse : (temps écoulé)" : "Ta réponse : "+h.options[h.chosen];

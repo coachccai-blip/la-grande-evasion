@@ -62,26 +62,28 @@ droite coupe ou réactive le son (la préférence est mémorisée).
 | Fichier        | Rôle |
 |----------------|------|
 | `index.html`   | Interface, assistant de configuration, plateau, logique du jeu, musique et bruitages. |
-| `questions.js` | Banque de questions, classées par matière, thème et difficulté. |
+| `questions.js` | **Générateur** de questions (banques de mots + moteur de conjugaison). |
 | `animaux.js`   | Les 10 animaux : nom, trait de caractère et répliques de libération. |
 | `sprites.js`   | Décor du plateau dessiné de façon procédurale (les animaux sont des emojis HD). |
 
-## ✏️ Ajouter des questions ou des répliques
+## ✏️ Enrichir les questions
 
-Aucune compétence technique n'est requise — pas de base de données, pas de
-compilation.
+Les questions ne sont **pas** une liste figée : elles sont **générées** à la
+volée par `questions.js`, à partir de banques de mots et d'un moteur de
+conjugaison. Chaque combinaison *matière · thème · difficulté* peut produire des
+centaines de variantes, et **les distracteurs sont des erreurs plausibles du
+même type que la bonne réponse** (au passé composé, par exemple, toutes les
+propositions sont des temps composés : *sont allées / ont allées / ont allé /
+étaient allées*). Le **temps ou la notion attendu·e est toujours affiché·e**, ce
+qui lève l'ambiguïté quand plusieurs temps seraient possibles (« Pourriez » vs
+« Pouvez »), surtout en mode « Tout ».
 
-- **Questions** : ouvre `questions.js` et ajoute des objets à la liste.
-  Chaque question suit ce format :
+Pour enrichir le répertoire (aucune compilation) :
 
-  ```js
-  { cat: "conjugaison",  // ou "grammaire", "vocabulaire", "orthographe"
-    sub: "Futur",         // le thème (voir la liste en tête de questions.js)
-    diff: 2,              // difficulté de 1 (très facile) à 6 (extrême)
-    phrase: "Demain, nous ___ au parc.",  // le trou est noté ___
-    options: ["irons", "allons", "irions", "allions"],
-    answer: 0 }          // index (0 à 3) de la bonne réponse
-  ```
+- **Conjugaison** : ajoute un verbe dans la table `VERBS` de `questions.js`
+  (verbes réguliers via `reg1`/`reg2`, irréguliers via `irr`).
+- **Grammaire / Vocabulaire / Orthographe** : ajoute des entrées dans les
+  banques correspondantes (`NATURE`, `SYN`, `HOMOPH`, `PLUR`, …).
 
 - **Répliques de libération** : ouvre `animaux.js` et complète le tableau
   `phrases` de l'animal concerné.
