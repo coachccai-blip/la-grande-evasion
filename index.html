@@ -1341,7 +1341,7 @@ function endTurn(){
 /* ==================================================================== */
 /*                     DUEL « QUESTIONS POUR UN CHAMPION »              */
 /* ==================================================================== */
-var DUEL_TIME = 60;  // secondes
+var DUEL_TIME = 20;  // secondes
 
 // Ouvre le choix de l'adversaire à défier.
 function openDuelChooser(){
@@ -1377,13 +1377,15 @@ function runDuel(botIndex){
 
     function bump(el){ el.classList.add("bump"); setTimeout(function(){ el.classList.remove("bump"); },130); }
 
-    // Adversaire : tente une question toutes les ~1,6–3,2 s, réussite = difficulté.
+    // Adversaire : cadence ET réussite dépendent de la difficulté.
+    // Mode facile → bot lent (~3,5 s) ; mode extrême → bot rapide (~1,4 s).
+    var botBase = Math.max(1200, 4700 - G.botSuccess*4000);   // ms
     function scheduleBot(){
       botT=setTimeout(function(){
         if(over) return;
         if(Math.random()<G.botSuccess){ foeScore++; $("vsFoeScore").textContent=foeScore; bump($("vsFoeScore")); Sound.tick(); }
         scheduleBot();
-      }, 1600+Math.random()*1600);
+      }, botBase*(0.75+Math.random()*0.5));
     }
     scheduleBot();
 

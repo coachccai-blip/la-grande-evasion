@@ -37,10 +37,10 @@ Ensuite, la course commence :
   d'affilée, sans dé. La moindre erreur referme tout !
 
 **Duel « Questions pour un champion » :** à ton tour, au lieu de lancer le dé, tu
-peux **défier un adversaire**. Pendant **1 minute**, vous répondez chacun au plus
-grand nombre de questions possible (écran *versus* avec les deux emojis face à
-face et les scores en direct). Le **gagnant avance de 6 cases**, le **perdant
-recule de 6**.
+peux **défier un adversaire**. Pendant **20 secondes**, vous répondez chacun au
+plus grand nombre de questions possible (écran *versus* avec les deux emojis face
+à face et les scores en direct). Le bot répond **plus ou moins vite selon la
+difficulté** choisie. Le **gagnant avance de 6 cases**, le **perdant recule de 6**.
 
 **Collection :** gagner libère ton animal pour la combinaison
 *matière · thème · difficulté* jouée (coche verte). Le vrai défi est de libérer
