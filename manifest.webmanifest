@@ -1,7 +1,7 @@
 {
   "name": "La Grande Évasion",
   "short_name": "Évasion",
-  "description": "Jeu de plateau en pixel art pour apprendre le français : aide ton animal à s'échapper du zoo en répondant juste !",
+  "description": "Jeu de plateau pour apprendre le français : aide ton animal à s'échapper du zoo en répondant juste !",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "./index.html",
@@ -9,8 +9,8 @@
   "display": "standalone",
   "display_override": ["standalone", "fullscreen", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#160f26",
-  "theme_color": "#160f26",
+  "background_color": "#eef6e2",
+  "theme_color": "#cfe9b8",
   "categories": ["education", "games", "kids"],
   "icons": [
     {
@@ -24,18 +24,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "assets/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "assets/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }
