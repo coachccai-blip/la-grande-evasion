@@ -43,7 +43,11 @@ Ensuite, la course commence :
   - **Mauvaise réponse** → il recule d'autant, et la bonne réponse s'affiche.
 - Attention aux **cases spéciales** (banane, toboggan, ressort, cadeau, tornade,
   piège, gardien, défi éclair, duel, case mystère) et aux **3 obstacles**
-  (cases 18, 34, 45). Un petit bouton **❔** en bas à gauche de la carte ouvre la
+  (cases 18, 34, 45). **Chaque case déclenche une petite animation** avant son
+  effet (le personnage glisse sur le toboggan, une boîte en carton tombe sur le
+  piégé, des cyclones traversent l'écran pour la tornade…). La **tornade** fait
+  **reculer tous les autres animaux** (−1 à −6) et le **piège** fait **passer le
+  prochain tour**. Un petit bouton **❔** en bas à gauche de la carte ouvre la
   **légende** (effet de chaque case, par emoji).
 - Arrivé au **portail** (case 50), ouvre les 3 serrures : 3 bonnes réponses
   d'affilée, sans dé. La moindre erreur referme tout !
