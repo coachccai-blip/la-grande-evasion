@@ -35,6 +35,13 @@
     if(disp==="je"){ return (vowel(form[0])||form[0]==="h") ? "j'"+form : "je "+form; }
     return disp+" "+form;
   }
+  // Sujet + trou, avec élision « je → j' » décidée d'après la BONNE réponse
+  // (le trou n'affiche jamais qu'elle ; toutes les options d'un verbe commencent
+  // par la même lettre). Ex. « j'___ » pour « j'allais », « je ___ » pour « je mange ».
+  function subjBlank(S, refForm){
+    if(S.d==="je") return (vowel(refForm[0])||refForm[0]==="h") ? "j'___" : "je ___";
+    return S.d+" ___";
+  }
   // construit 4 options : la bonne (index 0) + 3 distracteurs distincts
   function build(correct, pool){
     var out=[correct], seen={}; seen[norm(correct)]=1;
@@ -103,8 +110,8 @@
     reg1("parler",["fort","doucement","beaucoup","trop vite"]),
     reg1("aimer",["les animaux","le chocolat","lire","la musique"]),
     reg1("jouer",["au ballon","dans le jardin","aux cartes","de la flûte"]),
-    reg1("chanter",["une chanson","juste","en chœur","à voix haute"]),
-    reg1("danser",["la salsa","toute la nuit","ensemble","en rythme"]),
+    reg1("chanter",["une chanson","juste","faux","à voix haute"]),
+    reg1("danser",["la salsa","toute la nuit","le rock","en rythme"]),
     reg1("regarder",["la télévision","les étoiles","un film","le paysage"]),
     reg1("écouter",["de la musique","le maître","la radio","une histoire"]),
     reg1("donner",["un cadeau","la main","à manger","un coup de main"]),
@@ -129,7 +136,7 @@
     /* -------- 2e groupe (-ir) -------- */
     reg2("finir",["le repas","la course","le travail","à temps"]),
     reg2("choisir",["un animal","une carte","la bonne réponse","un livre"]),
-    reg2("grandir",["vite","beaucoup","en taille","chaque jour"]),
+    reg2("grandir",["vite","beaucoup","chaque jour"]),
     reg2("réfléchir",["bien","à la question","avant de répondre","longtemps"]),
     reg2("remplir",["le seau","la fiche","le verre","le panier"]),
     reg2("réussir",["l'exercice","le défi","la course","l'évasion"]),
@@ -204,7 +211,7 @@
       cond:["saurais","saurais","saurait","saurions","sauriez","sauraient"],
       subj:["sache","saches","sache","sachions","sachiez","sachent"],
       imper:{tu:"sache",nous:"sachons",vous:"sachez"} }),
-    irr("venir",{ etre:true, pp:"venu", comp:["au zoo","avec nous","à la fête","de loin"],
+    irr("venir",{ etre:true, pp:"venu", comp:["au zoo","à la fête","de loin","très vite"],
       pres:["viens","viens","vient","venons","venez","viennent"],
       imp:["venais","venais","venait","venions","veniez","venaient"],
       fut:["viendrai","viendras","viendra","viendrons","viendrez","viendront"],
@@ -242,6 +249,15 @@
   }
   // Amorces de conditionnel valables avec N'IMPORTE QUEL sujet.
   var COND_HEAD = ["Si c'était possible,","Si on le pouvait,","Dans ce cas,","Un jour peut-être,"];
+
+  // Adverbes qui, au passé composé, se placent ENTRE l'auxiliaire et le participe
+  // (« a beaucoup mangé »). Comme la réponse doit tenir en un seul trou, on ne les
+  // utilise PAS au passé composé (on garde alors les compléments d'objet/de lieu).
+  var PRE_ADV = ["beaucoup","bien","vite","trop vite","souvent","mal","trop","déjà","encore","toujours","chaque jour","enfin"];
+  function pcComp(v){
+    var ok=(v.comp||[]).filter(function(c){ return PRE_ADV.indexOf(c)<0; });
+    return ok.length ? pick(ok) : "";   // sinon : phrase sans complément (« Hier, il a grandi. »)
+  }
 
   var VK={present:"pres",imparfait:"imp",futur:"fut",cond:"cond",subj:"subj"};
   function pform(v,tense,pi){ return v[VK[tense]][pi]; }
@@ -298,11 +314,11 @@
 
     var phrase;
     if(tense==="subj"){ phrase = subjHead(pick(SUBJ_TRIG), S.d)+" ___"+ (comp?" "+comp:"")+"."; }
-    else if(tense==="cond"){ phrase = pick(COND_HEAD)+" "+withSubj(S.d,"___")+(comp?" "+comp:"")+"."; }
+    else if(tense==="cond"){ phrase = pick(COND_HEAD)+" "+subjBlank(S,correct)+(comp?" "+comp:"")+"."; }
     else {
       var tm=TIME[tense]?pick(TIME[tense]):"";
-      var body = withSubj(S.d,"___")+(comp?" "+comp:"")+".";
-      phrase = tm ? (tm+" "+body) : cap(body);
+      var body = subjBlank(S,correct)+(comp?" "+comp:"")+".";
+      phrase = tm ? (tm+", "+body) : cap(body);
     }
     phrase=cap(phrase);
     return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint, options:build(correct,pool), answer:0 };
@@ -324,9 +340,10 @@
       pool.push(v.pres[ who==="vous"?4:3 ]);    // forme du présent (avec pronom sous-entendu)
     }
     var whoLabel = who==="tu"?"(tu)":(who==="vous"?"(vous)":"(nous)");
-    var phrase = cap("___ "+(comp?comp+" ":"")+"!");
+    var phrase = "___ "+(comp?comp+" ":"")+"!";   // le trou ouvre la phrase → réponse en majuscule
+    var opts = build(cap(correct), pool.map(cap));
     return { cat:cat, sub:sub, tense:"imper", phrase:phrase,
-      hint:"Conjugue « "+v.inf+" » à l'impératif "+whoLabel, options:build(correct,pool), answer:0 };
+      hint:"Conjugue « "+v.inf+" » à l'impératif "+whoLabel, options:opts, answer:0 };
   }
 
   // Passé composé : options 100 % « temps composés » (auxiliaire + participe).
@@ -352,8 +369,8 @@
       if(v.pp!==v.inf) pool.push(AUX.avoir.pres[pi]+" "+v.inf);   // é/er (a manger)
       pool.push(AUX.etre.pres[pi]+" "+agree(v.pp,S)); // être + accord (sont mangés)
     }
-    var tm=pick(TIME.passe);
-    var phrase=cap(tm+" "+withSubj(S.d,"___")+(comp?" "+comp:"")+".");
+    var tm=pick(TIME.passe), pcc=pcComp(v);
+    var phrase=cap(tm+", "+subjBlank(S,correct)+(pcc?" "+pcc:"")+".");
     return { cat:cat, sub:sub, tense:"passe", phrase:phrase, hint:hint, options:build(correct,pool), answer:0 };
   }
 
