@@ -888,14 +888,95 @@
       options:build(o.good,o.bad.slice()), answer:0 };
   }
 
+  /* --- Nature des mots : générateur PARTITIONNÉ par difficulté --- */
+  var NATURE_WORDS=[
+    // d1
+    {w:"chien",n:"nom",d:1},{w:"chat",n:"nom",d:1},{w:"manger",n:"verbe",d:1},{w:"sauter",n:"verbe",d:1},
+    {w:"rouge",n:"adjectif",d:1},{w:"petit",n:"adjectif",d:1},{w:"vite",n:"adverbe",d:1},{w:"le",n:"déterminant",d:1},
+    {w:"il",n:"pronom",d:1},{w:"et",n:"conjonction",d:1},{w:"dans",n:"préposition",d:1},{w:"sur",n:"préposition",d:1},
+    // d2
+    {w:"maison",n:"nom",d:2},{w:"chanter",n:"verbe",d:2},{w:"courir",n:"verbe",d:2},{w:"joli",n:"adjectif",d:2},
+    {w:"grand",n:"adjectif",d:2},{w:"souvent",n:"adverbe",d:2},{w:"un",n:"déterminant",d:2},{w:"elle",n:"pronom",d:2},
+    {w:"nous",n:"pronom",d:2},{w:"mais",n:"conjonction",d:2},{w:"avec",n:"préposition",d:2},{w:"sous",n:"préposition",d:2},
+    // d3
+    {w:"montagne",n:"nom",d:3},{w:"grandir",n:"verbe",d:3},{w:"finir",n:"verbe",d:3},{w:"rapide",n:"adjectif",d:3},
+    {w:"joyeux",n:"adjectif",d:3},{w:"lentement",n:"adverbe",d:3},{w:"bien",n:"adverbe",d:3},{w:"mon",n:"déterminant",d:3},
+    {w:"ces",n:"déterminant",d:3},{w:"qui",n:"pronom",d:3},{w:"ou",n:"conjonction",d:3},{w:"pour",n:"préposition",d:3},
+    // d4
+    {w:"courage",n:"nom",d:4},{w:"obéir",n:"verbe",d:4},{w:"réfléchir",n:"verbe",d:4},{w:"curieux",n:"adjectif",d:4},
+    {w:"aimable",n:"adjectif",d:4},{w:"prudemment",n:"adverbe",d:4},{w:"déjà",n:"adverbe",d:4},{w:"cette",n:"déterminant",d:4},
+    {w:"dont",n:"pronom",d:4},{w:"toi",n:"pronom",d:4},{w:"donc",n:"conjonction",d:4},{w:"pendant",n:"préposition",d:4},
+    // d5
+    {w:"liberté",n:"nom",d:5},{w:"éblouir",n:"verbe",d:5},{w:"franchir",n:"verbe",d:5},{w:"courageux",n:"adjectif",d:5},
+    {w:"honnête",n:"adjectif",d:5},{w:"rarement",n:"adverbe",d:5},{w:"ailleurs",n:"adverbe",d:5},{w:"plusieurs",n:"déterminant",d:5},
+    {w:"lequel",n:"pronom",d:5},{w:"celui",n:"pronom",d:5},{w:"car",n:"conjonction",d:5},{w:"malgré",n:"préposition",d:5},
+    // d6
+    {w:"patience",n:"nom",d:6},{w:"accomplir",n:"verbe",d:6},{w:"resplendir",n:"verbe",d:6},{w:"audacieux",n:"adjectif",d:6},
+    {w:"généreux",n:"adjectif",d:6},{w:"habilement",n:"adverbe",d:6},{w:"chaque",n:"déterminant",d:6},{w:"quelque",n:"déterminant",d:6},
+    {w:"quiconque",n:"pronom",d:6},{w:"auquel",n:"pronom",d:6},{w:"or",n:"conjonction",d:6},{w:"dès",n:"préposition",d:6}
+  ];
+  var NAT_FRAMES=[
+    "« {W} » est {A} ___.",
+    "Dans une phrase, « {W} » est {A} ___.",
+    "Le mot « {W} » est {A} ___.",
+    "Grammaticalement, « {W} » est {A} ___.",
+    "Nature de « {W} » : c'est {A} ___."
+  ];
+  function genNature(diff,cat,sub){
+    var pool=NATURE_WORDS.filter(function(x){return x.d===diff;});
+    if(pool.length<3){ for(var w=1;w<=5 && pool.length<3;w++) pool=NATURE_WORDS.filter(function(x){return Math.abs(x.d-diff)<=w;}); }
+    var it=pick(pool), art=(it.n==="préposition"||it.n==="conjonction")?"une":"un";
+    var bad=shuffle(NATURE_OPTS.filter(function(o){return o!==it.n;})).slice(0,3);
+    return { cat:cat, sub:sub, phrase:pick(NAT_FRAMES).replace("{W}",it.w).replace("{A}",art),
+      hint:"Donne la nature (classe) du mot",
+      note:"La nature d'un mot : nom, verbe, adjectif, adverbe, déterminant, pronom, préposition ou conjonction.",
+      options:build(it.n,bad), answer:0 };
+  }
+
+  /* --- Accords : générateur PARTITIONNÉ par difficulté (noms partitionnés) --- */
+  var ACC_NOUNS=[
+    {w:"la pomme",g:"f",nb:"s",d:1},{w:"le chat",g:"m",nb:"s",d:1},{w:"les fleurs",g:"f",nb:"p",d:1},{w:"le ballon",g:"m",nb:"s",d:1},
+    {w:"la voiture",g:"f",nb:"s",d:1},{w:"les livres",g:"m",nb:"p",d:1},{w:"le chien",g:"m",nb:"s",d:1},{w:"la table",g:"f",nb:"s",d:1},{w:"les pommes",g:"f",nb:"p",d:1},
+    {w:"le gâteau",g:"m",nb:"s",d:2},{w:"la maison",g:"f",nb:"s",d:2},{w:"les oiseaux",g:"m",nb:"p",d:2},{w:"la robe",g:"f",nb:"s",d:2},
+    {w:"le vélo",g:"m",nb:"s",d:2},{w:"les chaises",g:"f",nb:"p",d:2},{w:"le chapeau",g:"m",nb:"s",d:2},{w:"la tasse",g:"f",nb:"s",d:2},{w:"les ballons",g:"m",nb:"p",d:2},
+    {w:"la montagne",g:"f",nb:"s",d:3},{w:"le château",g:"m",nb:"s",d:3},{w:"les rivières",g:"f",nb:"p",d:3},{w:"le tigre",g:"m",nb:"s",d:3},
+    {w:"la forêt",g:"f",nb:"s",d:3},{w:"les nuages",g:"m",nb:"p",d:3},{w:"le fauteuil",g:"m",nb:"s",d:3},{w:"la fenêtre",g:"f",nb:"s",d:3},{w:"les étoiles",g:"f",nb:"p",d:3},
+    {w:"l'éléphant",g:"m",nb:"s",d:4},{w:"l'horloge",g:"f",nb:"s",d:4},{w:"les ordinateurs",g:"m",nb:"p",d:4},{w:"l'armoire",g:"f",nb:"s",d:4},
+    {w:"le tableau",g:"m",nb:"s",d:4},{w:"les images",g:"f",nb:"p",d:4},{w:"le manteau",g:"m",nb:"s",d:4},{w:"la lampe",g:"f",nb:"s",d:4},{w:"les arbres",g:"m",nb:"p",d:4},
+    {w:"l'aquarium",g:"m",nb:"s",d:5},{w:"l'échelle",g:"f",nb:"s",d:5},{w:"les éclairs",g:"m",nb:"p",d:5},{w:"l'ampoule",g:"f",nb:"s",d:5},
+    {w:"le miroir",g:"m",nb:"s",d:5},{w:"les oreilles",g:"f",nb:"p",d:5},{w:"le tapis",g:"m",nb:"s",d:5},{w:"la cloche",g:"f",nb:"s",d:5},{w:"les bougies",g:"f",nb:"p",d:5},
+    {w:"l'hippopotame",g:"m",nb:"s",d:6},{w:"l'orchidée",g:"f",nb:"s",d:6},{w:"les hélicoptères",g:"m",nb:"p",d:6},{w:"l'enclume",g:"f",nb:"s",d:6},
+    {w:"le lampadaire",g:"m",nb:"s",d:6},{w:"les obstacles",g:"m",nb:"p",d:6},{w:"le candélabre",g:"m",nb:"s",d:6},{w:"la mappemonde",g:"f",nb:"s",d:6},{w:"les engrenages",g:"m",nb:"p",d:6}
+  ];
+  var ADJ_ACC=[
+    {ms:"grand",fs:"grande",mp:"grands",fp:"grandes"},{ms:"petit",fs:"petite",mp:"petits",fp:"petites"},
+    {ms:"gros",fs:"grosse",mp:"gros",fp:"grosses"},{ms:"joli",fs:"jolie",mp:"jolis",fp:"jolies"},
+    {ms:"beau",fs:"belle",mp:"beaux",fp:"belles"},{ms:"vert",fs:"verte",mp:"verts",fp:"vertes"},
+    {ms:"noir",fs:"noire",mp:"noirs",fp:"noires"},{ms:"blanc",fs:"blanche",mp:"blancs",fp:"blanches"},
+    {ms:"rond",fs:"ronde",mp:"ronds",fp:"rondes"},{ms:"lourd",fs:"lourde",mp:"lourds",fp:"lourdes"},
+    {ms:"léger",fs:"légère",mp:"légers",fp:"légères"},{ms:"neuf",fs:"neuve",mp:"neufs",fp:"neuves"},
+    {ms:"vieux",fs:"vieille",mp:"vieux",fp:"vieilles"},{ms:"doux",fs:"douce",mp:"doux",fp:"douces"},
+    {ms:"brillant",fs:"brillante",mp:"brillants",fp:"brillantes"}
+  ];
+  var ACC_FRAMES=["{W} {V} ___.","{W} {V} très ___.","On dirait que {W} {V} ___.","{W} {V} vraiment ___."];
+  function genAccords(diff,cat,sub){
+    var pool=ACC_NOUNS.filter(function(x){return x.d===diff;});
+    if(pool.length<3){ for(var w=1;w<=5 && pool.length<3;w++) pool=ACC_NOUNS.filter(function(x){return Math.abs(x.d-diff)<=w;}); }
+    var nn=pick(pool), adj=pick(ADJ_ACC), V=(nn.nb==="s")?"est":"sont";
+    var good=(nn.nb==="s")?(nn.g==="m"?adj.ms:adj.fs):(nn.g==="m"?adj.mp:adj.fp);
+    var bad=[adj.ms,adj.fs,adj.mp,adj.fp].filter(function(x){return x!==good;});
+    var phrase=cap(pick(ACC_FRAMES).replace("{W}",nn.w).replace("{V}",V));
+    return { cat:cat, sub:sub, phrase:phrase, hint:"Accorde l'adjectif (genre et nombre)",
+      note:"L'adjectif s'accorde en genre (masculin/féminin) et en nombre (singulier/pluriel) avec le nom.",
+      options:build(good,bad), answer:0 };
+  }
+
   function genGram(sub, diff, cat){
-    if(sub==="Nature des mots"){ var it=pickByDiff(NATURE,diff);
-      var bad=shuffle(NATURE_OPTS.filter(function(o){return o!==it.n;})).slice(0,3);
-      return { cat:cat, sub:sub, phrase:it.ph, hint:"Donne la nature (classe) du mot", note:"La nature (ou classe) d'un mot : nom, verbe, adjectif, adverbe, déterminant, pronom, préposition, conjonction.", options:build(it.n,bad), answer:0 }; }
+    if(sub==="Nature des mots") return genNature(diff,cat,sub);
     if(sub==="Déterminants") return genDeterminants(diff,cat,sub);
     if(sub==="Pronoms") return fromGood(pickByDiff(PRON,diff),"Choisis le bon pronom",cat,sub);
     if(sub==="Prépositions") return fromGood(pickByDiff(PREP,diff),"Choisis la bonne préposition",cat,sub);
-    if(sub==="Accords") return fromGood(pickByDiff(ACCORD,diff),"Accorde correctement (genre et nombre)",cat,sub);
+    if(sub==="Accords") return genAccords(diff,cat,sub);
     if(sub==="Types de phrases") return fromGood(pickByDiff(TYPES,diff),"Quel type de phrase ?",cat,sub);
     if(sub==="Accord du participe passé") return fromGood(pickByDiff(PP_ACC,diff),"Accorde le participe passé",cat,sub);
     if(sub==="Connecteurs logiques") return fromGood(pickByDiff(CONNECT,diff),"Choisis le bon connecteur logique",cat,sub);
