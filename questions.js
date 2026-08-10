@@ -95,52 +95,55 @@
   // Verbe irrégulier : toutes les formes fournies explicitement.
   function irr(inf, o){ o.inf=inf; o.g=3; return o; }
 
+  // Compléments choisis pour rester corrects avec TOUTES les personnes et TOUS
+  // les temps : pas de possessif (mon/ses…) ni d'adjectif à accorder, pas de
+  // mot de temps qui entrerait en conflit avec « Hier », « Demain », etc.
   var VERBS = [
     /* -------- 1er groupe (-er) -------- */
-    reg1("parler",["à ses amis","fort","doucement"]),
-    reg1("aimer",["les animaux","le chocolat","lire"]),
-    reg1("jouer",["au ballon","dans le jardin","aux cartes"]),
-    reg1("chanter",["une chanson","juste","en cœur"]),
-    reg1("danser",["la salsa","toute la nuit","ensemble"]),
-    reg1("regarder",["la télévision","les étoiles","un film"]),
-    reg1("écouter",["de la musique","le maître","la radio"]),
-    reg1("donner",["un cadeau","la main","à manger"]),
-    reg1("trouver",["la solution","un trésor","le chemin"]),
-    reg1("marcher",["vite","dans la forêt","sur le sable"]),
-    reg1("sauter",["haut","dans l'eau","à la corde"]),
-    reg1("dessiner",["un lion","une fleur","des maisons"]),
-    reg1("gagner",["la partie","une médaille","du temps"]),
-    reg1("pousser",["le portail","un cri","la brouette"]),
-    reg1("attraper",["le ballon","un rhume","le bus"]),
-    reg1("montrer",["le chemin","ses dessins","du doigt"]),
-    reg1("manger",["une pomme","du bambou","des cacahuètes"]),
-    reg1("nager",["dans le bassin","vite","le crawl"]),
-    reg1("ranger",["sa chambre","les jouets","les cahiers"]),
-    reg1("plonger",["dans l'eau","du plongeoir","tête la première"]),
-    reg1("commencer",["le travail","une histoire","à courir"]),
-    reg1("lancer",["le dé","la balle","un défi"]),
-    reg1("rester",["à la maison","calme","dehors"], true),
-    reg1("arriver",["en retard","les premiers","au portail"], true),
-    reg1("tomber",["par terre","de vélo","dans le piège"], true),
-    reg1("monter",["sur le toboggan","à l'échelle","les escaliers"], true),
+    reg1("parler",["fort","doucement","beaucoup","trop vite"]),
+    reg1("aimer",["les animaux","le chocolat","lire","la musique"]),
+    reg1("jouer",["au ballon","dans le jardin","aux cartes","de la flûte"]),
+    reg1("chanter",["une chanson","juste","en chœur","à voix haute"]),
+    reg1("danser",["la salsa","toute la nuit","ensemble","en rythme"]),
+    reg1("regarder",["la télévision","les étoiles","un film","le paysage"]),
+    reg1("écouter",["de la musique","le maître","la radio","une histoire"]),
+    reg1("donner",["un cadeau","la main","à manger","un coup de main"]),
+    reg1("trouver",["la solution","un trésor","le chemin","une idée"]),
+    reg1("marcher",["vite","dans la forêt","sur le sable","longtemps"]),
+    reg1("sauter",["haut","dans l'eau","à la corde","de joie"]),
+    reg1("dessiner",["un lion","une fleur","des maisons","un paysage"]),
+    reg1("gagner",["la partie","une médaille","du temps","le concours"]),
+    reg1("pousser",["le portail","un cri","la brouette","la porte"]),
+    reg1("attraper",["le ballon","un rhume","le bus","un poisson"]),
+    reg1("montrer",["le chemin","du doigt","la sortie","le tableau"]),
+    reg1("manger",["une pomme","du bambou","des cacahuètes","une carotte"]),
+    reg1("nager",["dans le bassin","vite","le crawl","sous l'eau"]),
+    reg1("ranger",["les jouets","les cahiers","la salle","le matériel"]),
+    reg1("plonger",["dans l'eau","du plongeoir","tête la première","dans le grand bain"]),
+    reg1("commencer",["le travail","une histoire","à courir","la partie"]),
+    reg1("lancer",["le dé","la balle","un défi","le ballon"]),
+    reg1("rester",["à la maison","dehors","au lit","à l'intérieur"], true),
+    reg1("arriver",["en retard","au portail","à l'heure","enfin"], true),
+    reg1("tomber",["par terre","de vélo","dans le piège","dans l'eau"], true),
+    reg1("monter",["sur le toboggan","à l'échelle","les escaliers","dans le bus"], true),
     /* -------- 2e groupe (-ir) -------- */
-    reg2("finir",["ses devoirs","le repas","la course"]),
-    reg2("choisir",["un animal","une carte","son camp"]),
-    reg2("grandir",["vite","chaque année","en sagesse"]),
-    reg2("réfléchir",["bien","à la question","avant de répondre"]),
-    reg2("remplir",["le seau","la fiche","son sac"]),
-    reg2("réussir",["l'exercice","son évasion","le défi"]),
-    reg2("obéir",["au gardien","aux règles","sans discuter"]),
-    reg2("applaudir",["les artistes","très fort","le vainqueur"]),
+    reg2("finir",["le repas","la course","le travail","à temps"]),
+    reg2("choisir",["un animal","une carte","la bonne réponse","un livre"]),
+    reg2("grandir",["vite","beaucoup","en taille","chaque jour"]),
+    reg2("réfléchir",["bien","à la question","avant de répondre","longtemps"]),
+    reg2("remplir",["le seau","la fiche","le verre","le panier"]),
+    reg2("réussir",["l'exercice","le défi","la course","l'évasion"]),
+    reg2("obéir",["au gardien","aux règles","sans discuter","au maître"]),
+    reg2("applaudir",["les artistes","très fort","le vainqueur","le spectacle"]),
     /* -------- irréguliers (3e groupe) -------- */
-    irr("être",{ etre:false, pp:"été", comp:["content","à l'heure","prudent","dehors"],
+    irr("être",{ etre:false, pp:"été", comp:["à l'heure","en retard","dehors","de retour"],
       pres:["suis","es","est","sommes","êtes","sont"],
       imp:["étais","étais","était","étions","étiez","étaient"],
       fut:["serai","seras","sera","serons","serez","seront"],
       cond:["serais","serais","serait","serions","seriez","seraient"],
       subj:["sois","sois","soit","soyons","soyez","soient"],
       imper:{tu:"sois",nous:"soyons",vous:"soyez"} }),
-    irr("avoir",{ etre:false, pp:"eu", comp:["un cadeau","de la chance","raison","peur"],
+    irr("avoir",{ etre:false, pp:"eu", comp:["un cadeau","de la chance","raison","peur"], noImper:true,
       pres:["ai","as","a","avons","avez","ont"],
       imp:["avais","avais","avait","avions","aviez","avaient"],
       fut:["aurai","auras","aura","aurons","aurez","auront"],
@@ -154,28 +157,28 @@
       cond:["irais","irais","irait","irions","iriez","iraient"],
       subj:["aille","ailles","aille","allions","alliez","aillent"],
       imper:{tu:"va",nous:"allons",vous:"allez"} }),
-    irr("faire",{ etre:false, pp:"fait", comp:["ses devoirs","du sport","un gâteau","attention"],
+    irr("faire",{ etre:false, pp:"fait", comp:["du sport","un gâteau","attention","le ménage"],
       pres:["fais","fais","fait","faisons","faites","font"],
       imp:["faisais","faisais","faisait","faisions","faisiez","faisaient"],
       fut:["ferai","feras","fera","ferons","ferez","feront"],
       cond:["ferais","ferais","ferait","ferions","feriez","feraient"],
       subj:["fasse","fasses","fasse","fassions","fassiez","fassent"],
       imper:{tu:"fais",nous:"faisons",vous:"faites"} }),
-    irr("dire",{ etre:false, pp:"dit", comp:["la vérité","un secret","bonjour","oui"],
+    irr("dire",{ etre:false, pp:"dit", comp:["la vérité","bonjour","oui","un poème"],
       pres:["dis","dis","dit","disons","dites","disent"],
       imp:["disais","disais","disait","disions","disiez","disaient"],
       fut:["dirai","diras","dira","dirons","direz","diront"],
       cond:["dirais","dirais","dirait","dirions","diriez","diraient"],
       subj:["dise","dises","dise","disions","disiez","disent"],
       imper:{tu:"dis",nous:"disons",vous:"dites"} }),
-    irr("prendre",{ etre:false, pp:"pris", comp:["le bus","une photo","son temps","un livre"],
+    irr("prendre",{ etre:false, pp:"pris", comp:["le bus","une photo","un livre","le train"],
       pres:["prends","prends","prend","prenons","prenez","prennent"],
       imp:["prenais","prenais","prenait","prenions","preniez","prenaient"],
       fut:["prendrai","prendras","prendra","prendrons","prendrez","prendront"],
       cond:["prendrais","prendrais","prendrait","prendrions","prendriez","prendraient"],
       subj:["prenne","prennes","prenne","prenions","preniez","prennent"],
       imper:{tu:"prends",nous:"prenons",vous:"prenez"} }),
-    irr("voir",{ etre:false, pp:"vu", comp:["un film","la mer","ses amis","le portail"],
+    irr("voir",{ etre:false, pp:"vu", comp:["un film","la mer","le portail","au loin"],
       pres:["vois","vois","voit","voyons","voyez","voient"],
       imp:["voyais","voyais","voyait","voyions","voyiez","voyaient"],
       fut:["verrai","verras","verra","verrons","verrez","verront"],
@@ -188,21 +191,20 @@
       fut:["pourrai","pourras","pourra","pourrons","pourrez","pourront"],
       cond:["pourrais","pourrais","pourrait","pourrions","pourriez","pourraient"],
       subj:["puisse","puisses","puisse","puissions","puissiez","puissent"] }),
-    irr("vouloir",{ etre:false, pp:"voulu", comp:["partir","un bonbon","gagner","de l'eau"],
+    irr("vouloir",{ etre:false, pp:"voulu", comp:["partir","un bonbon","gagner","de l'eau"], noImper:true,
       pres:["veux","veux","veut","voulons","voulez","veulent"],
       imp:["voulais","voulais","voulait","voulions","vouliez","voulaient"],
       fut:["voudrai","voudras","voudra","voudrons","voudrez","voudront"],
       cond:["voudrais","voudrais","voudrait","voudrions","voudriez","voudraient"],
-      subj:["veuille","veuilles","veuille","voulions","vouliez","veuillent"],
-      imper:{tu:"veuille",nous:"voulons",vous:"veuillez"} }),
-    irr("savoir",{ etre:false, pp:"su", comp:["la leçon","nager","la réponse","compter"],
+      subj:["veuille","veuilles","veuille","voulions","vouliez","veuillent"] }),
+    irr("savoir",{ etre:false, pp:"su", comp:["nager","compter","la réponse","la leçon"],
       pres:["sais","sais","sait","savons","savez","savent"],
       imp:["savais","savais","savait","savions","saviez","savaient"],
       fut:["saurai","sauras","saura","saurons","saurez","sauront"],
       cond:["saurais","saurais","saurait","saurions","sauriez","sauraient"],
       subj:["sache","saches","sache","sachions","sachiez","sachent"],
       imper:{tu:"sache",nous:"sachons",vous:"sachez"} }),
-    irr("venir",{ etre:true, pp:"venu", comp:["au zoo","avec nous","à la fête","demain"],
+    irr("venir",{ etre:true, pp:"venu", comp:["au zoo","avec nous","à la fête","de loin"],
       pres:["viens","viens","vient","venons","venez","viennent"],
       imp:["venais","venais","venait","venions","veniez","venaient"],
       fut:["viendrai","viendras","viendra","viendrons","viendrez","viendront"],
@@ -227,16 +229,19 @@
   var TIME = {
     present:["En ce moment","Aujourd'hui","Maintenant","Chaque jour","Souvent"],
     passe:["Hier","Ce matin","La semaine dernière","L'an dernier"],
-    imparfait:["Autrefois","Avant","Chaque été","Quand j'étais petit,"],
+    imparfait:["Autrefois","Avant","Chaque été","À cette époque"],
     futur:["Demain","Bientôt","L'année prochaine","Plus tard"]
   };
-  var SUBJ_TRIG = ["Il faut que","Je veux que","Il faudrait que","Pour que","Bien que","J'aimerais que"];
+  // Déclencheurs de subjonctif qui forment une phrase COMPLÈTE (pas « bien que… »
+  // qui exigerait une proposition principale).
+  var SUBJ_TRIG = ["Il faut que","Il faudrait que","Je veux que","J'aimerais que","Il vaut mieux que","Je souhaite que"];
   // élision « que » → « qu' » devant voyelle (qu'il, qu'elle, qu'ils…)
   function subjHead(trig, disp){
     if(/que$/.test(trig) && vowel(disp[0])) return trig.slice(0,-1)+"'"+disp;
     return trig+" "+disp;
   }
-  var COND_HEAD = ["Si c'était possible,","Avec plaisir,","Dans ce cas,","À ta place,"];
+  // Amorces de conditionnel valables avec N'IMPORTE QUEL sujet.
+  var COND_HEAD = ["Si c'était possible,","Si on le pouvait,","Dans ce cas,","Un jour peut-être,"];
 
   var VK={present:"pres",imparfait:"imp",futur:"fut",cond:"cond",subj:"subj"};
   function pform(v,tense,pi){ return v[VK[tense]][pi]; }
@@ -276,7 +281,7 @@
 
     // temps simples : present / imparfait / futur / cond / subj
     var subjPool = subjectsFor(diff);
-    if(tense==="subj") subjPool = subjPool; // ok
+    if(tense==="subj") subjPool = subjPool.filter(function(k){ return k!=="je"; }); // évite « Je veux que je… »
     var sk = pick(subjPool), S=SUBJ[sk], pi=S.pi;
     var correct = pform(v,tense,pi);
 
@@ -451,21 +456,29 @@
   var CONTR = [ ["grand","petit"],["jour","nuit"],["chaud","froid"],["vrai","faux"],["ouvrir","fermer"],
     ["monter","descendre"],["rapide","lent"],["content","triste"],["propre","sale"],["plein","vide"],
     ["gagner","perdre"],["devant","derrière"],["clair","sombre"],["dur","mou"],["riche","pauvre"] ];
+  // Homonymes : chaque phrase donne un indice de sens ; les distracteurs sont
+  // de vrais homophones (mêmes sons, sens différent).
   var HOMO = [
-    {ph:"Il a mal aux ___ (organes de la vue).",good:"yeux",bad:["yeu","yeus","yeurs"]},
-    {ph:"Le ___ coule dans la vallée (cours d'eau).",good:"cours",bad:["court","cour","courre"]},
-    {ph:"Elle boit un ___ d'eau (récipient).",good:"verre",bad:["vert","vers","ver"]},
-    {ph:"Le ___ galope (animal).",good:"cheval",bad:["chevale","chval","cheveaux"]},
-    {ph:"Un ___ de terre creuse (animal).",good:"ver",bad:["verre","vert","vers"]},
-    {ph:"Il fait très ___ aujourd'hui (température).",good:"chaud",bad:["chaux","show","cho"]}
+    {ph:"On se baigne dans la ___ (grande étendue d'eau salée).",good:"mer",bad:["mère","maire","mers"]},
+    {ph:"Ma ___ me lit une histoire (ma maman).",good:"mère",bad:["mer","maire","mères"]},
+    {ph:"Un ___ de terre creuse le sol (petit animal mou).",good:"ver",bad:["verre","vert","vers"]},
+    {ph:"Je bois de l'eau dans un ___ (récipient).",good:"verre",bad:["ver","vert","vers"]},
+    {ph:"Les élèves jouent dans la ___ de l'école (espace extérieur).",good:"cour",bad:["cours","court","courre"]},
+    {ph:"Le boulanger vend du ___ (aliment doré).",good:"pain",bad:["pin","peint","pains"]},
+    {ph:"On remplit le ___ d'eau (récipient à anse).",good:"seau",bad:["sceau","sot","saut"]},
+    {ph:"Le fermier laboure son ___ (grand terrain).",good:"champ",bad:["chant","champs","chants"]},
+    {ph:"Le soir, papa me lit un ___ de fées (histoire).",good:"conte",bad:["compte","comte","contes"]},
+    {ph:"Il était une ___, un lion rêvait de liberté (autrefois).",good:"fois",bad:["foi","foie","foies"]}
   ];
   var FAMILLE = [
     {ph:"Un petit jardin est un ___.",good:"jardinet",bad:["jardinier","jardinage","jardiner"]},
-    {ph:"Celui qui garde le jardin est le ___.",good:"jardinier",bad:["jardinet","jardinage","jardin"]},
+    {ph:"Celui qui s'occupe du jardin est le ___.",good:"jardinier",bad:["jardinet","jardinage","jardin"]},
     {ph:"Une petite maison est une ___.",good:"maisonnette",bad:["maisonnée","maçon","manoir"]},
-    {ph:"Le contraire de « faire » avec « dé- » : ___.",good:"défaire",bad:["refaire","parfaire","forfait"]},
+    {ph:"Avec le préfixe « dé- », le verbe « faire » devient ___.",good:"défaire",bad:["refaire","parfaire","forfait"]},
     {ph:"Celui qui joue est un ___.",good:"joueur",bad:["jouet","jouable","jeu"]},
-    {ph:"Un petit chat est un ___.",good:"chaton",bad:["chatte","chatière","chattemite"]}
+    {ph:"Un petit chat est un ___.",good:"chaton",bad:["chatte","chatière","chatton"]},
+    {ph:"Celui qui coiffe les cheveux est le ___.",good:"coiffeur",bad:["coiffe","coiffure","coiffé"]},
+    {ph:"L'action de laver s'appelle le ___.",good:"lavage",bad:["laveur","lavable","laver"]}
   ];
   var QUOTIDIEN = [
     {ph:"Pour écrire, j'utilise un ___.",good:"stylo",bad:["balai","verre","oreiller"]},
@@ -506,7 +519,7 @@
     {ph:"Tu ___ mon meilleur ami.",good:"es",bad:["est","et","ai"],note:"es / est"},
     {ph:"Je ne sais pas ___ il est.",good:"où",bad:["ou","houx","oux"],note:"où / ou"},
     {ph:"Tu veux du thé ___ du café ?",good:"ou",bad:["où","houx","oût"],note:"ou / où"},
-    {ph:"___ sont mes clés ?",good:"Ce",bad:["Se","Ceux","Ces"],note:"ce / se"},
+    {ph:"___ sont mes clés.",good:"Ce",bad:["Se","Ceux","Ces"],note:"ce / se"},
     {ph:"Il ___ lave les mains.",good:"se",bad:["ce","ceux","ces"],note:"se / ce"},
     {ph:"C'est ___ livre préféré.",good:"mon",bad:["mont","m'ont","mons"],note:"mon"}
   ];
@@ -520,8 +533,8 @@
     {ph:"Tu dois ___ tes devoirs.",good:"faire",bad:["fait","faites","faisait"],note:"infinitif après « dois »"}
   ];
   var ACCENTS = [
-    {ph:"J'ai acheté un ___ (fruit).",good:"gâteau",bad:["gateau","gâteaux","gatô"],note:"accent circonflexe"},
-    {ph:"Il fait très ___ dehors.",good:"élève",bad:["eleve","élêve","èleve"],note:"accents é/è"},
+    {ph:"J'ai mangé un ___ au chocolat (dessert).",good:"gâteau",bad:["gateau","gâteaux","gatô"],note:"accent circonflexe"},
+    {ph:"L'___ écoute le maître en classe.",good:"élève",bad:["eleve","élêve","èleve"],note:"accents é/è"},
     {ph:"La ___ est ouverte.",good:"fenêtre",bad:["fenetre","fenètre","fênetre"],note:"accent circonflexe"},
     {ph:"On mange à la ___.",good:"cantine",bad:["cantîne","cäntine","cantiné"],note:"pas d'accent"},
     {ph:"Le ___ brille.",good:"soleil",bad:["soléil","sôleil","soleïl"],note:"pas d'accent"},
@@ -538,7 +551,7 @@
   ];
   var MBP = [
     {ph:"Une ___ éclaire la nuit.",good:"lampe",bad:["lanpe","lempe","lampé"],note:"m devant p"},
-    {ph:"Le ___ de sport.",good:"champ",bad:["chanp","chemp","champ-"],note:"m devant p"},
+    {ph:"Le blé pousse dans le ___.",good:"champ",bad:["chanp","cham","chemp"],note:"m devant p"},
     {ph:"Il joue de la ___.",good:"trompette",bad:["tronpette","trempette","trompète"],note:"m devant p"},
     {ph:"Le ___ sonne midi.",good:"tambour",bad:["tanbour","tembour","tambourg"],note:"m devant b"},
     {ph:"Un nombre ___.",good:"important",bad:["inportant","emportant","importent"],note:"m devant p"},
