@@ -454,18 +454,31 @@
     if(named.length && rint(100) < pNamed) return pick(named);
     return SUBJ[pick(pron)];
   }
+  // Partition STRICTE des verbes par difficulté (1..6). Chaque niveau reçoit une
+  // part de CHAQUE groupe (g1/g2/g3), triée par difficulté → il reste valide à
+  // tous les temps (le subjonctif exige des verbes hors 1er groupe). Comme la
+  // forme conjuguée figure dans la phrase et que les ensembles sont disjoints,
+  // les questions d'un niveau n'apparaissent jamais à un autre niveau.
+  (function assignVD(){
+    function blocks(list){
+      list.sort(function(a,b){ return verbDiff(a)-verbDiff(b); });
+      for(var i=0;i<list.length;i++){ list[i].vd=Math.min(6, Math.floor(i*6/list.length)+1); }
+    }
+    blocks(VERBS.filter(function(v){ return v.g===1; }));
+    blocks(VERBS.filter(function(v){ return v.g===2; }));
+    blocks(VERBS.filter(function(v){ return v.g===3; }));
+  })();
   function verbsFor(diff, tense){
-    var pool=VERBS.filter(function(v){
-      if(tense==="subj" && (v.g===1 || v.noSubj)) return false; // subj identique à l'indicatif → exclu
+    function valid(v){
+      if(tense==="subj" && (v.g===1 || v.noSubj)) return false; // subj = indicatif au 1er groupe → exclu
       if(tense==="imper" && v.noImper) return false;
       return true;
-    });
-    // bande de difficulté autour de la cible (élargie jusqu'à trouver assez de verbes)
-    for(var w=1;w<=5;w++){
-      var band=pool.filter(function(v){ return Math.abs(verbDiff(v)-diff)<=w; });
-      if(band.length>=8) return band;
     }
-    return pool;
+    var pool=VERBS.filter(function(v){ return v.vd===diff && valid(v); });
+    if(pool.length>=4) return pool;
+    // filet de sécurité (ne devrait pas se déclencher) : élargit d'un cran
+    for(var w=1;w<=5;w++){ var band=VERBS.filter(function(v){ return Math.abs(v.vd-diff)<=w && valid(v); }); if(band.length>=4) return band; }
+    return VERBS.filter(valid);
   }
 
   function genConj(sub, diff, cat){
