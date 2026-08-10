@@ -1394,8 +1394,59 @@
     {d:4,ph:"gentil → il répond ___.",good:"gentiment",bad:["gentillement","gentimment","gentiement"],note:"« gentil » donne exceptionnellement « gentiment »."},
     {d:6,ph:"absolu → c'est ___ interdit.",good:"absolument",bad:["absoluement","absolumment","absolüment"],note:"Adjectif en -u : + -ment (absolument)."}
   ];
+  /* --- Pluriels : générateur PARTITIONNÉ par difficulté --- */
+  var PLUR_WORDS=[
+    // d1 : pluriel simple en -s
+    {s:"chat",p:"chats",d:1},{s:"chien",p:"chiens",d:1},{s:"table",p:"tables",d:1},{s:"livre",p:"livres",d:1},
+    {s:"fleur",p:"fleurs",d:1},{s:"vélo",p:"vélos",d:1},{s:"ami",p:"amis",d:1},{s:"jouet",p:"jouets",d:1},
+    {s:"école",p:"écoles",d:1},{s:"stylo",p:"stylos",d:1},{s:"porte",p:"portes",d:1},{s:"sac",p:"sacs",d:1},{s:"lit",p:"lits",d:1},
+    // d2 : -eau/-eu → -x
+    {s:"gâteau",p:"gâteaux",d:2},{s:"bateau",p:"bateaux",d:2},{s:"chapeau",p:"chapeaux",d:2},{s:"oiseau",p:"oiseaux",d:2},
+    {s:"jeu",p:"jeux",d:2},{s:"feu",p:"feux",d:2},{s:"cheveu",p:"cheveux",d:2},{s:"tableau",p:"tableaux",d:2},
+    {s:"manteau",p:"manteaux",d:2},{s:"cadeau",p:"cadeaux",d:2},{s:"drapeau",p:"drapeaux",d:2},{s:"rideau",p:"rideaux",d:2},{s:"noyau",p:"noyaux",d:2},
+    // d3 : -al → -aux
+    {s:"cheval",p:"chevaux",d:3},{s:"journal",p:"journaux",d:3},{s:"animal",p:"animaux",d:3},{s:"hôpital",p:"hôpitaux",d:3},
+    {s:"bocal",p:"bocaux",d:3},{s:"signal",p:"signaux",d:3},{s:"canal",p:"canaux",d:3},{s:"général",p:"généraux",d:3},
+    {s:"local",p:"locaux",d:3},{s:"métal",p:"métaux",d:3},{s:"rival",p:"rivaux",d:3},{s:"végétal",p:"végétaux",d:3},{s:"minéral",p:"minéraux",d:3},
+    // d4 : -ou (surtout -ous, exceptions -oux)
+    {s:"trou",p:"trous",d:4},{s:"clou",p:"clous",d:4},{s:"sou",p:"sous",d:4},{s:"fou",p:"fous",d:4},
+    {s:"verrou",p:"verrous",d:4},{s:"bijou",p:"bijoux",d:4},{s:"caillou",p:"cailloux",d:4},{s:"chou",p:"choux",d:4},
+    {s:"genou",p:"genoux",d:4},{s:"hibou",p:"hiboux",d:4},{s:"joujou",p:"joujoux",d:4},{s:"pou",p:"poux",d:4},{s:"matou",p:"matous",d:4},
+    // d5 : -ail (-ails vs -aux)
+    {s:"détail",p:"détails",d:5},{s:"chandail",p:"chandails",d:5},{s:"rail",p:"rails",d:5},{s:"éventail",p:"éventails",d:5},
+    {s:"portail",p:"portails",d:5},{s:"travail",p:"travaux",d:5},{s:"vitrail",p:"vitraux",d:5},{s:"corail",p:"coraux",d:5},
+    {s:"émail",p:"émaux",d:5},{s:"bail",p:"baux",d:5},{s:"soupirail",p:"soupiraux",d:5},{s:"gouvernail",p:"gouvernails",d:5},{s:"épouvantail",p:"épouvantails",d:5},
+    // d6 : exceptions et invariables (distracteurs explicites)
+    {s:"œil",p:"yeux",d:6,bad:["œils","yeus","oeils"]},{s:"monsieur",p:"messieurs",d:6,bad:["monsieurs","messieur","monsieux"]},
+    {s:"madame",p:"mesdames",d:6,bad:["madames","mesdame","medames"]},{s:"pneu",p:"pneus",d:6,bad:["pneux","pneaux","pnaus"]},
+    {s:"bleu",p:"bleus",d:6,bad:["bleux","bleaux","blues"]},{s:"landau",p:"landaus",d:6,bad:["landaux","landeaux","landeaus"]},
+    {s:"festival",p:"festivals",d:6,bad:["festivaux","festivales","festivaus"]},{s:"carnaval",p:"carnavals",d:6,bad:["carnavaux","carnavales","carnavaus"]},
+    {s:"récital",p:"récitals",d:6,bad:["récitaux","récitales","récitaus"]},{s:"nez",p:"nez",d:6,bad:["nezs","nés","néz"]},
+    {s:"prix",p:"prix",d:6,bad:["prixs","pris","prixes"]},{s:"croix",p:"croix",d:6,bad:["croixs","crois","croies"]},{s:"gaz",p:"gaz",d:6,bad:["gazs","gazes","gas"]}
+  ];
+  var PLUR_FRAMES=["Le pluriel de « {S} » est ___.","Au pluriel, « {S} » devient ___.","Plusieurs « {S} » → des ___.","Écris « {S} » au pluriel : ___."];
+  function plurBad(sing, plur){
+    var c=[sing, sing+"s", sing+"x", sing+"es",
+      sing.replace(/al$/,"als"), sing.replace(/al$/,"aux"),
+      sing.replace(/(eau|au|eu)$/,"$1s"), sing.replace(/(eu|au)$/,"$1x"),
+      sing.replace(/ou$/,"ous"), sing.replace(/ou$/,"oux"),
+      sing.replace(/ail$/,"ails"), sing.replace(/ail$/,"aux")];
+    var out=[], seen={}; seen[norm(plur)]=1;
+    shuffle(c);
+    for(var i=0;i<c.length && out.length<3;i++){ if(!seen[norm(c[i])]){ seen[norm(c[i])]=1; out.push(c[i]); } }
+    return out;
+  }
+  function genPluriels(diff,cat,sub){
+    var it=pick(bandFilter(PLUR_WORDS,diff,"d"));
+    var bad=it.bad?it.bad.slice():plurBad(it.s,it.p);
+    return { cat:cat, sub:sub, phrase:pick(PLUR_FRAMES).replace("{S}",it.s), hint:"Écris le bon pluriel",
+      note:"Pluriels : -al→-aux, -eau/-eu→-x, -ou→-s (sauf bijou, caillou, chou, genou, hibou, joujou, pou → -x), -ail→-ails (sauf travail, vitrail, corail… → -aux).",
+      options:build(it.p, bad), answer:0 };
+  }
+
   function genOrt(sub, diff, cat){
     var it, hint;
+    if(sub==="Pluriels") return genPluriels(diff,cat,sub);
     if(sub==="Homophones"){ it=pickByDiff(HOMOPH,diff); hint="Homophones ("+it.note+")"; }
     else if(sub==="é ou er"){ it=pickByDiff(ER_E,diff); hint="é (participe) ou er (infinitif) ?"; }
     else if(sub==="Accents"){ it=pickByDiff(ACCENTS,diff); hint="Orthographe : "+it.note; }
