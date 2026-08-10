@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#160f26">
+<meta name="theme-color" content="#cfe9b8">
 <title>La Grande Évasion</title>
 
 <!-- PWA : installable, se lance en plein écran hors du navigateur -->
@@ -20,54 +20,56 @@
 <style>
   /* ============================ Base & thème ============================ */
   :root{
-    --bg:#160f26; --bg2:#20163a; --panel:#2a1e48; --panel2:#352a58;
-    --ink:#f6f2ff; --ink-soft:#c9c0e4; --line:#4a3d73;
-    --accent:#f2c14e; --accent2:#ffd977;
-    --ok:#3fae5a; --ok2:#57d078; --ko:#e0574a; --ko2:#ff7566;
-    /* couleurs des catégories (cf. §6) */
+    /* Thème « Safari moderne » : clair, chaleureux, fun */
+    --bg:#eef6e2; --bg2:#e2f0d1; --panel:#ffffff; --panel2:#f4f9ec;
+    --ink:#26332a; --ink-soft:#61735f; --line:#d8e6cd;
+    --accent:#e88b2a; --accent2:#ffb64d;
+    --ok:#3fae5a; --ok2:#2f9a4c; --ko:#e0574a; --ko2:#c8402f;
+    /* couleurs des catégories */
     --c-conjugaison:#3b82f6; --c-grammaire:#8b5cf6;
-    --c-vocabulaire:#f59e0b; --c-orthographe:#22c55e; --c-melange:#ec78ac;
-    --font:"Trebuchet MS","Segoe UI",Verdana,system-ui,sans-serif;
+    --c-vocabulaire:#f59e0b; --c-orthographe:#22c55e; --c-melange:#ec6aa0;
+    --shadow:rgba(60,80,40,.18);
+    --font:"Trebuchet MS",ui-rounded,"Segoe UI",Verdana,system-ui,sans-serif;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;margin:0;}
   body{
     font-family:var(--font); color:var(--ink);
-    background:radial-gradient(120% 80% at 50% 0%,#2a1c4d 0%,var(--bg) 60%,#0f0a1c 100%);
+    background:linear-gradient(180deg,#bfe6ff 0%,#dff2e0 24%,var(--bg) 58%);
     overflow:hidden; user-select:none;
   }
-  canvas{image-rendering:pixelated; image-rendering:crisp-edges;}
+  canvas{image-rendering:auto;}
 
   /* Cadre appli : portrait, centré, plein écran mobile */
   #app{
     position:relative; height:100dvh; width:100%;
     max-width:460px; margin:0 auto;
     display:flex; flex-direction:column; overflow:hidden;
-    box-shadow:0 0 40px rgba(0,0,0,.5);
+    box-shadow:0 0 40px rgba(60,80,40,.18);
   }
 
   /* ============================== En-tête ============================== */
   header{
     flex:0 0 auto; padding:10px 12px 8px; text-align:center; position:relative;
-    background:linear-gradient(180deg,rgba(0,0,0,.25),transparent);
+    background:linear-gradient(180deg,rgba(255,255,255,.65),transparent);
   }
   #soundBtn{
     position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:11px;
     border:1px solid var(--line); background:var(--panel); color:var(--ink); font-size:19px;
     cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;
-    box-shadow:0 2px 0 #1c1436;
+    box-shadow:0 2px 0 var(--line);
   }
   #soundBtn:active{transform:translateY(2px); box-shadow:none;}
   #installBtn{
     position:absolute; top:10px; right:58px; width:40px; height:40px; border-radius:11px;
-    border:1px solid var(--accent); background:var(--accent); color:#3a2600; font-size:19px;
+    border:1px solid var(--accent); background:var(--accent); color:#fff; font-size:19px;
     cursor:pointer; line-height:1; display:none; align-items:center; justify-content:center;
-    box-shadow:0 2px 0 #7a4a00;
+    box-shadow:0 2px 0 #b06212;
   }
   #installBtn:active{transform:translateY(2px); box-shadow:none;}
   header h1{
     margin:0; font-size:20px; letter-spacing:2px; text-transform:uppercase;
-    color:var(--accent); text-shadow:0 2px 0 #7a4a00, 0 0 12px rgba(242,193,78,.35);
+    color:var(--accent); text-shadow:0 2px 0 #fff, 0 0 10px rgba(232,139,42,.25);
   }
   header .sub{font-size:11px; color:var(--ink-soft); letter-spacing:.5px; margin-top:2px;}
 
@@ -115,10 +117,10 @@
   .infobar{
     flex:0 0 auto; display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; justify-content:center;
     padding:8px 10px; font-size:12px; font-weight:700; color:var(--ink-soft);
-    background:rgba(0,0,0,.2); border-bottom:1px solid var(--line);
+    background:var(--panel2); border-bottom:1px solid var(--line);
   }
   .infobar b{color:var(--ink);}
-  .infobar .diffpill{color:#241a12; padding:2px 9px; border-radius:20px; font-weight:800;}
+  .infobar .diffpill{color:#fff; padding:2px 9px; border-radius:20px; font-weight:800;}
   .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
   .animal-card{
     position:relative; background:var(--panel); border:2px solid var(--line);
@@ -152,7 +154,7 @@
   /* =========================== Écran Jeu ============================== */
   .catbar{
     flex:0 0 auto; display:flex; gap:6px; padding:8px 10px; overflow-x:auto;
-    background:rgba(0,0,0,.2); border-bottom:1px solid var(--line);
+    background:var(--panel2); border-bottom:1px solid var(--line);
   }
   .cat-btn{
     flex:0 0 auto; border:2px solid transparent; border-radius:20px; padding:6px 12px;
@@ -160,16 +162,16 @@
     display:flex; align-items:center; gap:6px; background:var(--panel);
   }
   .cat-btn .dot{width:10px; height:10px; border-radius:50%; background:#fff;}
-  .cat-btn.active{opacity:1; border-color:#fff; box-shadow:0 0 10px rgba(255,255,255,.25);}
+  .cat-btn.active{opacity:1; border-color:var(--accent); box-shadow:0 0 8px rgba(232,139,42,.3);}
 
-  #boardWrap{flex:1 1 auto; overflow-y:auto; overflow-x:hidden; background:#0e0a1c; position:relative;}
+  #boardWrap{flex:1 1 auto; overflow-y:auto; overflow-x:hidden; background:#cfe9bf; position:relative;}
   #boardInner{position:relative; width:100%; line-height:0;}
-  #board{display:block; width:100%; height:auto; image-rendering:pixelated;}
+  #board{display:block; width:100%; height:auto; image-rendering:auto;}
   #pawnLayer{position:absolute; top:0; left:0; width:100%; height:100%; image-rendering:auto; pointer-events:none;}
 
   .gamebar{
     flex:0 0 auto; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-    background:linear-gradient(0deg,rgba(0,0,0,.35),transparent);
+    background:linear-gradient(0deg,var(--panel2),transparent);
     display:flex; align-items:center; gap:10px;
   }
   .gamebar #rollBtn{flex:1;}
@@ -874,7 +876,7 @@ function updateMissionProgress(){
 var boardW, boardH;
 var bctx=null, boardStatic=null;
 var DECO=SPRITES.deco, ELL=SPRITES.ellipse, CIR=SPRITES.circle, RQ=SPRITES.R;
-var SCALE=1;   // rendu pixel art : 1 px logique agrandi en "nearest" (image-rendering:pixelated)
+var SCALE=2;   // sur-échantillonnage : rendu vectoriel lissé (safari moderne)
 
 /* ---- Chemin serpentin défini par une courbe centrale échantillonnée ---- */
 var W=340, HW=23, STONE=6;                 // demi-largeur route + bordure de pierre
@@ -923,7 +925,7 @@ var pctx=null, PS=3;   // couche des pions (emojis HD) : sur-échantillonnée, l
 function initBoard(){
   initPath();
   var cv=$("board"); cv.width=boardW*SCALE; cv.height=boardH*SCALE; bctx=cv.getContext("2d");
-  bctx.imageSmoothingEnabled=false;
+  bctx.imageSmoothingEnabled=true;
   boardStatic=document.createElement("canvas"); boardStatic.width=boardW*SCALE; boardStatic.height=boardH*SCALE;
   var pl=$("pawnLayer"); pl.width=boardW*PS; pl.height=boardH*PS; pctx=pl.getContext("2d"); pctx.imageSmoothingEnabled=true;
   buildStaticBoard();
@@ -942,77 +944,104 @@ function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.im
 function buildStaticBoard(){
   var ctx=boardStatic.getContext("2d");
   ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,boardW*SCALE,boardH*SCALE);
-  ctx.setTransform(SCALE,0,0,SCALE,0,0); ctx.imageSmoothingEnabled=false;
-  paintGrass(ctx);          // herbe + dithering
-  paintGround(ctx);         // mares, sable, neige
-  drawScenery(ctx);         // arbres et props (sans animaux ni panneaux)
-  drawExitGate(ctx);        // portail de sortie en bois (haut) — dessiné sous les cases
-  drawPathAndTiles(ctx);    // chemin serpentin + cases (trapèzes) + numéros
-  drawZooBottom(ctx);       // entrée ZOO / DÉPART
+  ctx.setTransform(SCALE,0,0,SCALE,0,0);
+  ctx.imageSmoothingEnabled=true; ctx.lineJoin="round"; ctx.lineCap="round";
+  paintGrass(ctx);          // ciel + herbe + zones (dégradés doux)
+  paintGround(ctx);         // mares, sable, neige (vectoriel)
+  drawScenery(ctx);         // arbres, palmiers, buissons, nuages, soleil
+  drawExitGate(ctx);        // grand portail LIBERTÉ (haut) — sous les cases
+  drawPathAndTiles(ctx);    // chemin sablé + cases arrondies + numéros/icônes
+  drawZooBottom(ctx);       // clôture cassée + DÉPART
 }
 
-/* ---------- fond ---------- */
+/* ---------- fond : ciel, herbe, zones (vectoriel lissé) ---------- */
+function blob(ctx,x,y,rx,ry,color){ ctx.fillStyle=color; ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,6.2832); ctx.fill(); }
 function paintGrass(ctx){
+  // ciel derrière le portail (en haut) → dégradé vers l'herbe
+  var sky=ctx.createLinearGradient(0,0,0,boardH);
+  sky.addColorStop(0,"#a9ddff"); sky.addColorStop(0.16,"#d7eef0");
+  sky.addColorStop(0.30,"#cfeaad"); sky.addColorStop(1,"#a9d488");
+  ctx.fillStyle=sky; ctx.fillRect(0,0,boardW,boardH);
+  // grandes zones du zoo (taches douces)
+  blob(ctx, boardW*0.5, laneY(1)+10, 220, 120, "rgba(233,220,150,.55)");   // savane (ocre)
+  blob(ctx, boardW*0.5, laneY(3)+6, 210, 110, "rgba(150,205,140,.45)");    // serre (verte)
+  blob(ctx, boardW*0.5, laneY(5)+8, 220, 120, "rgba(198,228,236,.40)");    // esplanade/bassin (bleutée)
+  // pointillé d'herbe très léger pour la texture
   var rng=mulberry32(7);
-  ctx.fillStyle="#4a8f3c"; ctx.fillRect(0,0,boardW,boardH);
-  for(var y=0;y<boardH;y+=4) for(var x=0;x<boardW;x+=4){
-    var r=rng();
-    if(r<0.16){ ctx.fillStyle="#6ab04c"; ctx.fillRect(x,y,2,2); }
-    else if(r<0.30){ ctx.fillStyle="#2d6b25"; ctx.fillRect(x+2,y+2,2,2); }
+  for(var i=0;i<260;i++){
+    var x=rng()*boardW, y=140+rng()*(boardH-140);
+    ctx.fillStyle=rng()<.5?"rgba(255,255,255,.10)":"rgba(60,120,50,.10)";
+    ctx.beginPath(); ctx.ellipse(x,y,2.2,1.4,0,0,6.2832); ctx.fill();
   }
 }
 function paintGround(ctx){
   // herbe plus claire devant la clôture de départ (bas du plateau)
-  var fy=Y_BOT+34, rng=mulberry32(55);
-  ctx.fillStyle="#6ab04c"; ctx.fillRect(0, fy, boardW, boardH-fy);
-  for(var y=fy;y<boardH;y+=4) for(var x=0;x<boardW;x+=4){
-    if(rng()<0.16){ ctx.fillStyle="#84c765"; ctx.fillRect(x,y,2,2); }
-    else if(rng()<0.24){ ctx.fillStyle="#57a244"; ctx.fillRect(x+2,y+2,2,2); }
-  }
-  DECO.pond(ctx, 28, laneY(2)+20, 18, 11);
-  DECO.pond(ctx, boardW-26, laneY(4)-4, 20, 12);
-  DECO.pond(ctx, 24, laneY(5)+24, 15, 9);
-  ELL(ctx, boardW-30, laneY(5)+6, 30, 18, "rgba(214,240,251,.65)"); // neige
-  ELL(ctx, 30, laneY(1)+4, 26, 15, "rgba(226,205,120,.40)");        // sable
+  var fy=Y_BOT+30;
+  var g=ctx.createLinearGradient(0,fy,0,boardH); g.addColorStop(0,"#cdeba0"); g.addColorStop(1,"#d9f0ad");
+  ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(boardW/2, fy+64, boardW*0.62, 78, 0,0,6.2832); ctx.fill();
+  // mares (bassin) — ellipses lissées
+  svPond(ctx, 30, laneY(2)+20, 20, 12);
+  svPond(ctx, boardW-28, laneY(4)-4, 22, 13);
+  svPond(ctx, 26, laneY(5)+24, 16, 10);
+  // plaque de neige & sable
+  blob(ctx, boardW-30, laneY(5)+6, 30, 17, "rgba(224,242,251,.7)");
+  blob(ctx, 30, laneY(1)+4, 26, 14, "rgba(232,214,150,.5)");
 }
 
-/* ---------- décor & animaux ---------- */
-function A(ctx,id,cx,cy){                    // grand animal pixel art (u=3 → 48px)
-  ELL(ctx, cx, cy+20, 18, 6, "rgba(20,16,30,.22)");
-  SPRITES.animal(ctx, id, Math.round(cx-24), Math.round(cy-24), 3);
-}
+/* ---------- primitives de décor vectorielles (flat, lissé) ---------- */
+function softShadow(ctx,fn){ ctx.save(); ctx.shadowColor="rgba(40,60,30,.22)"; ctx.shadowBlur=3; ctx.shadowOffsetY=2; fn(); ctx.restore(); }
+function circle(ctx,x,y,r,c){ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,r,0,6.2832); ctx.fill(); }
+function svTree(ctx,x,y,s){ s=s||1; ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle="#9c6b3f"; roundRect(ctx,-3,0,6,20,2,"#9c6b3f");
+  circle(ctx,0,-10,15,"#4fa85f"); circle(ctx,-9,-4,10,"#5fb56d"); circle(ctx,9,-5,10,"#5fb56d"); circle(ctx,0,-14,10,"#78c884");
+  ctx.restore(); }
+function svAcacia(ctx,x,y,s){ s=s||1; ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  roundRect(ctx,-3,-2,6,24,2,"#9c6b3f");
+  ctx.fillStyle="#5fae63"; ctx.beginPath(); ctx.moveTo(-28,-2); ctx.quadraticCurveTo(0,-20,28,-2); ctx.quadraticCurveTo(0,-9,-28,-2); ctx.fill();
+  ctx.fillStyle="#78c67c"; ctx.beginPath(); ctx.ellipse(0,-8,26,8,0,0,6.2832); ctx.fill();
+  ctx.restore(); }
+function svPalm(ctx,x,y,s){ s=s||1; ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  ctx.strokeStyle="#a9743e"; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,22); ctx.quadraticCurveTo(-4,2,2,-14); ctx.stroke();
+  ctx.fillStyle="#4fae63"; var bl=[[-30,-12],[30,-12],[-20,-32],[22,-32],[0,-40]];
+  bl.forEach(function(b){ ctx.beginPath(); ctx.moveTo(2,-14); ctx.quadraticCurveTo(b[0]*.6,b[1]-6,b[0],b[1]); ctx.quadraticCurveTo(b[0]*.5,b[1]+4,2,-11); ctx.fill(); });
+  ctx.restore(); }
+function svBush(ctx,x,y,s){ s=s||1; ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle="#6fbf72"; ctx.beginPath(); ctx.ellipse(0,0,20,12,0,0,6.2832); ctx.fill();
+  circle(ctx,-8,-3,9,"#7fca82"); circle(ctx,8,-2,10,"#7fca82"); ctx.restore(); }
+function svRock(ctx,x,y,s){ s=s||1; ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle="#b9b2a6"; ctx.beginPath(); ctx.moveTo(-16,8); ctx.quadraticCurveTo(-18,-6,-4,-9); ctx.quadraticCurveTo(10,-14,16,-2); ctx.quadraticCurveTo(20,8,6,9); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#a49d90"; ctx.beginPath(); ctx.moveTo(-16,8); ctx.quadraticCurveTo(-18,-6,-4,-9); ctx.lineTo(2,9); ctx.closePath(); ctx.fill();
+  ctx.restore(); }
+function svPond(ctx,x,y,rx,ry){ ctx.fillStyle="#7fc7e6"; ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,6.2832); ctx.fill();
+  ctx.fillStyle="#9bd7ef"; ctx.beginPath(); ctx.ellipse(x,y,rx-4,ry-3,0,0,6.2832); ctx.fill();
+  ctx.fillStyle="#c4eaf8"; ctx.beginPath(); ctx.ellipse(x-rx*0.3,y-ry*0.3,rx*0.32,ry*0.26,0,0,6.2832); ctx.fill(); }
+function svCloud(ctx,x,y,s){ s=s||1; ctx.save(); ctx.translate(x,y); ctx.scale(s,s); ctx.globalAlpha=.92; ctx.fillStyle="#ffffff";
+  circle(ctx,-14,2,11); circle(ctx,0,-4,14); circle(ctx,15,2,11); roundRect(ctx,-20,2,40,10,5,"#ffffff"); ctx.restore(); }
+function svTuft(ctx,x,y){ ctx.strokeStyle="#6ea24a"; ctx.lineWidth=2; ctx.beginPath();
+  ctx.moveTo(x,y); ctx.quadraticCurveTo(x-3,y-8,x-5,y-11); ctx.moveTo(x,y); ctx.lineTo(x,y-13); ctx.moveTo(x,y); ctx.quadraticCurveTo(x+3,y-8,x+5,y-11); ctx.stroke(); }
+
 function drawScenery(ctx){
   var rng=mulberry32(20260810);
-  function treeAt(x,y){ var t=rng(); if(t<.45)DECO.tree(ctx,x,y,1.6); else if(t<.72)DECO.tree(ctx,x,y,1.2); else DECO.pine(ctx,x,y,1.4); }
-  // forêt sur tout le pourtour
-  for(var y=Y_TOP-14; y<Y_BOT+46; y+=24){
-    treeAt(9+rng()*8, y+rng()*8);
-    treeAt(boardW-9-rng()*8, y+rng()*8);
+  // soleil + nuages en haut (côté ciel)
+  circle(ctx, boardW-40, 54, 22, "#ffe07a"); ctx.globalAlpha=.3; circle(ctx, boardW-40, 54, 30, "#ffe07a"); ctx.globalAlpha=1;
+  svCloud(ctx, 60, 46, 1); svCloud(ctx, boardW-120, 30, .8);
+  // arbres sur le pourtour (rangée gauche/droite)
+  for(var y=Y_TOP-4; y<Y_BOT+40; y+=40){
+    softShadow(ctx, (function(yy){ return function(){ var t=rng(); (t<.5?svTree:svAcacia)(ctx, 22+rng()*8, yy+rng()*8, 0.9+rng()*.4); }; })(y));
+    softShadow(ctx, (function(yy){ return function(){ var t=rng(); (t<.5?svTree:svAcacia)(ctx, boardW-22-rng()*8, yy+rng()*8, 0.9+rng()*.4); }; })(y));
   }
-  // buissons / fleurs / touffes semés dans les marges (densité élevée)
-  var fc=["#e0574a","#f2c14e","#ec78ac","#8b5cf6","#ffffff"];
-  for(var i=0;i<120;i++){
-    var left=rng()<.5, x= left ? (5+rng()*46) : (boardW-5-rng()*46);
-    var yy=Y_TOP-8+rng()*(Y_BOT-Y_TOP+52);
-    var r=rng();
-    if(r<.45) DECO.flower(ctx,x,yy,fc[(rng()*fc.length)|0]);
-    else if(r<.78) DECO.tuft(ctx,x,yy,1);
-    else DECO.bush(ctx,x,yy,1+rng()*0.4);
+  // buissons & touffes semés dans les marges
+  for(var i=0;i<26;i++){
+    var left=rng()<.5, x= left ? (14+rng()*30) : (boardW-14-rng()*30);
+    var yy=Y_TOP+rng()*(Y_BOT-Y_TOP+30);
+    if(rng()<.5) softShadow(ctx, (function(xx,y2,ss){return function(){ svBush(ctx,xx,y2,ss); };})(x,yy,.7+rng()*.4));
+    else svTuft(ctx,x,yy);
   }
-  // props thématiques
-  DECO.acacia(ctx, 46, laneY(1)-6, 1.4);
-  DECO.palm(ctx, boardW-46, laneY(3)-8, 1.5);
-  DECO.bamboo(ctx, boardW-48, laneY(2)+6, 1.3);
-  DECO.bamboo(ctx, 48, laneY(2)-8, 1.1);
-  DECO.ice(ctx, boardW-40, laneY(5)+2, 1.3);
-  DECO.ice(ctx, 40, laneY(5)-10, 1.1);
-  DECO.rock(ctx, 48, laneY(4)+10, 1.3);
-  DECO.rock(ctx, boardW-48, laneY(1)+6, 1.2);
-  DECO.fence(ctx, LANE_XL-8, Y_BOT-2, 120, 1.1);
-  DECO.bench(ctx, 40, laneY(0)+10, 1.1);
-  DECO.lamp(ctx, boardW-14, laneY(6)+6, 1.1);
-  DECO.lamp(ctx, 16, laneY(0)+16, 1.1);
-  // (animaux latéraux et panneaux de zone retirés à la demande)
+  // props thématiques par zone
+  softShadow(ctx,function(){ svPalm(ctx, boardW-40, laneY(3)-6, 1.1); });
+  softShadow(ctx,function(){ svPalm(ctx, 40, laneY(3)+10, .9); });
+  softShadow(ctx,function(){ svRock(ctx, 46, laneY(4)+10, 1.2); });
+  softShadow(ctx,function(){ svRock(ctx, boardW-46, laneY(1)+8, 1.1); });
 }
 
 /* ---------- chemin serpentin + cases ---------- */
@@ -1028,157 +1057,119 @@ function fillQuad(ctx,q,color){
   for(var i=1;i<q.length;i++) ctx.lineTo(q[i][0],q[i][1]);
   ctx.closePath(); ctx.fillStyle=color; ctx.fill();
 }
-function specialVisual(type){
-  if(type==="piege")   return {kind:"red",  col:"#c0392b", label:"-3"};
-  if(type==="tornade") return {kind:"red",  col:"#c0392b", label:"-2"};
-  if(type==="toboggan")return {kind:"blue", col:"#2980b9", label:"+4"};
-  if(type==="banane"||type==="ressort"||type==="cadeau") return {kind:"blue", col:"#2980b9", label:"+"};
-  return {kind:"star"};                       // gardien, defi, duel, mystere
-}
-function drawNumber(ctx,i,c,color){
+// Icône emoji + teinte de chaque type de case spéciale (garde le code couleur : vert = avance, rouge = recule)
+var SPECIAL_ICON={ banane:{e:"🍌",t:"good"}, toboggan:{e:"🛝",t:"good"}, ressort:{e:"🌀",t:"good"},
+  cadeau:{e:"🎁",t:"good"}, tornade:{e:"🌪️",t:"bad"}, piege:{e:"🪤",t:"bad"},
+  gardien:{e:"🛡️",t:"neutral"}, defi:{e:"⚡",t:"neutral"}, duel:{e:"⚔️",t:"neutral"}, mystere:{e:"❓",t:"neutral"} };
+var TILE_FILL={ good:"#e4f6e6", bad:"#fde4e0", neutral:"#fff3d6", plain:"#ffffff" };
+
+// Case arrondie orientée le long du chemin (pavé lissé).
+function drawTile(ctx,c,len,fill){
   var ang=Math.atan2(c.ty,c.tx);
-  if(ang>Math.PI/2) ang-=Math.PI; if(ang<-Math.PI/2) ang+=Math.PI;
-  ang=Math.max(-0.5,Math.min(0.5,ang));
+  var w=Math.min(len*0.92, HW*2), h=HW*2*0.94, r=Math.min(9,h/2);
   ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(ang);
-  ctx.fillStyle=color||"#3d2b1f"; ctx.font="bold 15px monospace";
-  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(String(i),0,0);
+  ctx.save(); ctx.shadowColor="rgba(40,50,25,.28)"; ctx.shadowBlur=3; ctx.shadowOffsetY=2;
+  roundRect(ctx,-w/2,-h/2,w,h,r,fill,null); ctx.restore();
+  ctx.strokeStyle="rgba(120,110,80,.35)"; ctx.lineWidth=1; roundRect(ctx,-w/2,-h/2,w,h,r,null,"rgba(120,110,80,.35)");
   ctx.restore();
+}
+function drawTileNumber(ctx,i,c){
+  ctx.save(); ctx.translate(c.x,c.y);
+  ctx.fillStyle="#7a8a74"; ctx.font="bold 13px "+ 'ui-rounded,"Trebuchet MS",system-ui,sans-serif';
+  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(String(i),0,1); ctx.restore();
+}
+function drawTileEmoji(ctx,emoji,c){
+  ctx.save(); ctx.translate(c.x,c.y);
+  ctx.font="15px system-ui,'Apple Color Emoji','Noto Color Emoji',sans-serif";
+  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(emoji,0,1); ctx.restore();
 }
 function drawPathAndTiles(ctx){
   var B=[]; for(var j=0;j<=NCASE;j++) B.push(boundary(j));
-  // bordure de pierre puis route sable
-  ribbon(ctx,B,HW+STONE,"#5c5c64");
-  ribbon(ctx,B,HW+STONE-2,"#8a8a92");
-  ribbon(ctx,B,HW,"#e8d5a8");
-  // texture de dalles (dithering léger sur la route)
-  var rng=mulberry32(99);
-  for(var t=0;t<900;t++){
-    var s=rng()*CTOTAL, p=atLen(s), off=(rng()*2-1)*HW*0.9;
-    var px=p.x-p.ty*off, py=p.y+p.tx*off;
-    ctx.fillStyle=rng()<.5?"rgba(180,150,95,.35)":"rgba(255,244,210,.35)";
-    ctx.fillRect(px|0,py|0,2,2);
-  }
-  // cases
+  // ombre douce du chemin, puis ruban sablé + liseré clair
+  ctx.save(); ctx.shadowColor="rgba(90,60,20,.20)"; ctx.shadowBlur=6; ctx.shadowOffsetY=3;
+  ribbon(ctx,B,HW+2,"#e3bd80"); ctx.restore();
+  ribbon(ctx,B,HW,"#efd6a4");
+  // pointillé central clair (guide du parcours)
+  ctx.strokeStyle="rgba(255,247,214,.85)"; ctx.lineWidth=3; ctx.setLineDash([1,12]);
+  ctx.beginPath(); ctx.moveTo(B[0].x,B[0].y);
+  for(var j2=1;j2<B.length;j2++) ctx.lineTo(B[j2].x,B[j2].y); ctx.stroke(); ctx.setLineDash([]);
+  // cases (pavés arrondis)
+  var len=CTOTAL/NCASE;
   for(var i=0;i<NCASE;i++){
-    var b0=B[i], b1=B[i+1];
-    var quad=[[b0.x+b0.nx*HW,b0.y+b0.ny*HW],[b1.x+b1.nx*HW,b1.y+b1.ny*HW],
-              [b1.x-b1.nx*HW,b1.y-b1.ny*HW],[b0.x-b0.nx*HW,b0.y-b0.ny*HW]];
-    var kind=null, col=null, lab=null;
-    if(i>0 && i<50){
-      if(OBSTACLES[i]) kind="rock";
-      else if(SPECIALS[i]){ var v=specialVisual(SPECIALS[i]); kind=v.kind; col=v.col; lab=v.label; }
-    }
-    if(kind==="red"||kind==="blue") fillQuad(ctx,quad,col);
-    // séparateur (bord entre case i et i+1)
-    ctx.strokeStyle="rgba(90,70,40,.55)"; ctx.lineWidth=1;
-    ctx.beginPath();
-    ctx.moveTo(b1.x+b1.nx*HW,b1.y+b1.ny*HW); ctx.lineTo(b1.x-b1.nx*HW,b1.y-b1.ny*HW); ctx.stroke();
     var c=caseCenter(i);
-    if(kind==="rock") DECO.rockPile(ctx, c.x, c.y, 1.15);
-    if(kind==="star") DECO.star(ctx, c.x, c.y, 10, "#ffd94a");
-    var numCol=(kind==="red"||kind==="blue")?"#ffffff":(kind==="star"?"#5a3d10":"#3d2b1f");
-    drawNumber(ctx, i, c, numCol);
-    if(lab){ ctx.fillStyle=(kind==="red")?"#ffd7d1":"#d6ecff"; ctx.font="bold 8px monospace";
-      ctx.textAlign="center"; ctx.textBaseline="middle";
-      ctx.fillText(lab, c.x - c.ty*13, c.y + c.tx*13); }
+    var icon=null, fill=TILE_FILL.plain;
+    if(i>0 && i<50){
+      if(OBSTACLES[i]){ icon="🪨"; fill="#eee7db"; }
+      else if(SPECIALS[i] && SPECIAL_ICON[SPECIALS[i]]){ var v=SPECIAL_ICON[SPECIALS[i]]; icon=v.e; fill=TILE_FILL[v.t]; }
+    }
+    drawTile(ctx,c,len,fill);
+    if(icon) drawTileEmoji(ctx,icon,c); else drawTileNumber(ctx,i,c);
   }
 }
 
 /* ---------- portails & panneaux ---------- */
 // Portail de sortie « LIBERTÉ » : grande grille en bois à deux battants,
 // encadrée de grands arbres (inspiré de la photo fournie), en pixel art.
+function woodRect(ctx,x,y,w,h,r){ r=r||4;
+  roundRect(ctx,x,y,w,h,r,"#b8814a",null);
+  roundRect(ctx,x+2,y+2,Math.max(2,w*0.26),h-4,Math.max(2,r-2),"rgba(255,255,255,.20)",null);
+  ctx.strokeStyle="#6d461f"; ctx.lineWidth=2; roundRect(ctx,x,y,w,h,r,null,"#6d461f");
+}
+function gateLeaf2(ctx,x,y,dir){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(dir*0.17);
+  var lx=(dir<0)?-40:0;
+  roundRect(ctx,lx,-46,40,92,4,"#c0894f",null);
+  ctx.strokeStyle="rgba(109,70,31,.5)"; ctx.lineWidth=1;
+  for(var yy=-32; yy<46; yy+=14){ ctx.beginPath(); ctx.moveTo(lx+2,yy); ctx.lineTo(lx+38,yy); ctx.stroke(); }
+  ctx.strokeStyle="#6d461f"; ctx.lineWidth=2; roundRect(ctx,lx,-46,40,92,4,null,"#6d461f");
+  circle(ctx,(dir<0?-8:8),4,3,"#4a3016");
+  ctx.restore();
+}
+// Grand portail « LIBERTÉ » : deux battants entrouverts sur la lumière (vectoriel).
 function drawExitGate(ctx){
-  var cx=boardW/2;
-  // grands arbres derrière le portail
-  DECO.tree(ctx, 42, 52, 3.2);
-  DECO.tree(ctx, boardW-42, 46, 3.7);
-  DECO.tree(ctx, 96, 34, 2.0);
-  DECO.tree(ctx, boardW-96, 30, 2.2);
-  // sol sable au pied du portail (chemin qui passe dessous)
-  ELL(ctx, cx, 104, 94, 15, "#e8d5a8");
-  ELL(ctx, cx, 104, 70, 10, "#f0e2bc");
-  // poteaux en bois
-  gatePost(ctx, 100, 28, 84);
-  gatePost(ctx, boardW-100, 28, 84);
-  // deux battants
-  var gy=40, gh=60;
-  gateLeaf(ctx, 112, gy, cx-2-112, gh, +1);
-  gateLeaf(ctx, cx+2, gy, (boardW-112)-(cx+2), gh, -1);
-  // ferrures + cadenas doré au centre
-  ctx.fillStyle="#2f2f37"; ctx.fillRect(cx-16, gy+14, 12, 5); ctx.fillRect(cx+4, gy+14, 12, 5);
-  ctx.fillStyle="#2f2f37"; ctx.fillRect(cx-16, gy+34, 12, 5); ctx.fillRect(cx+4, gy+34, 12, 5);
-  gatePadlock(ctx, cx, gy+28);
-  // bannière LIBERTÉ
-  ctx.fillStyle="#7a1f1f"; ctx.fillRect(cx-54, 4, 108, 16);
-  ctx.fillStyle="#5a1414"; ctx.fillRect(cx-54,20,5,5); ctx.fillRect(cx+49,20,5,5);
-  ctx.fillStyle="#f2c14e"; ctx.font="bold 12px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText("LIBERTÉ !", cx, 12);
-  // végétation à la base des poteaux
-  DECO.bush(ctx, 104, 112, 1.4); DECO.bush(ctx, boardW-104, 112, 1.4);
-  DECO.tuft(ctx, 118, 114, 1.2); DECO.tuft(ctx, boardW-118, 114, 1.2);
+  var cx=boardW/2, gy=82;
+  ctx.save(); ctx.translate(cx,gy);
+  // halo + rayons de liberté
+  var gl=ctx.createRadialGradient(0,-8,4,0,-8,74); gl.addColorStop(0,"rgba(255,240,180,.85)"); gl.addColorStop(1,"rgba(255,240,180,0)");
+  ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(0,-8,74,0,6.2832); ctx.fill();
+  ctx.save(); ctx.globalAlpha=.4; ctx.fillStyle="#fff3c4";
+  for(var a=-2;a<=2;a++){ ctx.save(); ctx.rotate(a*0.33); ctx.beginPath(); ctx.moveTo(-6,-10); ctx.lineTo(6,-10); ctx.lineTo(0,-88); ctx.closePath(); ctx.fill(); ctx.restore(); }
+  ctx.restore();
+  // poteaux
+  woodRect(ctx,-66,-70,20,124,4); woodRect(ctx,46,-70,20,124,4);
+  // battants entrouverts
+  gateLeaf2(ctx,-46,-12,-1); gateLeaf2(ctx,46,-12,1);
+  // linteau + panneau LIBERTÉ
+  woodRect(ctx,-74,-86,148,22,6);
+  roundRect(ctx,-52,-82,104,15,4,"#8a5a2c",null);
+  ctx.fillStyle="#ffe9a8"; ctx.font="bold 12px ui-rounded,'Trebuchet MS',system-ui,sans-serif";
+  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("LIBERTÉ", 0,-74);
+  // verdure au pied des poteaux
+  softShadow(ctx,function(){ svBush(ctx,-56,52,.6); }); softShadow(ctx,function(){ svBush(ctx,56,52,.55); });
+  ctx.restore();
 }
-function gatePost(ctx,x,y,h){
-  ctx.fillStyle="#5f3a16"; ctx.fillRect(x-8,y,16,h);
-  ctx.fillStyle="#8a5a2b"; ctx.fillRect(x-6,y,9,h);
-  ctx.fillStyle="#a06a37"; ctx.fillRect(x-6,y,3,h);           // reflet
-  ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(x-8+0.5,y+0.5,16,h);
-  CIR(ctx,x,y-1,6,"#8a5a2b"); CIR(ctx,x-2,y-2,2,"#a06a37");   // boule (finial)
-  ctx.strokeStyle="#3a2410"; ctx.beginPath(); ctx.arc(x,y-1,6,0,6.2832); ctx.stroke();
-  ctx.fillStyle="#6b6b73"; ctx.fillRect(x-9,y+24,18,6);       // ferrure métallique
-  ctx.fillStyle="#4a4a52"; ctx.fillRect(x-9,y+24,18,2);
+// Clôture de ranch en bois, cassée en son centre (par où les animaux s'échappent).
+function woodPost(ctx,x,y,w,h){
+  roundRect(ctx,x-w/2,y,w,h,3,"#b07d45",null);
+  roundRect(ctx,x-w/2+2,y+2,4,h-4,2,"rgba(255,255,255,.22)",null);
+  ctx.strokeStyle="#7a5228"; ctx.lineWidth=2; roundRect(ctx,x-w/2,y,w,h,3,null,"#7a5228");
 }
-function gateLeaf(ctx,x,y,w,h,dir){
-  ctx.fillStyle="#7a4a24"; ctx.fillRect(x,y,w,h);             // fond
-  ctx.fillStyle="#b07b3e";                                    // barreaux verticaux
-  for(var bx=x+4; bx<x+w-3; bx+=8){ ctx.fillRect(bx,y,3,h); }
-  ctx.fillStyle="#8a5a2b"; ctx.fillRect(x,y+3,w,6); ctx.fillRect(x,y+h-11,w,6); // rails
-  ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=5;                 // diagonale
-  ctx.beginPath();
-  if(dir>0){ ctx.moveTo(x+3,y+h-4); ctx.lineTo(x+w-3,y+7); }
-  else { ctx.moveTo(x+w-3,y+h-4); ctx.lineTo(x+3,y+7); }
-  ctx.stroke();
-  ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1);
-}
-function gatePadlock(ctx,x,y){
-  ctx.strokeStyle="#c9c9d1"; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(x,y-1,5,Math.PI,0); ctx.stroke();
-  ctx.fillStyle="#e0c04a"; ctx.fillRect(x-8,y+3,16,13);
-  ctx.fillStyle="#f2d876"; ctx.fillRect(x-8,y+3,16,3);
-  ctx.fillStyle="#c9971f"; ctx.fillRect(x-8,y+13,16,3);
-  ctx.fillStyle="#3a2f10"; ctx.fillRect(x-1,y+7,3,5);
-}
-// Clôture de départ en bois, cassée en son centre (par où les animaux s'échappent).
+function woodRail(ctx,x,y,w){ roundRect(ctx,x,y,w,11,4,"#c69056",null); ctx.strokeStyle="#7a5228"; ctx.lineWidth=2; roundRect(ctx,x,y,w,11,4,null,"#7a5228"); }
 function drawZooBottom(ctx){
-  var cx=boardW/2, fy=Y_BOT+40, gap=46;
-  fenceSection(ctx, 14, cx-gap, fy);
-  fenceSection(ctx, cx+gap, boardW-14, fy);
-  // planches cassées au sol dans la brèche centrale
-  ctx.save(); ctx.translate(cx-14, fy+16); ctx.rotate(-0.32);
-  ctx.fillStyle="#9a5a2b"; ctx.fillRect(0,0,26,5); ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,26,5); ctx.restore();
-  ctx.save(); ctx.translate(cx+2, fy+22); ctx.rotate(0.26);
-  ctx.fillStyle="#8a5024"; ctx.fillRect(0,0,22,5); ctx.strokeStyle="#3a2410"; ctx.strokeRect(0.5,0.5,22,5); ctx.restore();
-  // poteaux pointus (dont deux qui bordent la brèche)
-  fencePost(ctx,14,fy); fencePost(ctx,cx-gap,fy); fencePost(ctx,cx+gap,fy); fencePost(ctx,boardW-14,fy);
-  ctx.fillStyle="#f3ead2"; ctx.font="bold 12px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText("DÉPART", cx, boardH-16);
-}
-function fencePost(ctx,x,fy){
-  ctx.fillStyle="#7a4520"; ctx.fillRect(x-4,fy-6,8,34);
-  ctx.fillStyle="#a2632f"; ctx.fillRect(x-4,fy-6,3,34);              // reflet
-  ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(x-4+0.5,fy-6+0.5,8,34);
-  ctx.fillStyle="#7a4520"; ctx.beginPath(); ctx.moveTo(x-4,fy-6); ctx.lineTo(x,fy-12); ctx.lineTo(x+4,fy-6); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle="#3a2410"; ctx.stroke();                          // pointe
-}
-function fenceSection(ctx,x1,x2,fy){
-  var w=x2-x1;
-  ctx.lineWidth=5; ctx.strokeStyle="#8a5024";                       // croix (X)
-  ctx.beginPath(); ctx.moveTo(x1+4,fy+22); ctx.lineTo(x2-4,fy+2); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(x2-4,fy+22); ctx.lineTo(x1+4,fy+2); ctx.stroke();
-  var rails=[fy, fy+10, fy+20];                                     // barres horizontales
-  rails.forEach(function(ry){
-    ctx.fillStyle="#9a5a2b"; ctx.fillRect(x1,ry,w,5);
-    ctx.fillStyle="#b8763a"; ctx.fillRect(x1,ry,w,2);
-    ctx.strokeStyle="#3a2410"; ctx.lineWidth=1; ctx.strokeRect(x1+0.5,ry+0.5,w,5);
-  });
+  var cx=boardW/2, fy=Y_BOT+52;
+  ctx.save(); ctx.translate(cx,fy);
+  [-118,-64,64,118].forEach(function(px){ woodPost(ctx,px,-46,14,70); });
+  [-34,-12].forEach(function(ry){ woodRail(ctx,-122,ry,62); woodRail(ctx,60,ry,62); });
+  // planches cassées dans la brèche
+  ctx.save(); ctx.rotate(-0.13); woodRail(ctx,-54,-30,42); ctx.restore();
+  ctx.save(); ctx.translate(18,4); ctx.rotate(0.24); woodRail(ctx,0,-8,38); ctx.restore();
+  ctx.restore();
+  // panneau DÉPART (bannière centrée sous la clôture)
+  var by=Y_BOT+98;
+  roundRect(ctx,cx-40,by-13,80,26,8,"#f2c14e",null);
+  ctx.strokeStyle="#a9761f"; ctx.lineWidth=2; roundRect(ctx,cx-40,by-13,80,26,8,null,"#a9761f");
+  ctx.fillStyle="#5a3c05"; ctx.font="bold 13px ui-rounded,'Trebuchet MS',system-ui,sans-serif";
+  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("DÉPART", cx, by);
 }
 function panel(ctx,x,y,w,h){
   ctx.fillStyle="#5a3618"; ctx.fillRect(x-2,y-2,w+4,h+4);
@@ -1218,11 +1209,18 @@ function drawBoard(){
   autoScroll();
 }
 // Pions = emojis HD dessinés sur la couche lissée (pawnLayer).
+function smoothStar(ctx,x,y,r,color){
+  ctx.save(); ctx.translate(x,y); ctx.beginPath();
+  for(var i=0;i<10;i++){ var rr=(i%2?r*0.45:r), a=Math.PI*i/5 - Math.PI/2; ctx.lineTo(Math.cos(a)*rr, Math.sin(a)*rr); }
+  ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+  ctx.strokeStyle="rgba(150,100,0,.5)"; ctx.lineWidth=0.8; ctx.stroke(); ctx.restore();
+}
 function drawPawn(pi, cx, groundY, jump){
   var p=G.players[pi], sz=26;
-  ELL(pctx, cx, groundY+sz*0.42, sz*0.34, sz*0.14, "rgba(0,0,0,.30)");   // ombre au sol
+  pctx.save(); pctx.fillStyle="rgba(0,0,0,.28)"; pctx.beginPath();
+  pctx.ellipse(cx, groundY+sz*0.42, sz*0.34, sz*0.14, 0,0,6.2832); pctx.fill(); pctx.restore();  // ombre au sol
   var yy=groundY-(jump||0);
-  if(pi===0){ DECO.star(pctx, cx, yy-sz*0.52, 5, "#ffd94a"); }            // marqueur "toi"
+  if(pi===0){ smoothStar(pctx, cx, yy-sz*0.54, 5.5, "#ffd94a"); }        // marqueur "toi"
   drawEmoji(pctx, EMOJI[p.animalId], cx, yy, sz);
 }
 function drawPawns(){

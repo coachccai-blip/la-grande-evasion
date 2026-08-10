@@ -117,7 +117,7 @@ logo (mêmes noms, mêmes dimensions).
 | `index.html`   | Interface, assistant de configuration, plateau, logique du jeu, musique et bruitages. |
 | `questions.js` | **Générateur** de questions (banques de mots + moteur de conjugaison). |
 | `animaux.js`   | Les 10 animaux : nom, trait, répliques de libération et **dialogues d'ambiance** (`BANTER`). |
-| `sprites.js`   | Décor du plateau dessiné de façon procédurale (les animaux sont des emojis HD). |
+| `sprites.js`   | Anciennes primitives pixel art (héritage) ; le décor « safari » actuel est dessiné dans `index.html`. |
 | `manifest.webmanifest` | Manifeste PWA (nom, icônes, lancement autonome plein écran). |
 | `sw.js`        | *Service worker* : mise en cache pour un fonctionnement hors-ligne. |
 | `assets/`      | Icônes de l'application (logo). |
@@ -160,7 +160,13 @@ un navigateur (`index.html`).
 
 ## 🎨 Direction artistique
 
-Pixel art rendu sur un canvas HTML5 en résolution logique, agrandi sans lissage
-(*nearest neighbor*) pour des pixels nets. Chaque zone du zoo a sa palette :
-tons paille pour les enclos, ocres pour la savane, verts pour la serre, bleus
-glacés pour le bassin polaire, gris chauds pour l'esplanade.
+**Safari moderne** : un décor de zoo vectoriel, clair et lumineux, dessiné sur
+un canvas HTML5 en rendu lissé (sur-échantillonné pour rester net sur mobile).
+Le parcours serpentin en cases arrondies (pavés sablés) traverse des zones
+illustrées — savane (acacias, rochers), serre tropicale (palmiers, buissons),
+bassin polaire (mares glacées) et esplanade — sous un ciel avec soleil et
+nuages. Le **DÉPART** est une clôture de ranch cassée en son centre, l'**ARRIVÉE**
+un grand portail « LIBERTÉ » à deux battants entrouverts sur la lumière. Les
+pions et les animaux sont des **emojis HD**, et les cases spéciales affichent une
+icône claire (🍌 🎁 ⭐ 🌀 ⚔️ 🛡️ …). Tout est **dessiné par le code** (aucune image
+lourde) : l'application reste rapide et jouable hors-ligne.
