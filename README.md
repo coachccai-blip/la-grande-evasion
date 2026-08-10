@@ -43,7 +43,8 @@ Ensuite, la course commence :
   - **Mauvaise réponse** → il recule d'autant, et la bonne réponse s'affiche.
 - Attention aux **cases spéciales** (banane, toboggan, ressort, cadeau, tornade,
   piège, gardien, défi éclair, duel, case mystère) et aux **3 obstacles**
-  (cases 18, 34, 45).
+  (cases 18, 34, 45). Un petit bouton **❔** en bas à gauche de la carte ouvre la
+  **légende** (effet de chaque case, par emoji).
 - Arrivé au **portail** (case 50), ouvre les 3 serrures : 3 bonnes réponses
   d'affilée, sans dé. La moindre erreur referme tout !
 
