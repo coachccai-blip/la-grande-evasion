@@ -271,6 +271,15 @@
   .hist-phrase .fill{color:var(--accent2); font-weight:800;}
   .hist-wrong{font-size:12px; color:var(--ko2); margin-top:3px;}
   .empty{text-align:center; color:var(--ink-soft); margin-top:40px; font-size:14px;}
+  /* Explication dépliable (rappel de la règle) */
+  .hist-item.clickable{cursor:pointer;}
+  .hist-toggle{font-size:11px; font-weight:700; color:var(--accent2); margin-top:6px;}
+  .hist-explain{
+    display:none; margin-top:6px; font-size:12.5px; line-height:1.45; color:var(--ink);
+    background:rgba(242,193,78,.10); border:1px solid rgba(242,193,78,.35);
+    border-radius:9px; padding:8px 10px;
+  }
+  .hist-item.open .hist-explain{display:block;}
 
   /* ============================= Nav du bas ========================== */
   nav{
@@ -293,6 +302,23 @@
     max-width:90%; text-align:center;
   }
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* Dialogues d'ambiance (banter) : bulles entre deux animaux */
+  #banter{
+    position:absolute; left:0; right:0; top:14px; z-index:70; pointer-events:none;
+    display:flex; flex-direction:column; gap:8px; padding:0 12px;
+    opacity:0; transform:translateY(-8px); transition:opacity .3s, transform .3s;
+  }
+  #banter.show{opacity:1; transform:translateY(0);}
+  .banter-row{display:flex; align-items:flex-end; gap:8px;}
+  .banter-row.right{justify-content:flex-end;}
+  .banter-em{font-size:30px; line-height:1; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));}
+  .banter-bubble{
+    max-width:74%; background:#fff; color:#1a1330; font-size:13px; font-weight:600;
+    padding:8px 12px; border-radius:14px; box-shadow:0 3px 10px rgba(0,0,0,.35); position:relative;
+  }
+  .banter-row.left .banter-bubble{border-bottom-left-radius:3px;}
+  .banter-row.right .banter-bubble{border-bottom-right-radius:3px; background:var(--accent2); color:#3a2600;}
 
   /* ============================== Duel ============================== */
   .gamebar #abandonBtn{flex:0 0 auto; padding:10px 12px; font-size:15px;}
@@ -472,6 +498,7 @@
     </div>
 
     <div id="toast"></div>
+    <div id="banter"></div>
   </main>
 
   <nav>
@@ -513,10 +540,14 @@ function drawEmoji(ctx, ch, cx, cy, size){
 
 /* Sous-catégories (thèmes) par matière. */
 var SUBCATS = {
-  conjugaison:["Présent","Passé composé","Futur","Imparfait","Impératif","Subjonctif","Conditionnel présent"],
-  grammaire:  ["Nature des mots","Déterminants","Pronoms","Prépositions","Accords","Types de phrases"],
-  vocabulaire:["Synonymes","Contraires","Homonymes","Familles de mots","Mots du quotidien"],
-  orthographe:["Homophones","é ou er","Accents","Pluriels","m devant m, b, p"]
+  conjugaison:["Présent","Passé composé","Futur","Imparfait","Impératif","Subjonctif","Conditionnel présent",
+    "Plus-que-parfait","Conditionnel passé","Subjonctif passé","Futur antérieur"],
+  grammaire:  ["Nature des mots","Déterminants","Pronoms","Prépositions","Accords","Types de phrases",
+    "Accord du participe passé","Connecteurs logiques","Voix passive"],
+  vocabulaire:["Synonymes","Contraires","Homonymes","Familles de mots","Mots du quotidien",
+    "Expressions idiomatiques","Registres de langue","Paronymes"],
+  orthographe:["Homophones","é ou er","Accents","Pluriels","m devant m, b, p",
+    "Homophones grammaticaux","Adverbes en -ment"]
 };
 
 /* Niveaux de difficulté : force des bots + difficulté des questions. */
@@ -587,6 +618,54 @@ function toast(msg, ms){
 }
 
 function animalById(id){ for(var i=0;i<ANIMAUX.length;i++){ if(ANIMAUX[i].id===id) return ANIMAUX[i]; } return null; }
+
+/* ---------------------- Dialogues d'ambiance (banter) ---------------------- */
+function pickBanter(animalId, kind){
+  var b = (typeof BANTER!=="undefined") && BANTER[animalId] && BANTER[animalId][kind];
+  return (b && b.length) ? b[randint(b.length)] : null;
+}
+// Affiche un petit échange entre deux animaux (bulles), sans bloquer les clics.
+function showBanter(youId, youLine, foeId, foeLine, hold){
+  var wrap=$("banter"); if(!wrap) return Promise.resolve();
+  wrap.innerHTML="";
+  function bubble(id, line, side){
+    var row=document.createElement("div"); row.className="banter-row "+side;
+    var em=document.createElement("span"); em.className="banter-em emoji"; em.textContent=(EMOJI[id]||"❓");
+    var bb=document.createElement("span"); bb.className="banter-bubble"; bb.textContent="« "+line+" »";
+    if(side==="right"){ row.appendChild(bb); row.appendChild(em); } else { row.appendChild(em); row.appendChild(bb); }
+    return row;
+  }
+  if(foeLine) wrap.appendChild(bubble(foeId, foeLine, "left"));
+  if(youLine) wrap.appendChild(bubble(youId, youLine, "right"));
+  wrap.classList.add("show");
+  try{ Sound.click(); }catch(e){}
+  return new Promise(function(res){
+    clearTimeout(showBanter._t);
+    showBanter._t=setTimeout(function(){ wrap.classList.remove("show"); res(); }, hold||2400);
+  });
+}
+// Déclenche parfois un échange quand un gros écart se forme (positif ou négatif).
+async function maybeGapBanter(){
+  if(!G || G.over) return;
+  G.turnCount=(G.turnCount||0)+1;
+  if(G.turnCount - (G.lastBanterTurn||-99) < 3) return;     // pas trop souvent
+  var youPos=me().pos, bots=G.players.slice(1);
+  if(!bots.length) return;
+  var lead=bots[0], trail=bots[0];
+  bots.forEach(function(b){ if(b.pos>lead.pos) lead=b; if(b.pos<trail.pos) trail=b; });
+  var gapAhead = youPos - lead.pos;      // >0 : le joueur devance le meilleur bot
+  var kind=null, foe=null;
+  if(gapAhead>=12){ kind="ahead"; foe=lead; }
+  else if(gapAhead<=-12){ kind="behind"; foe=lead; }
+  if(!kind) return;
+  if(Math.random()>0.6) return;                            // ~60 % du temps seulement
+  var youLine=pickBanter(me().animalId, kind);
+  var foeKind = kind==="ahead" ? "behind" : "ahead";       // le bot réplique en miroir
+  var foeLine=pickBanter(foe.animalId, foeKind);
+  if(!youLine && !foeLine) return;
+  G.lastBanterTurn=G.turnCount;
+  await showBanter(me().animalId, youLine, foe.animalId, foeLine, 2400);
+}
 
 /* ==================================================================== */
 /*                     MUSIQUE & BRUITAGES (Web Audio)                  */
@@ -1267,7 +1346,7 @@ function askQuestion(opts){
       if(opts.record){
         store.history.unshift({
           result:correct, cat:realCat, sub:q.sub, hint:q.hint, phrase:q.phrase, options:q.options.slice(),
-          answer:q.answer, chosen:(timedOut? null : chosenIdx)
+          answer:q.answer, chosen:(timedOut? null : chosenIdx), explain:q.explain||"", tense:q.tense||""
         });
         persist();
       }
@@ -1373,6 +1452,7 @@ async function playerRoll(){
   }
   if(G.over) return;
   await botsPlay();
+  if(!G.over) await maybeGapBanter();
   endTurn();
 }
 
@@ -1417,6 +1497,8 @@ function runDuel(botIndex){
     $("vsTimeNum").textContent=DUEL_TIME; $("vsTimeNum").className="vs-time";
     var bar=$("vsTimer").querySelector("i"); bar.style.width="100%";
     ds.classList.add("show"); Sound.duelStart();
+    // petite provocation d'avant-match entre les deux animaux
+    showBanter(me().animalId, pickBanter(me().animalId,"duel"), foe.animalId, pickBanter(foe.animalId,"duel"), 2200);
 
     function bump(el){ el.classList.add("bump"); setTimeout(function(){ el.classList.remove("bump"); },130); }
 
@@ -1452,7 +1534,7 @@ function runDuel(botIndex){
           b.classList.add(correct?"correct":"wrong");
           if(correct){ youScore++; $("vsYouScore").textContent=youScore; bump($("vsYouScore")); Sound.good(); }
           else Sound.bad();
-          store.history.unshift({result:correct,cat:q.cat,sub:q.sub,hint:q.hint,phrase:q.phrase,options:q.options.slice(),answer:q.answer,chosen:oi});
+          store.history.unshift({result:correct,cat:q.cat,sub:q.sub,hint:q.hint,phrase:q.phrase,options:q.options.slice(),answer:q.answer,chosen:oi,explain:q.explain||"",tense:q.tense||""});
           setTimeout(nextQ, correct?240:480);
         };
         box.appendChild(b);
@@ -1521,6 +1603,7 @@ async function playerDuel(botIndex){
   }
   if(G.over) return;
   await botsPlay();
+  if(!G.over) await maybeGapBanter();
   endTurn();
 }
 
@@ -1767,8 +1850,28 @@ function renderHistory(){
       w.textContent = (h.chosen==null) ? "Ta réponse : (temps écoulé)" : "Ta réponse : "+h.options[h.chosen];
       main.appendChild(w);
     }
+    // explication (rappel de la règle) — dépliable au clic sur la carte
+    var explain = h.explain || histExplain(h);
+    if(explain){
+      var toggle=document.createElement("div"); toggle.className="hist-toggle";
+      toggle.textContent="💡 Voir l'explication";
+      var exp=document.createElement("div"); exp.className="hist-explain";
+      exp.innerHTML="<b>Bonne réponse :</b> "+escapeHtml(h.options[h.answer])+"<br><b>Règle :</b> "+escapeHtml(explain);
+      main.appendChild(toggle); main.appendChild(exp);
+      it.classList.add("clickable");
+      it.onclick=function(){
+        var open=it.classList.toggle("open");
+        toggle.textContent = open ? "🔽 Masquer l'explication" : "💡 Voir l'explication";
+        if(open) Sound.click();
+      };
+    }
     it.appendChild(res); it.appendChild(main); list.appendChild(it);
   });
+}
+// Retrouve une explication pour les anciennes entrées d'historique (sans champ explain).
+function histExplain(h){
+  try{ if(window.Questions && Questions.ruleFor) return Questions.ruleFor(h.cat, h.sub, h.tense||""); }catch(e){}
+  return "";
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
 

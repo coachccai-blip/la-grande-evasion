@@ -171,5 +171,65 @@ const ANIMAUX = [
   }
 ];
 
+/*
+ * Petites répliques « d'ambiance » (banter) échangées pendant la partie :
+ *  - ahead  : quand l'animal a une grosse avance (il chambre) ;
+ *  - behind : quand il est largement distancé (il rouspète, motivé) ;
+ *  - duel   : petite provocation au lancement d'un duel.
+ * L'enseignant peut les modifier librement.
+ */
+const BANTER = {
+  lion: {
+    ahead:["Regardez le roi filer vers la sortie !","Ma crinière prend déjà le large, suivez si vous pouvez.","Un roi devant : c'est dans l'ordre des choses."],
+    behind:["Un roi ne panique jamais… je vais remonter.","Ce n'est qu'un contretemps, la royauté contre-attaque.","Rira bien qui rugira le dernier."],
+    duel:["Tu oses défier le roi ? Rugissons !","Ce duel finira à ma gloire.","Approche, petit : la leçon commence."]
+  },
+  elephant: {
+    ahead:["Lentement mais devant, comme prévu.","Ma mémoire connaît déjà le chemin de la victoire.","Pas pressé, et pourtant en tête."],
+    behind:["Un éléphant n'oublie pas : je reviendrai.","Patience… la sagesse rattrape la vitesse.","Doucement, je garde le cap."],
+    duel:["Un duel ? Ma mémoire retient toutes les réponses.","Affronte l'éléphant, si tu l'oses.","Je n'oublierai pas ce duel… ni ma victoire."]
+  },
+  girafe: {
+    ahead:["De là-haut, je vois déjà l'arrivée.","Tête dans les nuages, pattes vers la victoire.","Je vois loin… et vous, loin derrière."],
+    behind:["Je vise l'horizon : je vais vous rattraper.","De haut, tout écart se comble.","Un dernier élan et je repasse devant."],
+    duel:["Un duel ? Je vois venir tes réponses.","Lève les yeux : le défi commence.","Je surplombe déjà ce duel."]
+  },
+  singe: {
+    ahead:["Trop facile, je fais le pitre en tête !","Attrapez-moi… ah non, trop tard !","Hi hi, je saute droit vers la sortie !"],
+    behind:["Un dernier tour de malin et je repasse !","Vous croyez m'avoir ? Bananes à vous !","Je grimpe au classement, attention !"],
+    duel:["Un duel ? Je vais te faire tourner en bourrique !","Prépare-toi à rire… jaune !","Banane pour le perdant, c'est-à-dire toi !"]
+  },
+  panda: {
+    ahead:["Même sans forcer, je suis devant… cool.","Je gagne, puis je fais la sieste.","Objectif bambou : bientôt atteint."],
+    behind:["Pas de stress, je remonte tranquille.","Un bambou, une pause, et je repars.","Doucement… la course est longue."],
+    duel:["Un duel ? Bon, mais après je me repose.","Réveille-moi quand tu es prêt à perdre.","J'affronte, puis je sieste."]
+  },
+  manchot: {
+    ahead:["Je glisse en tête, wouhou !","Ventre à terre vers la victoire !","Même maladroit, je vous devance !"],
+    behind:["Une bonne glissade et je reviens !","Oups… mais je rattrape, promis !","La banquise me donne des ailes !"],
+    duel:["Un duel ? Je glisse plus vite que toi !","Attention, manchot pressé au défi !","Prêt à déraper… vers la gagne !"]
+  },
+  flamant: {
+    ahead:["Je mène avec élégance, forcément.","Rose devant, c'est plus chic.","Un port de tête de vainqueur."],
+    behind:["Je reste élégant, même en remontant.","Pas une plume de travers, je reviens.","La classe se rattrape avec style."],
+    duel:["Un duel ? Tout en grâce, je vais gagner.","Regarde et admire ce défi.","Élégance et victoire : mon duo."]
+  },
+  crocodile: {
+    ahead:["Snap ! Je file vers la sortie.","Menaçant devant, tendre au fond.","La rivière m'attend en vainqueur."],
+    behind:["Grrr… je remonte, doucement mais sûrement.","Une larme, puis je contre-attaque.","Je mords le classement : patience."],
+    duel:["Un duel ? Attention à mes crocs !","Approche… le tendre va mordre.","Snap ! Ce défi sera à moi."]
+  },
+  zebre: {
+    ahead:["Sprint en tête, personne ne suit !","Rayures au vent, record en vue !","Trop rapide pour être rattrapé !"],
+    behind:["Je passe la vitesse supérieure, j'arrive !","Un sprint et je repasse devant !","Mes rayures, c'est plus aérodynamique."],
+    duel:["Un duel de vitesse ? Tu as déjà perdu.","Prêts, feu… je gagne !","Personne ne me bat au chrono."]
+  },
+  hibou: {
+    ahead:["Logiquement, je devais mener.","J'avais tout calculé : victoire en vue.","Le savoir me place en tête."],
+    behind:["Un instant de réflexion et je reviens.","Statistiquement, je vais remonter.","La sagesse rattrape toujours."],
+    duel:["Un duel ? Je corrige déjà tes erreurs.","La connaissance va trancher ce défi.","Hou hou ! Prépare-toi à apprendre."]
+  }
+};
+
 /* Export pour un usage éventuel hors navigateur (tests, scripts). */
-if (typeof module !== "undefined" && module.exports) { module.exports = ANIMAUX; }
+if (typeof module !== "undefined" && module.exports) { module.exports = ANIMAUX; module.exports.BANTER = BANTER; }

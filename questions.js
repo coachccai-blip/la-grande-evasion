@@ -64,8 +64,12 @@
     ils:{d:"ils",pi:5,g:"m",n:"p"}, elles:{d:"elles",pi:5,g:"f",n:"p"}
   };
   var AUX = {
-    avoir:{ pres:["ai","as","a","avons","avez","ont"], imp:["avais","avais","avait","avions","aviez","avaient"] },
-    etre: { pres:["suis","es","est","sommes","êtes","sont"], imp:["étais","étais","était","étions","étiez","étaient"] }
+    avoir:{ pres:["ai","as","a","avons","avez","ont"], imp:["avais","avais","avait","avions","aviez","avaient"],
+      fut:["aurai","auras","aura","aurons","aurez","auront"], cond:["aurais","aurais","aurait","aurions","auriez","auraient"],
+      subj:["aie","aies","ait","ayons","ayez","aient"] },
+    etre: { pres:["suis","es","est","sommes","êtes","sont"], imp:["étais","étais","était","étions","étiez","étaient"],
+      fut:["serai","seras","sera","serons","serez","seront"], cond:["serais","serais","serait","serions","seriez","seraient"],
+      subj:["sois","sois","soit","soyons","soyez","soient"] }
   };
   // accord du participe (verbes en être) selon le sujet
   function agree(pp, subj){
@@ -355,10 +359,20 @@
   ];
 
   var TENSE_LABEL = { present:"au présent", passe:"au passé composé", imparfait:"à l'imparfait",
-    futur:"au futur simple", cond:"au conditionnel présent", subj:"au subjonctif présent", imper:"à l'impératif" };
+    futur:"au futur simple", cond:"au conditionnel présent", subj:"au subjonctif présent", imper:"à l'impératif",
+    pqp:"au plus-que-parfait", condp:"au conditionnel passé", subjp:"au subjonctif passé", futa:"au futur antérieur" };
   var SUB_TO_TENSE = { "Présent":"present","Passé composé":"passe","Futur":"futur","Imparfait":"imparfait",
-    "Impératif":"imper","Subjonctif":"subj","Conditionnel présent":"cond" };
+    "Impératif":"imper","Subjonctif":"subj","Conditionnel présent":"cond",
+    "Plus-que-parfait":"pqp","Conditionnel passé":"condp","Subjonctif passé":"subjp","Futur antérieur":"futa" };
   var CONJ_SUBS = Object.keys(SUB_TO_TENSE);
+  // Temps COMPOSÉS (auxiliaire conjugué + participe passé) : générés à partir des
+  // mêmes tables → toujours corrects, avec accord du participe pour les verbes en être.
+  var COMPOSED = { passe:"pres", pqp:"imp", condp:"cond", futa:"fut", subjp:"subj" };
+  // Amorces propres à chaque temps composé (phrases complètes et naturelles).
+  var HEAD_PQP  = ["La veille,","Ce jour-là,","Quelques heures plus tôt,","Avant notre arrivée,","La semaine d'avant,","Peu avant,"];
+  var HEAD_CONDP= ["Avec un peu de chance,","À ta place,","Sans cette erreur,","Dans d'autres circonstances,","Autrement,","Avec plus de temps,"];
+  var HEAD_FUTA = ["Demain à midi,","D'ici ce soir,","Dans une heure,","Bientôt,","Avant la fin du mois,","D'ici là,"];
+  var TRIG_SUBJP= ["Il est possible que","Je doute que","Il se peut que","J'ai peur que","Je ne crois pas que","Il est dommage que","Je regrette que"];
 
   var TIME = {
     present:["En ce moment","Aujourd'hui","Maintenant","Chaque jour","Souvent","D'habitude","Tous les jours","En général"],
@@ -460,11 +474,17 @@
       var poolT=["present","imparfait","futur","passe"];
       if(diff>=3) poolT=poolT.concat(["passe","cond","imper"]);
       if(diff>=4) poolT=poolT.concat(["subj","cond","passe"]);
+      if(diff>=5) poolT=poolT.concat(["pqp","condp","futa","subjp"]);   // temps composés (C1)
       tense=pick(poolT);
     }
     var verbs=verbsFor(diff,tense); if(!verbs.length) verbs=VERBS;
     var v=pick(verbs);
     var comp = v.comp ? pick(v.comp) : "";
+
+    // Temps composés (plus-que-parfait, conditionnel/subjonctif passé, futur antérieur)
+    if(COMPOSED[tense] && tense!=="passe"){
+      return genComposed(v, diff, cat, sub, tense, comp, "Conjugue « "+v.inf+" » "+TENSE_LABEL[tense]);
+    }
     var hint = "Conjugue « "+v.inf+" » "+TENSE_LABEL[tense];
 
     if(tense==="passe") return genPasse(v,diff,cat,sub,comp,hint);
@@ -551,6 +571,41 @@
     return { cat:cat, sub:sub, tense:"passe", phrase:phrase, hint:hint, options:build(correct,pool), answer:0 };
   }
 
+  // Temps composés « avancés » (C1) : plus-que-parfait, conditionnel passé,
+  // futur antérieur, subjonctif passé. Forme = auxiliaire (avoir/être) au temps
+  // voulu + participe passé (accordé avec le sujet pour les verbes en être).
+  // Les distracteurs sont d'AUTRES temps composés à la même personne + erreurs
+  // d'auxiliaire / d'accord → 100 % « du même registre ».
+  function genComposed(v, diff, cat, sub, tense, comp, hint){
+    var ak = COMPOSED[tense];                       // clé de temps de l'auxiliaire
+    var S = pickSubject(diff, {etre:v.etre, tense:(tense==="subjp"?"subj":null)}), pi=S.pi;
+    var aux = v.etre ? AUX.etre : AUX.avoir;
+    var pp = v.etre ? agree(v.pp,S) : v.pp;
+    var correct = aux[ak][pi]+" "+pp;
+    var pool=[];
+    // autres temps composés (même personne, même auxiliaire, participe correct)
+    ["pres","imp","fut","cond","subj"].forEach(function(x){ if(x!==ak) pool.push(aux[x][pi]+" "+pp); });
+    if(v.etre){
+      // mauvais auxiliaire (avoir au lieu d'être) + défauts d'accord classiques
+      pool.push(AUX.avoir[ak][pi]+" "+pp);
+      pool.push(aux[ak][pi]+" "+v.pp);                                  // pas d'accord
+      pool.push(aux[ak][pi]+" "+agree(v.pp, S.g==="f"?{n:S.n,g:"m"}:{n:S.n,g:"f"})); // accord inversé
+    } else {
+      pool.push(AUX.etre[ak][pi]+" "+v.pp);                             // mauvais auxiliaire (être)
+      pool.push(aux[ak][pi]+" "+v.pp+(S.n==="p"?"s":"e"));              // faux accord avec avoir
+      if(v.pp!==v.inf) pool.push(aux[ak][pi]+" "+v.inf);               // participe = infinitif (é/er)
+    }
+    var phrase;
+    if(tense==="subjp"){
+      phrase = subjHead(pick(TRIG_SUBJP), S.d)+" ___"+(comp?" "+comp:"")+".";
+    } else {
+      var head = tense==="pqp" ? pick(HEAD_PQP) : (tense==="condp" ? pick(HEAD_CONDP) : pick(HEAD_FUTA));
+      phrase = head+" "+subjBlank(S,correct)+(comp?" "+comp:"")+".";
+    }
+    phrase=cap(phrase);
+    return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint, options:build(correct,pool), answer:0 };
+  }
+
   // Choisit un item d'une banque en visant la difficulté. On élargit la bande
   // autour de la cible jusqu'à disposer d'un CHOIX SUFFISANT (≥ 7 items) : cela
   // évite qu'aux difficultés extrêmes (très facile / extrême), où peu d'items ont
@@ -566,7 +621,8 @@
     return pick(list);
   }
   function fromGood(item, hint, cat, sub){
-    return { cat:cat, sub:sub, phrase:item.ph, hint:hint, options:build(item.good, item.bad.slice()), answer:0 };
+    return { cat:cat, sub:sub, phrase:item.ph, hint:hint, note:item.note||item.rule||"",
+      options:build(item.good, item.bad.slice()), answer:0 };
   }
 
   /* ======================================================================= */
@@ -727,15 +783,69 @@
     {d:2,ph:"« Quel beau match ! » est une phrase ___.",good:"exclamative",bad:["déclarative","interrogative","impérative"]},
     {d:4,ph:"« Elle chante bien. » est une phrase ___.",good:"affirmative",bad:["négative","interrogative","impérative"]}
   ];
+  /* ---- Grammaire de niveau avancé (vers le C1) ---- */
+  var PP_ACC = [ // accord du participe passé (être / avoir / COD antéposé / pronominaux)
+    {d:3,ph:"Elle est ___ à la maison.",good:"restée",bad:["resté","restés","restées"],note:"Avec « être », le participe s'accorde avec le sujet (ici féminin singulier)."},
+    {d:4,ph:"Les filles sont ___ très tôt.",good:"parties",bad:["parti","partis","partie"],note:"Avec « être » : accord avec le sujet (féminin pluriel)."},
+    {d:3,ph:"Mon frère est ___ hier soir.",good:"arrivé",bad:["arrivée","arrivés","arriver"],note:"Avec « être » : accord avec le sujet (masculin singulier)."},
+    {d:4,ph:"Nous sommes ___ au cinéma.",good:"allés",bad:["allé","allée","allées"],note:"Avec « être » : accord avec le sujet (nous, masculin pluriel)."},
+    {d:5,ph:"La lettre que j'ai ___ est partie.",good:"écrite",bad:["écrit","écrits","écrites"],note:"Avec « avoir », accord avec le COD placé AVANT le verbe (la lettre = f.s.)."},
+    {d:5,ph:"Les fleurs que tu as ___ sont belles.",good:"cueillies",bad:["cueilli","cueillie","cueillis"],note:"« Avoir » + COD antéposé (les fleurs = f.p.) → accord."},
+    {d:5,ph:"Les gâteaux que nous avons ___ étaient bons.",good:"mangés",bad:["mangé","mangée","mangées"],note:"« Avoir » + COD antéposé (les gâteaux = m.p.) → accord."},
+    {d:4,ph:"Elles ont ___ toute la journée.",good:"couru",bad:["courue","courus","courues"],note:"Avec « avoir » sans COD antéposé, le participe reste invariable."},
+    {d:4,ph:"Ils ont ___ leurs devoirs.",good:"fini",bad:["finis","finie","finies"],note:"« Avoir », COD placé APRÈS (leurs devoirs) → pas d'accord."},
+    {d:5,ph:"Les livres qu'il a ___ sont rares.",good:"lus",bad:["lu","lue","lues"],note:"« Avoir » + COD antéposé (les livres = m.p.) → accord."},
+    {d:6,ph:"Les mains, elle se les est ___.",good:"lavées",bad:["lavé","lavés","lavée"],note:"Verbe pronominal : accord avec le COD placé avant (les mains = f.p.)."},
+    {d:6,ph:"Combien de fautes as-tu ___ ?",good:"faites",bad:["fait","faits","faite"],note:"« Avoir » + COD antéposé (combien de fautes = f.p.) → accord."},
+    {d:6,ph:"La décision qu'ils ont ___ est sage.",good:"prise",bad:["pris","prises","prisé"],note:"« Avoir » + COD antéposé (la décision = f.s.) → accord."},
+    {d:3,ph:"Elles sont ___ de bonne heure.",good:"revenues",bad:["revenu","revenue","revenus"],note:"Avec « être » : accord avec le sujet (féminin pluriel)."},
+    {d:4,ph:"La pomme est ___ de l'arbre.",good:"tombée",bad:["tombé","tombés","tombées"],note:"Avec « être » : accord avec le sujet (féminin singulier)."},
+    {d:5,ph:"Les chansons que j'ai ___ me plaisent.",good:"entendues",bad:["entendu","entendue","entendus"],note:"« Avoir » + COD antéposé (les chansons = f.p.) → accord."}
+  ];
+  var CONNECT = [ // connecteurs logiques
+    {d:4,ph:"Il pleuvait ; ___, nous sommes sortis.",good:"cependant",bad:["donc","car","ainsi"],note:"« cependant » exprime l'opposition (≈ pourtant, néanmoins)."},
+    {d:4,ph:"Il a beaucoup travaillé ; ___, il a réussi.",good:"par conséquent",bad:["cependant","en revanche","au contraire"],note:"« par conséquent » exprime la conséquence."},
+    {d:5,ph:"J'aime le thé ; ___, je déteste le café.",good:"en revanche",bad:["donc","par conséquent","ainsi"],note:"« en revanche » oppose deux faits."},
+    {d:5,ph:"Il est parti tôt ___ éviter les embouteillages.",good:"afin d'",bad:["parce qu'","bien qu'","tandis qu'"],note:"« afin de » exprime le but."},
+    {d:4,ph:"Nous resterons ___ il pleut.",good:"parce qu'",bad:["afin qu'","pour qu'","bien qu'"],note:"« parce que » exprime la cause."},
+    {d:6,ph:"___ il soit riche, il vit simplement.",good:"Bien qu'",bad:["Parce qu'","Puisqu'","Ainsi qu'"],note:"« bien que » (+ subjonctif) exprime la concession."},
+    {d:5,ph:"Prends un manteau, ___ il fait froid.",good:"car",bad:["afin que","pour que","bien que"],note:"« car » introduit une explication (cause)."},
+    {d:4,ph:"D'abord on mélange ; ___, on fait cuire.",good:"ensuite",bad:["car","donc","pourtant"],note:"« ensuite » marque la succession dans le temps."},
+    {d:6,ph:"Il pleut, ___ nous partons quand même.",good:"mais",bad:["donc","car","puisque"],note:"« mais » marque l'opposition."},
+    {d:5,ph:"Tu peux venir ___ tu préviennes à l'avance.",good:"à condition que",bad:["bien que","avant que","sans que"],note:"« à condition que » (+ subjonctif) exprime la condition."},
+    {d:5,ph:"___ nous manquons de temps, finissons vite.",good:"Puisque",bad:["Afin que","Pour que","Bien que"],note:"« puisque » exprime une cause évidente, déjà connue."},
+    {d:6,ph:"Il travaille ___ que son frère se repose.",good:"tandis",bad:["afin","bien","pour"],note:"« tandis que » marque l'opposition ou la simultanéité."},
+    {d:4,ph:"___, le projet est une réussite.",good:"En somme",bad:["En effet","D'ailleurs","Or"],note:"« en somme » introduit une conclusion, une synthèse."},
+    {d:5,ph:"Il n'a pas révisé ; ___, il a échoué.",good:"c'est pourquoi",bad:["pourtant","néanmoins","or"],note:"« c'est pourquoi » exprime la conséquence."}
+  ];
+  var PASSIVE = [ // voix passive : être + participe accordé avec le sujet
+    {d:4,ph:"La souris est ___ par le chat.",good:"mangée",bad:["mange","mangé","manger"],note:"Voix passive : « être » + participe accordé avec le sujet (la souris = f.s.)."},
+    {d:5,ph:"Les voleurs ont été ___ par la police.",good:"arrêtés",bad:["arrêté","arrêtée","arrêter"],note:"Passif au passé composé : « ont été » + participe accordé (m.p.)."},
+    {d:4,ph:"La maison a été ___ en un an.",good:"construite",bad:["construit","construits","construire"],note:"Passif : accord du participe avec le sujet (f.s.)."},
+    {d:5,ph:"Ce roman sera ___ par des millions de gens.",good:"lu",bad:["lue","lus","lire"],note:"Passif au futur : « sera » + participe (m.s.)."},
+    {d:6,ph:"Les décisions seront ___ demain.",good:"prises",bad:["pris","prise","prendre"],note:"Passif au futur : accord (les décisions = f.p.)."},
+    {d:4,ph:"Le gâteau est ___ par la boulangère.",good:"préparé",bad:["préparée","préparés","préparer"],note:"Passif : accord avec le sujet (le gâteau = m.s.)."},
+    {d:5,ph:"La fenêtre a été ___ par le vent.",good:"cassée",bad:["cassé","cassés","casser"],note:"Passif passé composé : accord (f.s.)."},
+    {d:5,ph:"Les élèves sont ___ par le directeur.",good:"félicités",bad:["félicité","félicitées","féliciter"],note:"Passif : accord (m.p.)."},
+    {d:6,ph:"Cette loi a été ___ par le Parlement.",good:"votée",bad:["voté","votés","voter"],note:"Passif : accord (la loi = f.s.)."},
+    {d:4,ph:"Les jardins sont ___ chaque matin.",good:"arrosés",bad:["arrosé","arrosée","arroser"],note:"Passif : accord (m.p.)."},
+    {d:5,ph:"La vérité sera ___ un jour.",good:"connue",bad:["connu","connus","connaître"],note:"Passif au futur : accord (f.s.)."},
+    {d:6,ph:"Ces tableaux ont été ___ au XVIIᵉ siècle.",good:"peints",bad:["peint","peinte","peindre"],note:"Passif : accord (m.p.)."},
+    {d:4,ph:"La leçon est ___ par le professeur.",good:"expliquée",bad:["expliqué","expliqués","expliquer"],note:"Passif : accord (f.s.)."},
+    {d:5,ph:"Les fruits sont ___ au marché.",good:"vendus",bad:["vendu","vendue","vendre"],note:"Passif : accord (m.p.)."}
+  ];
   function genGram(sub, diff, cat){
     if(sub==="Nature des mots"){ var it=pickByDiff(NATURE,diff);
       var bad=shuffle(NATURE_OPTS.filter(function(o){return o!==it.n;})).slice(0,3);
-      return { cat:cat, sub:sub, phrase:it.ph, hint:"Donne la nature (classe) du mot", options:build(it.n,bad), answer:0 }; }
+      return { cat:cat, sub:sub, phrase:it.ph, hint:"Donne la nature (classe) du mot", note:"La nature (ou classe) d'un mot : nom, verbe, adjectif, adverbe, déterminant, pronom, préposition, conjonction.", options:build(it.n,bad), answer:0 }; }
     if(sub==="Déterminants") return fromGood(pickByDiff(DET,diff),"Choisis le bon déterminant",cat,sub);
     if(sub==="Pronoms") return fromGood(pickByDiff(PRON,diff),"Choisis le bon pronom",cat,sub);
     if(sub==="Prépositions") return fromGood(pickByDiff(PREP,diff),"Choisis la bonne préposition",cat,sub);
     if(sub==="Accords") return fromGood(pickByDiff(ACCORD,diff),"Accorde correctement (genre et nombre)",cat,sub);
     if(sub==="Types de phrases") return fromGood(pickByDiff(TYPES,diff),"Quel type de phrase ?",cat,sub);
+    if(sub==="Accord du participe passé") return fromGood(pickByDiff(PP_ACC,diff),"Accorde le participe passé",cat,sub);
+    if(sub==="Connecteurs logiques") return fromGood(pickByDiff(CONNECT,diff),"Choisis le bon connecteur logique",cat,sub);
+    if(sub==="Voix passive") return fromGood(pickByDiff(PASSIVE,diff),"Accorde le participe (voix passive)",cat,sub);
     return fromGood(pickByDiff(DET,diff),"Grammaire",cat,sub);
   }
 
@@ -848,19 +958,71 @@
     {d:3,ph:"On garde le lait au ___.",good:"réfrigérateur",bad:["radiateur","grenier","garage"]},
     {d:4,ph:"L'élève écrit au tableau avec une ___.",good:"craie",bad:["gomme","règle","trousse"]}
   ];
+  /* ---- Vocabulaire de niveau avancé (vers le C1) ---- */
+  var IDIOM = [ // expressions idiomatiques
+    {d:3,ph:"Il pleut des ___ (il pleut très fort).",good:"cordes",bad:["chats","gouttes","seaux"],note:"« Il pleut des cordes » = il pleut très fort."},
+    {d:4,ph:"Avoir le ___ (être déprimé, triste).",good:"cafard",bad:["moral","spleen","bourdon"],note:"« Avoir le cafard » = être déprimé."},
+    {d:4,ph:"Poser un ___ à quelqu'un (ne pas venir au rendez-vous).",good:"lapin",bad:["lièvre","chat","pigeon"],note:"« Poser un lapin » = ne pas venir à un rendez-vous."},
+    {d:5,ph:"Donner sa langue au ___ (renoncer à deviner).",good:"chat",bad:["chien","loup","renard"],note:"« Donner sa langue au chat » = renoncer à trouver la réponse."},
+    {d:3,ph:"Casser les ___ à quelqu'un (l'ennuyer).",good:"pieds",bad:["mains","bras","oreilles"],note:"« Casser les pieds » = ennuyer, importuner."},
+    {d:5,ph:"Avoir un chat dans la ___ (être enroué).",good:"gorge",bad:["bouche","voix","tête"],note:"« Avoir un chat dans la gorge » = être enroué."},
+    {d:4,ph:"Mettre la ___ à l'oreille (éveiller les soupçons).",good:"puce",bad:["mouche","abeille","fourmi"],note:"« Mettre la puce à l'oreille » = éveiller les soupçons."},
+    {d:5,ph:"Il n'y a pas un ___ (il n'y a personne).",good:"chat",bad:["chien","rat","bruit"],note:"« Il n'y a pas un chat » = il n'y a personne."},
+    {d:4,ph:"Tomber dans les ___ (s'évanouir).",good:"pommes",bad:["choux","poires","fraises"],note:"« Tomber dans les pommes » = s'évanouir."},
+    {d:5,ph:"Couper les ___ en quatre (compliquer inutilement).",good:"cheveux",bad:["fils","poils","brins"],note:"« Couper les cheveux en quatre » = chercher des complications inutiles."},
+    {d:6,ph:"En faire tout un ___ (exagérer un problème).",good:"fromage",bad:["gâteau","dessert","repas"],note:"« En faire tout un fromage » = exagérer l'importance d'une chose."},
+    {d:4,ph:"Avoir la ___ verte (être doué pour le jardinage).",good:"main",bad:["patte","paume","poigne"],note:"« Avoir la main verte » = savoir s'occuper des plantes."},
+    {d:5,ph:"Prendre ses ___ à son cou (s'enfuir vite).",good:"jambes",bad:["pieds","bras","talons"],note:"« Prendre ses jambes à son cou » = s'enfuir en courant."},
+    {d:6,ph:"Appeler un chat un ___ (parler franchement).",good:"chat",bad:["félin","animal","matou"],note:"« Appeler un chat un chat » = nommer les choses franchement."}
+  ];
+  var REGISTRE = [ // registres de langue (familier / courant / soutenu)
+    {d:5,ph:"En registre soutenu, « manger » se dit ___.",good:"se restaurer",bad:["bouffer","grailler","boulotter"],note:"« se restaurer » (soutenu) vs « bouffer » (familier)."},
+    {d:5,ph:"En registre soutenu, « avoir peur » se dit ___.",good:"être effrayé",bad:["flipper","avoir les jetons","avoir la trouille"],note:"« être effrayé » (soutenu) vs « flipper » (familier)."},
+    {d:4,ph:"En registre familier, « une voiture » se dit ___.",good:"une bagnole",bad:["un véhicule","une automobile","une berline"],note:"« bagnole » = familier ; « véhicule / automobile » = courant ou soutenu."},
+    {d:6,ph:"En registre soutenu, « travailler » se dit ___.",good:"œuvrer",bad:["bosser","trimer","turbiner"],note:"« œuvrer » (soutenu) vs « bosser » (familier)."},
+    {d:5,ph:"En registre soutenu, « se dépêcher » se dit ___.",good:"se hâter",bad:["se grouiller","se magner","se bouger"],note:"« se hâter » (soutenu) vs « se grouiller » (familier)."},
+    {d:4,ph:"En registre familier, « de l'argent » se dit ___.",good:"du fric",bad:["des fonds","des espèces","des capitaux"],note:"« fric » = familier ; les autres relèvent du courant ou du soutenu."},
+    {d:6,ph:"En registre soutenu, « content » se dit ___.",good:"ravi",bad:["aux anges","hyper content","trop bien"],note:"« ravi » (soutenu) ; « aux anges » (courant/familier)."},
+    {d:5,ph:"En registre soutenu, « une maison » se dit ___.",good:"une demeure",bad:["une baraque","une piaule","une cabane"],note:"« demeure » (soutenu) vs « baraque » (familier)."},
+    {d:5,ph:"En registre familier, « la tête » se dit ___.",good:"la caboche",bad:["le crâne","le visage","le front"],note:"« caboche » = familier."},
+    {d:6,ph:"En registre soutenu, « comprendre » se dit ___.",good:"saisir",bad:["piger","capter","entraver"],note:"« saisir » (soutenu) ; « piger » (familier)."},
+    {d:5,ph:"En registre soutenu, « fatigué » se dit ___.",good:"harassé",bad:["crevé","claqué","lessivé"],note:"« harassé » (soutenu) ; « crevé » (familier)."},
+    {d:4,ph:"En registre familier, « un enfant » se dit ___.",good:"un gosse",bad:["un élève","un adolescent","un nourrisson"],note:"« gosse » = familier."},
+    {d:6,ph:"En registre soutenu, « parler » se dit ___.",good:"s'exprimer",bad:["jacter","causer","baratiner"],note:"« s'exprimer » (soutenu) ; « jacter » (familier)."},
+    {d:5,ph:"En registre soutenu, « beaucoup » se dit ___.",good:"considérablement",bad:["vachement","carrément","hyper"],note:"« considérablement » (soutenu) ; « vachement » (familier)."}
+  ];
+  var PARONYM = [ // paronymes (mots proches souvent confondus)
+    {d:5,ph:"Un danger ___ nous menace (tout proche).",good:"imminent",bad:["éminent","immanent","imminant"],note:"« imminent » = tout proche ; « éminent » = remarquable."},
+    {d:5,ph:"C'est un ___ professeur (remarquable).",good:"éminent",bad:["imminent","immanent","éminant"],note:"« éminent » = remarquable ; « imminent » = tout proche."},
+    {d:6,ph:"La ___ économique est difficile (situation du moment).",good:"conjoncture",bad:["conjecture","conjointure","conjecure"],note:"« conjoncture » = situation ; « conjecture » = supposition."},
+    {d:6,ph:"Ce n'est qu'une simple ___ (supposition).",good:"conjecture",bad:["conjoncture","conjointure","conjecure"],note:"« conjecture » = hypothèse ; « conjoncture » = contexte."},
+    {d:6,ph:"Les cambrioleurs sont entrés par ___.",good:"effraction",bad:["infraction","réfraction","fraction"],note:"« effraction » = entrée par la force ; « infraction » = violation d'une règle."},
+    {d:5,ph:"Il a commis une ___ au code de la route.",good:"infraction",bad:["effraction","réfraction","fraction"],note:"« infraction » = violation d'une règle ; « effraction » = entrée forcée."},
+    {d:5,ph:"Le maire a prononcé une ___ (bref discours).",good:"allocution",bad:["allocation","élocution","allitération"],note:"« allocution » = discours ; « allocation » = somme d'argent versée."},
+    {d:5,ph:"La famille reçoit une ___ familiale (aide financière).",good:"allocation",bad:["allocution","élocution","allitération"],note:"« allocation » = aide financière ; « allocution » = discours."},
+    {d:5,ph:"L'acteur va ___ un poème (réciter avec emphase).",good:"déclamer",bad:["déclarer","proclamer","réclamer"],note:"« déclamer » = réciter avec emphase ; « déclarer » = affirmer."},
+    {d:5,ph:"Le témoin doit ___ ce qu'il a vu (dire officiellement).",good:"déclarer",bad:["déclamer","proclamer","réclamer"],note:"« déclarer » = affirmer officiellement ; « déclamer » = réciter."},
+    {d:6,ph:"Ce mot a une autre ___ (sens particulier).",good:"acception",bad:["acceptation","exception","acceptance"],note:"« acception » = sens d'un mot ; « acceptation » = fait d'accepter."},
+    {d:6,ph:"J'attends ton ___ du contrat (fait d'accepter).",good:"acceptation",bad:["acception","exception","acceptance"],note:"« acceptation » = fait d'accepter ; « acception » = sens d'un mot."},
+    {d:5,ph:"La ___ des deux voitures a fait du bruit (choc).",good:"collision",bad:["collusion","collation","colision"],note:"« collision » = choc ; « collusion » = entente secrète."},
+    {d:6,ph:"On soupçonne une ___ entre les deux sociétés (entente secrète).",good:"collusion",bad:["collision","collation","colusion"],note:"« collusion » = entente frauduleuse ; « collision » = choc."}
+  ];
   function genVoc(sub, diff, cat){
     if(sub==="Synonymes"){
       var g=pickByDiff(SYN,diff), word=g.w[0], good=pick(g.w.slice(1));
       var bad=shuffle(SYN_DIST.filter(function(x){return x!==word && g.w.indexOf(x)<0;})).slice(0,3);
-      return { cat:cat, sub:sub, phrase:"Un synonyme de « "+word+" » est ___.", hint:"Trouve un mot de sens PROCHE", options:build(good,bad), answer:0 };
+      return { cat:cat, sub:sub, phrase:"Un synonyme de « "+word+" » est ___.", hint:"Trouve un mot de sens PROCHE", note:"Un synonyme est un mot de sens PROCHE. Ici, « "+g.w.slice(1).join(" », « ")+" » sont des synonymes de « "+word+" ».", options:build(good,bad), answer:0 };
     }
     if(sub==="Contraires"){
       var c=pickByDiff(CONTR,diff), fwd=rint(2), w=fwd?c.a:c.b, good=fwd?c.b:c.a;
       var bad=shuffle(["pareil","semblable","identique"].concat(SYN_DIST).filter(function(x){return x!==good&&x!==w;})).slice(0,3);
-      return { cat:cat, sub:sub, phrase:"Le contraire de « "+w+" » est ___.", hint:"Trouve le mot de sens OPPOSÉ", options:build(good,bad), answer:0 };
+      return { cat:cat, sub:sub, phrase:"Le contraire de « "+w+" » est ___.", hint:"Trouve le mot de sens OPPOSÉ", note:"Un antonyme (contraire) a le sens OPPOSÉ : « "+c.a+" » ↔ « "+c.b+" ».", options:build(good,bad), answer:0 };
     }
     if(sub==="Homonymes") return fromGood(pickByDiff(HOMO,diff),"Choisis le bon homonyme",cat,sub);
     if(sub==="Familles de mots") return fromGood(pickByDiff(FAMILLE,diff),"Même famille de mots",cat,sub);
+    if(sub==="Expressions idiomatiques") return fromGood(pickByDiff(IDIOM,diff),"Complète l'expression imagée",cat,sub);
+    if(sub==="Registres de langue") return fromGood(pickByDiff(REGISTRE,diff),"Registre de langue",cat,sub);
+    if(sub==="Paronymes") return fromGood(pickByDiff(PARONYM,diff),"Paronymes (mots proches à ne pas confondre)",cat,sub);
     return fromGood(pickByDiff(QUOTIDIEN,diff),"Mot du quotidien",cat,sub);
   }
 
@@ -982,6 +1144,41 @@
     {d:3,ph:"L'école recommence en ___.",good:"septembre",bad:["septenbre","septembré","septambre"],note:"m devant b"},
     {d:4,ph:"Je cueille une ___ bien mûre (petit fruit rouge).",good:"framboise",bad:["franboise","framboisé","framboize"],note:"m devant b"}
   ];
+  /* ---- Orthographe de niveau avancé (vers le C1) ---- */
+  var HOMOG = [ // homophones GRAMMATICAUX avancés
+    {d:4,ph:"Je me demande ___ heure il est.",good:"quelle",bad:["qu'elle","quel","quels"],note:"« quelle » = déterminant interrogatif (féminin) ; « qu'elle » = que + elle."},
+    {d:5,ph:"Je crois ___ viendra demain.",good:"qu'elle",bad:["quelle","quel","quels"],note:"« qu'elle » = que + elle ; « quelle » = déterminant."},
+    {d:4,ph:"___ tu seras grand, tu comprendras.",good:"Quand",bad:["Quant","Qu'en","Camp"],note:"« quand » = lorsque ; « quant à » = en ce qui concerne ; « qu'en » = que + en."},
+    {d:5,ph:"___ à moi, je préfère rester.",good:"Quant",bad:["Quand","Qu'en","Camp"],note:"« quant à » = en ce qui concerne."},
+    {d:6,ph:"___ penses-tu ? (= que + en)",good:"Qu'en",bad:["Quand","Quant","Camp"],note:"« qu'en » = que + en (Qu'en penses-tu ?)."},
+    {d:4,ph:"Les enfants rangent ___ jouets.",good:"leurs",bad:["leur","leures","l'heure"],note:"« leurs » (déterminant pluriel : plusieurs jouets) ; « leur » (singulier ou pronom)."},
+    {d:5,ph:"Je ___ ai donné un cadeau.",good:"leur",bad:["leurs","l'heure","leures"],note:"« leur » pronom personnel (= à eux) est INVARIABLE."},
+    {d:4,ph:"Il ___ a pris sans permission.",good:"l'a",bad:["la","là","las"],note:"« l'a » = le/la + a (avoir) ; « la » = déterminant ; « là » = lieu."},
+    {d:4,ph:"Pose le livre ___, sur l'étagère.",good:"là",bad:["la","l'a","las"],note:"« là » indique le lieu ; « la » = déterminant."},
+    {d:5,ph:"Elle ___ venir si elle veut.",good:"peut",bad:["peux","peu","peus"],note:"« peut » (il/elle) ; « peux » (je/tu) ; « peu » = petite quantité."},
+    {d:4,ph:"Il mange très ___.",good:"peu",bad:["peut","peux","peus"],note:"« peu » = petite quantité ; « peut/peux » = verbe pouvoir."},
+    {d:5,ph:"Le train est ___ à partir.",good:"prêt",bad:["près","prés","prêts"],note:"« prêt » = préparé ; « près » = à côté."},
+    {d:4,ph:"Assieds-toi ___ de moi.",good:"près",bad:["prêt","prés","prêts"],note:"« près de » = à côté ; « prêt » = préparé."},
+    {d:5,ph:"___ ne me dérange pas du tout.",good:"Ça",bad:["Sa","Çà","Sà"],note:"« ça » = cela ; « sa » = déterminant possessif."},
+    {d:4,ph:"Il prend ___ veste et s'en va.",good:"sa",bad:["ça","çà","sà"],note:"« sa » = possessif (sa veste) ; « ça » = cela."},
+    {d:6,ph:"Il est ___ malade qu'il reste couché.",good:"si",bad:["s'y","ci","scie"],note:"« si » = tellement ; « s'y » = se + y."}
+  ];
+  var ADVMENT = [ // formation des adverbes en -ment
+    {d:3,ph:"lent → il avance ___.",good:"lentement",bad:["lentment","lenteument","lengtement"],note:"Adjectif au féminin (lente) + -ment."},
+    {d:3,ph:"rapide → il court ___.",good:"rapidement",bad:["rapidment","rapidemant","rapiddement"],note:"Adjectif terminé par -e : on ajoute simplement -ment."},
+    {d:3,ph:"doux → elle parle ___.",good:"doucement",bad:["douxment","doucemant","douçement"],note:"On part du féminin (douce) + -ment."},
+    {d:4,ph:"heureux → ils vivent ___.",good:"heureusement",bad:["heureuxment","heureusment","heureusemant"],note:"Féminin (heureuse) + -ment."},
+    {d:4,ph:"franc → réponds ___.",good:"franchement",bad:["francment","franchemant","frankement"],note:"Féminin (franche) + -ment."},
+    {d:5,ph:"vrai → il est ___ gentil.",good:"vraiment",bad:["vraiement","vraîment","vraimant"],note:"Adjectif terminé par une voyelle : -ment sans « e » (vrai → vraiment)."},
+    {d:5,ph:"poli → il salue ___.",good:"poliment",bad:["poliement","polîment","polimment"],note:"Adjectif en voyelle (poli) → + -ment, sans « e »."},
+    {d:4,ph:"prudent → il conduit ___.",good:"prudemment",bad:["prudamment","prudentment","prudement"],note:"Adjectif en -ent → adverbe en -emment (se prononce « aman »)."},
+    {d:5,ph:"évident → c'est ___ faux.",good:"évidemment",bad:["évidamment","évidentment","évidement"],note:"Adjectif en -ent → -emment."},
+    {d:4,ph:"courant → cela arrive ___.",good:"couramment",bad:["courrament","couramant","courantment"],note:"Adjectif en -ant → adverbe en -amment."},
+    {d:5,ph:"suffisant → il gagne ___.",good:"suffisamment",bad:["suffisament","suffisemment","suffisantment"],note:"Adjectif en -ant → -amment."},
+    {d:5,ph:"précis → il vise ___.",good:"précisément",bad:["précisement","précisètment","precisément"],note:"Féminin (précise) + -ment, avec accent : précisément."},
+    {d:4,ph:"gentil → il répond ___.",good:"gentiment",bad:["gentillement","gentimment","gentiement"],note:"« gentil » donne exceptionnellement « gentiment »."},
+    {d:6,ph:"absolu → c'est ___ interdit.",good:"absolument",bad:["absoluement","absolumment","absolüment"],note:"Adjectif en -u : + -ment (absolument)."}
+  ];
   function genOrt(sub, diff, cat){
     var it, hint;
     if(sub==="Homophones"){ it=pickByDiff(HOMOPH,diff); hint="Homophones ("+it.note+")"; }
@@ -989,8 +1186,10 @@
     else if(sub==="Accents"){ it=pickByDiff(ACCENTS,diff); hint="Orthographe : "+it.note; }
     else if(sub==="Pluriels"){ it=pickByDiff(PLUR,diff); hint="Écris le bon pluriel"; }
     else if(sub==="m devant m, b, p"){ it=pickByDiff(MBP,diff); hint="Règle m devant m, b, p"; }
+    else if(sub==="Homophones grammaticaux"){ it=pickByDiff(HOMOG,diff); hint="Homophones grammaticaux"; }
+    else if(sub==="Adverbes en -ment"){ it=pickByDiff(ADVMENT,diff); hint="Forme l'adverbe en -ment"; }
     else { it=pickByDiff(HOMOPH,diff); hint="Orthographe"; }
-    return { cat:cat, sub:sub, phrase:it.ph, hint:hint, options:build(it.good, it.bad.slice()), answer:0 };
+    return { cat:cat, sub:sub, phrase:it.ph, hint:hint, note:it.note||"", options:build(it.good, it.bad.slice()), answer:0 };
   }
 
   /* ======================================================================= */
@@ -999,10 +1198,68 @@
   var CATS=["conjugaison","grammaire","vocabulaire","orthographe"];
   var SUBS_BY_CAT={
     conjugaison:CONJ_SUBS,
-    grammaire:["Nature des mots","Déterminants","Pronoms","Prépositions","Accords","Types de phrases"],
-    vocabulaire:["Synonymes","Contraires","Homonymes","Familles de mots","Mots du quotidien"],
-    orthographe:["Homophones","é ou er","Accents","Pluriels","m devant m, b, p"]
+    grammaire:["Nature des mots","Déterminants","Pronoms","Prépositions","Accords","Types de phrases",
+      "Accord du participe passé","Connecteurs logiques","Voix passive"],
+    vocabulaire:["Synonymes","Contraires","Homonymes","Familles de mots","Mots du quotidien",
+      "Expressions idiomatiques","Registres de langue","Paronymes"],
+    orthographe:["Homophones","é ou er","Accents","Pluriels","m devant m, b, p",
+      "Homophones grammaticaux","Adverbes en -ment"]
   };
+
+  /* ======================================================================= */
+  /*            EXPLICATIONS (rappel de la règle, cf. Historique)            */
+  /* ======================================================================= */
+  var RULES_TENSE = {
+    present:"Présent de l'indicatif : action actuelle ou habituelle. 1er groupe : -e, -es, -e, -ons, -ez, -ent.",
+    imparfait:"Imparfait : description ou habitude dans le passé. Terminaisons : -ais, -ais, -ait, -ions, -iez, -aient.",
+    futur:"Futur simple : action à venir. Terminaisons ajoutées à l'infinitif : -ai, -as, -a, -ons, -ez, -ont.",
+    passe:"Passé composé : auxiliaire « avoir » ou « être » au présent + participe passé. Avec « être », le participe s'accorde avec le sujet.",
+    cond:"Conditionnel présent : souhait, politesse ou hypothèse. Radical du futur + terminaisons de l'imparfait (-ais, -ait…).",
+    subj:"Subjonctif présent : après « que » (volonté, doute, nécessité). Ex. « que je parle, que nous parlions ».",
+    imper:"Impératif : ordre ou conseil, sans sujet. Au 1er groupe, « tu » ne prend pas de -s (Mange !).",
+    pqp:"Plus-que-parfait : action passée ANTÉRIEURE à une autre. Auxiliaire à l'imparfait (avais/étais…) + participe passé.",
+    condp:"Conditionnel passé : action qui aurait pu se produire. Auxiliaire au conditionnel (aurais/serais…) + participe passé.",
+    subjp:"Subjonctif passé : après « que », pour une action accomplie. Auxiliaire au subjonctif (aie/sois…) + participe passé.",
+    futa:"Futur antérieur : action future ACHEVÉE avant une autre. Auxiliaire au futur (aurai/serai…) + participe passé."
+  };
+  var RULES_SUB = {
+    "Nature des mots":"La nature (classe) d'un mot : nom, verbe, adjectif, adverbe, déterminant, pronom, préposition ou conjonction.",
+    "Déterminants":"Le déterminant précède le nom et s'accorde avec lui en genre et en nombre (le, la, un, des, mon, ce…).",
+    "Pronoms":"Le pronom remplace un nom ou un groupe nominal (il, lui, leur, qui, que, dont, où…).",
+    "Prépositions":"La préposition relie des mots (à, de, en, dans, sur, pour, par…) ; le bon choix dépend du contexte.",
+    "Accords":"L'adjectif s'accorde en genre et en nombre avec le nom qu'il qualifie.",
+    "Types de phrases":"Types : déclarative, interrogative, exclamative, impérative ; formes : affirmative ou négative.",
+    "Accord du participe passé":"Avec « être » → accord avec le sujet. Avec « avoir » → accord avec le COD placé AVANT le verbe, sinon invariable.",
+    "Connecteurs logiques":"Les connecteurs relient les idées : cause (car, parce que), conséquence (donc, par conséquent), opposition (mais, cependant), but (afin que), concession (bien que)…",
+    "Voix passive":"Voix passive : « être » (au temps voulu) + participe passé accordé avec le sujet (Le chat mange la souris → La souris est mangée par le chat).",
+    "Synonymes":"Un synonyme est un mot de sens PROCHE.",
+    "Contraires":"Un antonyme (contraire) a le sens OPPOSÉ.",
+    "Homonymes":"Les homonymes se prononcent pareil mais s'écrivent différemment ; le sens dépend du contexte.",
+    "Familles de mots":"Les mots d'une même famille partagent un radical commun (jardin, jardinier, jardinet…).",
+    "Mots du quotidien":"Vocabulaire courant : choisis le mot qui correspond exactement à la définition.",
+    "Expressions idiomatiques":"Une expression idiomatique a un sens imagé, différent du sens littéral des mots.",
+    "Registres de langue":"On distingue les registres familier, courant et soutenu selon la situation de communication.",
+    "Paronymes":"Les paronymes se ressemblent mais ont des sens différents (éminent / imminent, collision / collusion…).",
+    "Homophones":"Homophones : mêmes sons, orthographes différentes ; le choix dépend de la fonction dans la phrase.",
+    "é ou er":"Après un auxiliaire (a, est…) → participe en -é ; après une préposition ou « il faut » → infinitif en -er. Test : remplace par « vendu » (é) ou « vendre » (er).",
+    "Accents":"Attention aux accents (é, è, ê) : leur présence ou leur absence change l'orthographe du mot.",
+    "Pluriels":"Pluriels particuliers : -al → -aux, -eau/-eu → -x, -ou → -s (sauf bijou, caillou, chou, genou, hibou, joujou, pou → -x).",
+    "m devant m, b, p":"Devant m, b ou p, on écrit « m » au lieu de « n » (tomber, chambre, emporter). Exceptions : bonbon, embonpoint, néanmoins.",
+    "Homophones grammaticaux":"Le choix dépend de la nature du mot : quel/qu'elle, quand/quant/qu'en, leur/leurs, la/l'a/là, peu/peut/peux, près/prêt…",
+    "Adverbes en -ment":"Adjectif au féminin + -ment (lente→lentement). En -ant → -amment, en -ent → -emment, terminé par une voyelle → +ment (vrai→vraiment)."
+  };
+  function ruleFor(cat, sub, tense){
+    if(cat==="conjugaison"){ var t = tense || SUB_TO_TENSE[sub]; return RULES_TENSE[t] || RULES_SUB[sub] || ""; }
+    return RULES_SUB[sub] || "";
+  }
+  function composeExplain(q){
+    var base = ruleFor(q.cat, q.sub, q.tense);
+    var extra = (q.note && norm(q.note)!==norm(base)) ? q.note : "";
+    var s = base || "";
+    if(extra) s += (s? "  ➜ " : "") + extra;
+    return s;
+  }
+
   function generate(cat, sub, diff){
     diff = diff||3;
     var c = (!cat || cat==="tout") ? pick(CATS) : cat;
@@ -1021,9 +1278,10 @@
       (q.options||[]).concat(fill).forEach(function(o){ if(o!=null && !seen[norm(o)]){seen[norm(o)]=1; out.push(String(o));} });
       q.options=out.slice(0,4); q.answer=0;
     }
+    q.explain = composeExplain(q);   // rappel de la règle pour l'Historique
     return q;
   }
 
-  global.Questions = { generate:generate, SUBS_BY_CAT:SUBS_BY_CAT, CATS:CATS };
+  global.Questions = { generate:generate, SUBS_BY_CAT:SUBS_BY_CAT, CATS:CATS, ruleFor:ruleFor };
   if (typeof module !== "undefined" && module.exports) { module.exports = global.Questions; }
 })(typeof window !== "undefined" ? window : this);

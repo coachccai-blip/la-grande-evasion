@@ -18,8 +18,19 @@ compte, aucune donnée transmise en ligne.
 Avant chaque partie, un petit assistant configure l'aventure :
 
 1. **La matière** : Conjugaison, Grammaire, Vocabulaire, Orthographe ou **Tout**.
-2. **Le thème** (sous-catégorie) : par ex. pour la Conjugaison — Présent, Passé
-   composé, Futur, Imparfait, Impératif, Subjonctif, Conditionnel présent, ou Tout.
+2. **Le thème** (sous-catégorie). L'éventail va des bases jusqu'à des thèmes de
+   **niveau avancé (vers le C1)** :
+   - **Conjugaison** : Présent, Passé composé, Futur, Imparfait, Impératif,
+     Subjonctif, Conditionnel présent, **Plus-que-parfait**, **Conditionnel
+     passé**, **Subjonctif passé**, **Futur antérieur**.
+   - **Grammaire** : Nature des mots, Déterminants, Pronoms, Prépositions,
+     Accords, Types de phrases, **Accord du participe passé**, **Connecteurs
+     logiques**, **Voix passive**.
+   - **Vocabulaire** : Synonymes, Contraires, Homonymes, Familles de mots, Mots
+     du quotidien, **Expressions idiomatiques**, **Registres de langue**,
+     **Paronymes**.
+   - **Orthographe** : Homophones, é/er, Accents, Pluriels, m devant m·b·p,
+     **Homophones grammaticaux**, **Adverbes en -ment**.
 3. **La difficulté** : Très facile, Facile, Normal, Difficile, Très difficile,
    Extrême. Plus la difficulté est élevée, plus **les bots sont forts** et plus
    **les questions posées sont difficiles**.
@@ -52,7 +63,13 @@ réponse mise en évidence) pour servir de carnet de révision. Les pastilles
 **✓** et **✗** en haut sont **cliquables** : touche la croix rouge **✗** pour
 n'afficher que les **questions ratées** (idéal pour réviser ses erreurs), la
 coche verte **✓** pour ne voir que les réussites, et re-touche pour tout revoir.
+**Touche une carte** pour dérouler l'**explication de la réponse** : la bonne
+réponse et un **rappel de la règle** associée (temps, accord, homophone…).
 Tout est sauvegardé localement sur l'appareil et survit aux nouvelles parties.
+
+**Dialogues d'ambiance :** de temps en temps, quand un gros écart se creuse (en
+tête ou distancé) ou au **lancement d'un duel**, ton animal et son rival
+s'échangent une petite réplique amusante, dans leur caractère.
 
 **Anti-répétition (mémoire longue) :** chaque question déjà posée est mémorisée
 durablement. À chaque tirage, le jeu propose **en priorité une question jamais
@@ -99,7 +116,7 @@ logo (mêmes noms, mêmes dimensions).
 |----------------|------|
 | `index.html`   | Interface, assistant de configuration, plateau, logique du jeu, musique et bruitages. |
 | `questions.js` | **Générateur** de questions (banques de mots + moteur de conjugaison). |
-| `animaux.js`   | Les 10 animaux : nom, trait de caractère et répliques de libération. |
+| `animaux.js`   | Les 10 animaux : nom, trait, répliques de libération et **dialogues d'ambiance** (`BANTER`). |
 | `sprites.js`   | Décor du plateau dessiné de façon procédurale (les animaux sont des emojis HD). |
 | `manifest.webmanifest` | Manifeste PWA (nom, icônes, lancement autonome plein écran). |
 | `sw.js`        | *Service worker* : mise en cache pour un fonctionnement hors-ligne. |
