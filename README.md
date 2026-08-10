@@ -48,8 +48,17 @@ difficulté** choisie. Le **gagnant avance de 6 cases**, le **perdant recule de 
 difficultés** — de quoi jouer très longtemps !
 
 L'onglet **Historique** conserve toutes les questions jouées (avec la bonne
-réponse mise en évidence) pour servir de carnet de révision. Tout est sauvegardé
-localement sur l'appareil et survit aux nouvelles parties.
+réponse mise en évidence) pour servir de carnet de révision. Les pastilles
+**✓** et **✗** en haut sont **cliquables** : touche la croix rouge **✗** pour
+n'afficher que les **questions ratées** (idéal pour réviser ses erreurs), la
+coche verte **✓** pour ne voir que les réussites, et re-touche pour tout revoir.
+Tout est sauvegardé localement sur l'appareil et survit aux nouvelles parties.
+
+**Anti-répétition (mémoire longue) :** chaque question déjà posée est mémorisée
+durablement. À chaque tirage, le jeu propose **en priorité une question jamais
+vue** ; une même question ne réapparaît qu'après que **toutes** les autres du
+même *matière · thème · difficulté* soient repassées. Les répétitions sont donc
+fortement réduites, d'une partie à l'autre.
 
 Les pions (le tien et ceux des robots) sautent de case en case, comme sur un
 échiquier en ligne : tu vois chaque animal bondir jusqu'à sa case d'arrivée, y

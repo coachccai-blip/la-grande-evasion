@@ -252,6 +252,12 @@
   .chip{font-size:12px; font-weight:800; padding:5px 9px; border-radius:20px;}
   .chip.ok{background:rgba(63,174,90,.2); color:var(--ok2);}
   .chip.ko{background:rgba(224,87,74,.2); color:var(--ko2);}
+  /* Les pastilles ✓ / ✗ servent de filtres cliquables dans l'historique */
+  .chip.filterable{cursor:pointer; border:1px solid transparent; user-select:none;}
+  .chip.filterable:active{transform:scale(.95);}
+  .chip.ok.on{border-color:var(--ok2); box-shadow:0 0 0 2px var(--ok2) inset;}
+  .chip.ko.on{border-color:var(--ko2); box-shadow:0 0 0 2px var(--ko2) inset;}
+  .hist-filter-note{font-size:11px; color:var(--ink-soft); margin:0 0 8px 2px;}
   .hist-item{
     display:flex; gap:10px; align-items:flex-start; background:var(--panel); border:1px solid var(--line);
     border-radius:12px; padding:10px; margin-bottom:8px;
@@ -379,8 +385,8 @@
       <div class="scroll">
         <div class="hist-head">
           <div class="stat">
-            <span class="chip ok" id="statOk">✓ 0</span>
-            <span class="chip ko" id="statKo">✗ 0</span>
+            <span class="chip ok filterable" id="statOk" title="Afficher seulement les réussites">✓ 0</span>
+            <span class="chip ko filterable" id="statKo" title="Afficher seulement les questions ratées">✗ 0</span>
           </div>
           <button id="clearHist" class="btn secondary small">Effacer</button>
         </div>
@@ -551,12 +557,13 @@ function zoneOf(s){ if(s<=0) return 0; return Math.min(4, Math.floor((s-1)/10));
 
 /* --------------------------- Sauvegarde ---------------------------- */
 var SAVE_KEY = "lge_save_v1";
-var store = {history:[], missions:{}, game:null};
+var store = {history:[], missions:{}, game:null, seen:{}, seenN:0};
 function loadSave(){
   try{
     var raw = localStorage.getItem(SAVE_KEY);
     if(raw){ var o = JSON.parse(raw);
-      store.history = o.history||[]; store.missions = o.missions||{}; store.game = o.game||null; }
+      store.history = o.history||[]; store.missions = o.missions||{}; store.game = o.game||null;
+      store.seen = o.seen||{}; store.seenN = o.seenN||0; }
   }catch(e){ /* repli silencieux si localStorage indisponible (§12) */ }
 }
 function persist(){
@@ -566,8 +573,6 @@ function persist(){
 /* --------------------------- État courant -------------------------- */
 var G = null;        // partie en cours
 var busy = false;    // verrou pendant animations/questions
-var usedQ = {};      // suivi des questions déjà posées (RG10)
-CATS.forEach(function(c){ usedQ[c] = []; });
 
 /* --------------------------- Utilitaires --------------------------- */
 function $(id){ return document.getElementById(id); }
@@ -654,20 +659,37 @@ var Sound=(function(){
   };
 })();
 
-/* Génère une question selon la matière/thème/difficulté choisis (G.setup),
-   en évitant de répéter les dernières questions posées (RG10). */
+/* Génère une question selon la matière/thème/difficulté choisis (G.setup).
+
+   Anti-répétition « mémoire longue » (RG10) : chaque question déjà posée est
+   mémorisée durablement (localStorage) avec un numéro d'ordre. À chaque tirage,
+   on génère plusieurs candidats et on retient EN PRIORITÉ une question jamais
+   vue. Si tout le réservoir accessible (matière · thème · difficulté) a déjà été
+   joué, on ressort alors la question vue le plus ANCIENNEMENT (ordre LRU) : une
+   même question ne revient donc qu'après que toutes les autres soient repassées.
+   Résultat : les répétitions sont drastiquement réduites et le contenu tourne. */
 function pickQuestion(){
   var cat=G.setup.cat, sub=G.setup.sub, target=G.setup.diffVal;
-  var recent=usedQ.recent||(usedQ.recent=[]);
-  var q=null;
-  for(var t=0;t<15;t++){
-    q=Questions.generate(cat, sub, target);
+  var seen = store.seen || (store.seen={});
+  var best=null, bestKey=null, bestSeenAt=Infinity;
+  for(var t=0;t<50;t++){
+    var q=Questions.generate(cat, sub, target);
     var k=q.phrase+"§"+q.options[q.answer];
-    if(recent.indexOf(k)<0){ recent.push(k); break; }
+    var when=seen[k];
+    if(when===undefined){ best=q; bestKey=k; break; }   // jamais vue → on prend tout de suite
+    if(when<bestSeenAt){ bestSeenAt=when; best=q; bestKey=k; } // sinon : la plus ancienne
   }
-  if(!q) q=Questions.generate(cat, sub, target);
-  if(recent.length>80) recent.shift();
-  return {q:q, cat:q.cat};
+  if(!best){ best=Questions.generate(cat, sub, target); bestKey=best.phrase+"§"+best.options[best.answer]; }
+  store.seenN=(store.seenN||0)+1;
+  seen[bestKey]=store.seenN;
+  // plafond mémoire : au-delà de 1500 clés, on oublie les 500 plus anciennes
+  var keys=Object.keys(seen);
+  if(keys.length>1500){
+    keys.sort(function(a,b){ return seen[a]-seen[b]; });
+    for(var i=0;i<500;i++) delete seen[keys[i]];
+  }
+  persist();
+  return {q:best, cat:best.cat};
 }
 
 /* Clé de mission : un animal libéré pour une combinaison matière/thème/difficulté donnée. */
@@ -1292,7 +1314,8 @@ function startGame(animalId){
       .concat(bots.map(function(b){ return {animalId:b, pos:0, skip:false, bot:true}; })),
     turnStartPos:0, over:false
   };
-  usedQ={};   // nouvelle banque de suivi pour cette configuration
+  // NB : la mémoire anti-répétition (store.seen) est volontairement CONSERVÉE
+  // d'une partie à l'autre, pour éviter que les mêmes questions ne reviennent.
   saveGameState();
   enterGame();
 }
@@ -1703,13 +1726,32 @@ function finishGame(playerWon, winnerIndex){
 /* ==================================================================== */
 /*                            HISTORIQUE                                */
 /* ==================================================================== */
+var histFilter="all";   // "all" | "ok" | "ko" : filtre de l'historique (pastilles ✓/✗)
 function renderHistory(){
   var list=$("histList"); list.innerHTML="";
   var ok=0, ko=0;
   store.history.forEach(function(h){ if(h.result) ok++; else ko++; });
   $("statOk").textContent="✓ "+ok; $("statKo").textContent="✗ "+ko;
+  $("statOk").classList.toggle("on", histFilter==="ok");
+  $("statKo").classList.toggle("on", histFilter==="ko");
   if(store.history.length===0){ list.innerHTML="<div class='empty'>Aucune question jouée pour l'instant.<br>Lance une partie pour remplir ton carnet de révision !</div>"; return; }
-  store.history.forEach(function(h){
+  // bandeau indiquant le filtre actif
+  if(histFilter!=="all"){
+    var note=document.createElement("div"); note.className="hist-filter-note";
+    note.textContent = histFilter==="ko"
+      ? "🔴 Filtre actif : questions ratées uniquement — touche « ✗ » pour tout revoir."
+      : "🟢 Filtre actif : réussites uniquement — touche « ✓ » pour tout revoir.";
+    list.appendChild(note);
+  }
+  var shown=store.history.filter(function(h){
+    return histFilter==="all" || (histFilter==="ko" ? !h.result : !!h.result);
+  });
+  if(shown.length===0){
+    var e=document.createElement("div"); e.className="empty";
+    e.innerHTML = histFilter==="ko" ? "Aucune question ratée. Bravo ! 🎉" : "Aucune réussite pour l'instant.";
+    list.appendChild(e); return;
+  }
+  shown.forEach(function(h){
     var it=document.createElement("div"); it.className="hist-item";
     var res=document.createElement("div"); res.className="hist-res "+(h.result?"ok":"ko"); res.textContent=h.result?"✓":"✗";
     var main=document.createElement("div"); main.className="hist-main";
@@ -1793,6 +1835,9 @@ function init(){
       store.history=[]; persist(); renderHistory();
     }
   };
+  // Pastilles ✓ / ✗ : filtrent l'historique (clic pour activer, re-clic pour tout revoir)
+  $("statKo").onclick=function(){ Sound.click(); histFilter = (histFilter==="ko"?"all":"ko"); renderHistory(); };
+  $("statOk").onclick=function(){ Sound.click(); histFilter = (histFilter==="ok"?"all":"ok"); renderHistory(); };
 
   $("rematchBtn").onclick=function(){ Sound.click(); $("endScreen").classList.remove("show"); startGame(G? G.animalId : selectedAnimal); };
   $("backSelectBtn").onclick=function(){

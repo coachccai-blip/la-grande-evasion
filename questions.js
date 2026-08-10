@@ -405,6 +405,41 @@
     if(diff<=4) return ["je","tu","il","elle","nous","vous","ils","elles"];
     return ["je","tu","il","elle","on","nous","vous","ils","elles"];
   }
+
+  // Sujets « nommés » (3e personne) : prénoms et groupes nominaux. Ils multiplient
+  // la variété des phrases tout en restant naturels avec N'IMPORTE QUEL verbe
+  // (mêmes contraintes que « il/elle/ils/elles »). Les noms communs sont écrits en
+  // minuscule (« le chat ») : cap() met la majuscule seulement en début de phrase ;
+  // les prénoms gardent leur majuscule partout (« Hier, Paul a mangé »). g/n servent
+  // à l'accord du participe (passé composé avec « être »).
+  var NAMED_S = [ // 3e personne du SINGULIER (pi = 2)
+    {d:"Paul",pi:2,g:"m",n:"s"},{d:"Léo",pi:2,g:"m",n:"s"},{d:"Lucas",pi:2,g:"m",n:"s"},
+    {d:"Théo",pi:2,g:"m",n:"s"},{d:"Hugo",pi:2,g:"m",n:"s"},{d:"Nathan",pi:2,g:"m",n:"s"},
+    {d:"Léa",pi:2,g:"f",n:"s"},{d:"Emma",pi:2,g:"f",n:"s"},{d:"Chloé",pi:2,g:"f",n:"s"},
+    {d:"Marie",pi:2,g:"f",n:"s"},{d:"Jade",pi:2,g:"f",n:"s"},{d:"Alice",pi:2,g:"f",n:"s"},
+    {d:"le maître",pi:2,g:"m",n:"s"},{d:"la maîtresse",pi:2,g:"f",n:"s"},
+    {d:"mon frère",pi:2,g:"m",n:"s"},{d:"ma sœur",pi:2,g:"f",n:"s"},
+    {d:"le voisin",pi:2,g:"m",n:"s"},{d:"le chat",pi:2,g:"m",n:"s"},{d:"le chien",pi:2,g:"m",n:"s"}
+  ];
+  var NAMED_P = [ // 3e personne du PLURIEL (pi = 5)
+    {d:"les enfants",pi:5,g:"m",n:"p"},{d:"les élèves",pi:5,g:"m",n:"p"},
+    {d:"Paul et Léa",pi:5,g:"m",n:"p"},{d:"mes amis",pi:5,g:"m",n:"p"},
+    {d:"les joueurs",pi:5,g:"m",n:"p"},{d:"mes parents",pi:5,g:"m",n:"p"},
+    {d:"les filles",pi:5,g:"f",n:"p"},{d:"Emma et Jade",pi:5,g:"f",n:"p"},
+    {d:"les oiseaux",pi:5,g:"m",n:"p"},{d:"les voisins",pi:5,g:"m",n:"p"}
+  ];
+  // Choisit un sujet : pronom classique OU sujet nommé (≈ 45 % du temps, un peu
+  // plus en montée de difficulté). o.etre → uniquement des sujets à genre défini.
+  function pickSubject(diff, o){
+    o=o||{};
+    var pron = o.etre ? ["il","elle","ils","elles"] : subjectsFor(diff);
+    if(o.tense==="subj") pron = pron.filter(function(k){ return k!=="je"; });
+    var named = NAMED_S.slice();
+    if(diff>=2) named = named.concat(NAMED_P);
+    var pNamed = Math.min(60, 35 + diff*5);   // proba (%) d'un sujet nommé
+    if(named.length && rint(100) < pNamed) return pick(named);
+    return SUBJ[pick(pron)];
+  }
   function verbsFor(diff, tense){
     var pool=VERBS.filter(function(v){
       if(tense==="subj" && (v.g===1 || v.noSubj)) return false; // subj identique à l'indicatif → exclu
@@ -436,9 +471,8 @@
     if(tense==="imper") return genImper(v,diff,cat,sub,comp);
 
     // temps simples : present / imparfait / futur / cond / subj
-    var subjPool = subjectsFor(diff);
-    if(tense==="subj") subjPool = subjPool.filter(function(k){ return k!=="je"; }); // évite « Je veux que je… »
-    var sk = pick(subjPool), S=SUBJ[sk], pi=S.pi;
+    var S = pickSubject(diff, {tense:tense});   // pronom OU sujet nommé (variété)
+    var pi = S.pi;
     var correct = pform(v,tense,pi);
 
     // distracteurs = erreurs plausibles DU MÊME registre
@@ -456,9 +490,11 @@
     if(tense==="subj"){ phrase = subjHead(pick(SUBJ_TRIG), S.d)+" ___"+ (comp?" "+comp:"")+"."; }
     else if(tense==="cond"){ phrase = pick(COND_HEAD)+" "+subjBlank(S,correct)+(comp?" "+comp:"")+"."; }
     else {
-      var tm=TIME[tense]?pick(TIME[tense]):"";
+      // marqueur de temps facultatif (~70 %) : sinon la phrase commence par le sujet
+      var tm=(TIME[tense] && rint(100)<70) ? pick(TIME[tense]) : "";
       var body = subjBlank(S,correct)+(comp?" "+comp:"")+".";
-      phrase = tm ? (tm+", "+body) : cap(body);
+      var sep = /[,]$/.test(tm) ? " " : ", ";   // certains marqueurs finissent déjà par une virgule
+      phrase = tm ? (tm+sep+body) : cap(body);
     }
     phrase=cap(phrase);
     return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint, options:build(correct,pool), answer:0 };
@@ -488,8 +524,9 @@
 
   // Passé composé : options 100 % « temps composés » (auxiliaire + participe).
   function genPasse(v,diff,cat,sub,comp,hint){
-    var subjPool = v.etre ? ["il","elle","ils","elles"] : subjectsFor(diff);
-    var sk=pick(subjPool), S=SUBJ[sk], pi=S.pi;
+    // sujet pronom OU nommé ; pour les verbes en « être », genre/nombre définis
+    // (indispensable à l'accord du participe) → assuré par pickSubject(etre).
+    var S = pickSubject(diff, {etre:v.etre}), pi=S.pi;
     var correct, pool=[];
     if(v.etre){
       var pp=agree(v.pp,S);
@@ -514,12 +551,17 @@
     return { cat:cat, sub:sub, tense:"passe", phrase:phrase, hint:hint, options:build(correct,pool), answer:0 };
   }
 
-  // Choisit un item d'une banque en visant la difficulté (bande élargie au besoin).
+  // Choisit un item d'une banque en visant la difficulté. On élargit la bande
+  // autour de la cible jusqu'à disposer d'un CHOIX SUFFISANT (≥ 7 items) : cela
+  // évite qu'aux difficultés extrêmes (très facile / extrême), où peu d'items ont
+  // exactement ce niveau, on ne tourne qu'entre 2-3 questions. La difficulté reste
+  // respectée (items voisins), mais la variété est bien plus grande.
   function pickByDiff(list, target){
     target=target||3;
+    var want=Math.min(7, list.length);
     for(var w=0;w<=5;w++){
       var band=list.filter(function(it){ return Math.abs((it.d||3)-target)<=w; });
-      if(band.length>=3) return pick(band);
+      if(band.length>=want) return pick(band);
     }
     return pick(list);
   }
@@ -555,7 +597,21 @@
     {w:"avec",n:"préposition",d:4,ph:"Dans « avec un ami », « avec » est une ___."},
     {w:"mais",n:"conjonction",d:4,ph:"Dans « petit mais fort », « mais » est une ___."},
     {w:"et",n:"conjonction",d:3,ph:"Dans « toi et moi », « et » est une ___."},
-    {w:"car",n:"conjonction",d:5,ph:"Dans « il pleure car il est triste », « car » est une ___."}
+    {w:"car",n:"conjonction",d:5,ph:"Dans « il pleure car il est triste », « car » est une ___."},
+    {w:"maison",n:"nom",d:1,ph:"« maison » est un ___."},
+    {w:"soleil",n:"nom",d:1,ph:"« soleil » est un ___."},
+    {w:"chanter",n:"verbe",d:1,ph:"« chanter » est un ___."},
+    {w:"dormir",n:"verbe",d:2,ph:"« dormir » est un ___."},
+    {w:"petit",n:"adjectif",d:2,ph:"Dans « un petit chien », « petit » est un ___."},
+    {w:"bleu",n:"adjectif",d:2,ph:"Dans « le ciel bleu », « bleu » est un ___."},
+    {w:"bien",n:"adverbe",d:3,ph:"Dans « il travaille bien », « bien » est un ___."},
+    {w:"hier",n:"adverbe",d:4,ph:"Dans « il est parti hier », « hier » est un ___."},
+    {w:"une",n:"déterminant",d:2,ph:"Dans « une pomme », « une » est un ___."},
+    {w:"tu",n:"pronom",d:2,ph:"Dans « tu manges », « tu » est un ___."},
+    {w:"pour",n:"préposition",d:4,ph:"Dans « un cadeau pour toi », « pour » est une ___."},
+    {w:"sur",n:"préposition",d:3,ph:"Dans « sur le mur », « sur » est une ___."},
+    {w:"ou",n:"conjonction",d:4,ph:"Dans « du thé ou du café », « ou » est une ___."},
+    {w:"donc",n:"conjonction",d:5,ph:"Dans « je pense donc je suis », « donc » est une ___."}
   ];
   var NATURE_OPTS=["nom","verbe","adjectif","adverbe","préposition","pronom","déterminant","conjonction"];
   var DET = [
@@ -572,7 +628,17 @@
     {d:2,ph:"Il boit ___ lait le matin.",good:"du",bad:["de la","des","le"]},
     {d:3,ph:"___ arbre perd ses feuilles.",good:"L'",bad:["Le","La","Les"]},
     {d:4,ph:"Elle mange ___ confiture.",good:"de la",bad:["du","de l'","des"]},
-    {d:3,ph:"Range ___ affaires.",good:"tes",bad:["ta","ton","te"]}
+    {d:3,ph:"Range ___ affaires.",good:"tes",bad:["ta","ton","te"]},
+    {d:1,ph:"___ soleil brille aujourd'hui.",good:"Le",bad:["La","Les","L'"]},
+    {d:2,ph:"J'ai mangé ___ pomme ce matin.",good:"une",bad:["un","des","de"]},
+    {d:2,ph:"Nous avons ___ jouets neufs.",good:"des",bad:["du","de la","le"]},
+    {d:3,ph:"___ histoire fait peur.",good:"Cette",bad:["Ce","Cet","Ces"]},
+    {d:3,ph:"C'est ___ maison, pas la tienne.",good:"ma",bad:["mon","mes","me"]},
+    {d:2,ph:"___ hibou vit dans l'arbre.",good:"Un",bad:["Une","Des","Le"]},
+    {d:4,ph:"Elle ne mange jamais ___ viande.",good:"de",bad:["de la","du","des"]},
+    {d:4,ph:"Il reste encore ___ soupe.",good:"de la",bad:["du","de l'","des"]},
+    {d:3,ph:"___ hommes travaillent dans le champ.",good:"Les",bad:["Le","Des","L'"]},
+    {d:5,ph:"Je n'ai plus ___ idées.",good:"d'",bad:["des","de","les"]}
   ];
   var PRON = [
     {d:2,ph:"La personne ___ vient d'arriver est mon oncle.",good:"qui",bad:["que","dont","où"]},
@@ -586,7 +652,15 @@
     {d:2,ph:"Où est le chat ? ___ dort.",good:"Il",bad:["Elle","Ils","On"]},
     {d:4,ph:"Ces bonbons sont à nous, ce sont les ___.",good:"nôtres",bad:["notres","nôtre","nos"]},
     {d:3,ph:"Tu vois ce film ? Je ___ ai déjà vu.",good:"l'",bad:["le","lui","les"]},
-    {d:4,ph:"Voici le chemin par ___ il faut passer.",good:"lequel",bad:["laquelle","lesquels","dont"]}
+    {d:4,ph:"Voici le chemin par ___ il faut passer.",good:"lequel",bad:["laquelle","lesquels","dont"]},
+    {d:2,ph:"Tu as fini ? ___ ai presque terminé.",good:"J'",bad:["Je","Tu","Il"]},
+    {d:3,ph:"Ce sont mes parents ___ m'ont appelé.",good:"qui",bad:["que","dont","où"]},
+    {d:3,ph:"Regarde ce dessin : c'est moi ___ l'ai fait.",good:"qui",bad:["que","dont","qu'"]},
+    {d:4,ph:"L'histoire ___ tu m'as racontée était drôle.",good:"que",bad:["qui","dont","où"]},
+    {d:3,ph:"Les élèves sont prêts ; ___ attendent la maîtresse.",good:"ils",bad:["elles","eux","on"]},
+    {d:4,ph:"Mes amis me manquent, je pense souvent à ___.",good:"eux",bad:["leur","les","ils"]},
+    {d:5,ph:"Cette voiture est à eux, c'est la ___.",good:"leur",bad:["leurs","nôtre","sienne"]},
+    {d:3,ph:"Tu vois la tour ? Monte ___ !",good:"dessus",bad:["dessous","dedans","dehors"]}
   ];
   var PREP = [
     {d:2,ph:"Le chat est ___ la table.",good:"sous",bad:["sur","dans","à"]},
@@ -602,7 +676,17 @@
     {d:3,ph:"Il joue ___ violon.",good:"du",bad:["au","de","à"]},
     {d:2,ph:"Le nid est ___ l'arbre.",good:"dans",bad:["sur","sous","à"]},
     {d:4,ph:"Elle rentre ___ l'école à pied.",good:"de",bad:["à","en","du"]},
-    {d:3,ph:"Pose le vase ___ la table.",good:"sur",bad:["sous","dans","à"]}
+    {d:3,ph:"Pose le vase ___ la table.",good:"sur",bad:["sous","dans","à"]},
+    {d:2,ph:"Le chien dort ___ le lit.",good:"sous",bad:["sur","à","en"]},
+    {d:3,ph:"Je reviens ___ deux minutes.",good:"dans",bad:["en","à","depuis"]},
+    {d:4,ph:"J'ai fait ce dessin ___ dix minutes.",good:"en",bad:["dans","à","depuis"]},
+    {d:3,ph:"Nous partons ___ Italie cet été.",good:"en",bad:["au","à","aux"]},
+    {d:4,ph:"Il vient ___ Canada.",good:"du",bad:["de","au","des"]},
+    {d:2,ph:"Le cadeau est ___ ma sœur.",good:"pour",bad:["par","de","à"]},
+    {d:3,ph:"Le livre est posé ___ l'étagère.",good:"sur",bad:["sous","dans","de"]},
+    {d:4,ph:"Elle parle ___ ses vacances.",good:"de",bad:["à","en","par"]},
+    {d:3,ph:"Il marche ___ la maison à l'école.",good:"de",bad:["à","en","dans"]},
+    {d:5,ph:"Ce train part ___ Lyon à Marseille.",good:"de",bad:["à","en","depuis"]}
   ];
   var ACCORD = [
     {d:2,ph:"Les fleurs sont ___.",good:"belles",bad:["belle","beau","beaux"]},
@@ -616,7 +700,16 @@
     {d:3,ph:"La petite fille est ___.",good:"heureuse",bad:["heureux","heureuses","heureu"]},
     {d:2,ph:"Un chien ___ aboie.",good:"noir",bad:["noire","noirs","noires"]},
     {d:4,ph:"Les feuilles ___ tombent.",good:"mortes",bad:["mort","morte","morts"]},
-    {d:5,ph:"Une vieille dame et un vieux monsieur sont ___.",good:"âgés",bad:["âgé","âgées","âgée"]}
+    {d:5,ph:"Une vieille dame et un vieux monsieur sont ___.",good:"âgés",bad:["âgé","âgées","âgée"]},
+    {d:2,ph:"Une voiture ___ passe dans la rue.",good:"rouge",bad:["rouges","rouje","rougé"]},
+    {d:3,ph:"Les chats sont ___ sur le canapé.",good:"assis",bad:["assit","assises","assise"]},
+    {d:3,ph:"Ma cousine est ___ de son cadeau.",good:"contente",bad:["content","contents","contentes"]},
+    {d:4,ph:"Les élèves sont ___ en classe.",good:"attentifs",bad:["attentif","attentive","attentives"]},
+    {d:2,ph:"Des chiens ___ courent dans le pré.",good:"blancs",bad:["blanc","blanche","blanches"]},
+    {d:4,ph:"Cette tarte est ___.",good:"délicieuse",bad:["délicieux","délicieuses","délicieu"]},
+    {d:5,ph:"Les fenêtres restent ___ toute la nuit.",good:"ouvertes",bad:["ouvert","ouverts","ouverte"]},
+    {d:3,ph:"Ces exercices sont ___.",good:"faciles",bad:["facile","facil","faciless"]},
+    {d:4,ph:"Mes grands-mères sont ___.",good:"gentilles",bad:["gentil","gentils","gentille"]}
   ];
   var TYPES = [
     {d:2,ph:"« Quelle belle journée ! » est une phrase ___.",good:"exclamative",bad:["interrogative","déclarative","impérative"]},
@@ -626,7 +719,13 @@
     {d:4,ph:"« Ne cours pas. » est une phrase ___.",good:"négative",bad:["affirmative","interrogative","exclamative"]},
     {d:3,ph:"« Range ta chambre. » est une phrase ___.",good:"impérative",bad:["déclarative","interrogative","exclamative"]},
     {d:4,ph:"« Comme il fait beau ! » est une phrase ___.",good:"exclamative",bad:["déclarative","interrogative","impérative"]},
-    {d:3,ph:"« Est-ce que tu viens ? » est une phrase ___.",good:"interrogative",bad:["exclamative","impérative","déclarative"]}
+    {d:3,ph:"« Est-ce que tu viens ? » est une phrase ___.",good:"interrogative",bad:["exclamative","impérative","déclarative"]},
+    {d:2,ph:"« J'aime les vacances. » est une phrase ___.",good:"déclarative",bad:["interrogative","exclamative","impérative"]},
+    {d:4,ph:"« Je ne veux pas de dessert. » est une phrase ___.",good:"négative",bad:["affirmative","interrogative","impérative"]},
+    {d:3,ph:"« Viens ici tout de suite ! » est une phrase ___.",good:"impérative",bad:["déclarative","interrogative","exclamative"]},
+    {d:5,ph:"« N'est-il pas trop tard ? » est une phrase ___.",good:"interrogative",bad:["déclarative","exclamative","impérative"]},
+    {d:2,ph:"« Quel beau match ! » est une phrase ___.",good:"exclamative",bad:["déclarative","interrogative","impérative"]},
+    {d:4,ph:"« Elle chante bien. » est une phrase ___.",good:"affirmative",bad:["négative","interrogative","impérative"]}
   ];
   function genGram(sub, diff, cat){
     if(sub==="Nature des mots"){ var it=pickByDiff(NATURE,diff);
@@ -653,9 +752,15 @@
     {d:4,w:["maison","demeure","logis"]}, {d:3,w:["regarder","observer","contempler"]},
     {d:3,w:["manger","dévorer","déguster"]}, {d:2,w:["content","ravi","enchanté"]},
     {d:4,w:["triste","malheureux","chagriné"]}, {d:3,w:["dire","déclarer","annoncer"]},
-    {d:4,w:["courageux","brave","vaillant"]}, {d:5,w:["riche","fortuné","aisé"]}
+    {d:4,w:["courageux","brave","vaillant"]}, {d:5,w:["riche","fortuné","aisé"]},
+    {d:2,w:["joli","mignon","charmant"]}, {d:3,w:["méchant","cruel","vil"]},
+    {d:3,w:["froid","glacé","frais"]}, {d:2,w:["finir","terminer","achever"]},
+    {d:3,w:["difficile","dur","ardu"]}, {d:4,w:["étrange","bizarre","curieux"]},
+    {d:3,w:["montrer","présenter","exposer"]}, {d:4,w:["cacher","dissimuler","masquer"]},
+    {d:2,w:["crier","hurler","brailler"]}, {d:5,w:["important","essentiel","capital"]},
+    {d:3,w:["fabriquer","construire","bâtir"]}, {d:4,w:["ancien","vieux","antique"]}
   ];
-  var SYN_DIST = ["triste","lent","petit","laid","finir","fort","méchant","lourd","bruyant","sombre","facile","vide","froid","sale"];
+  var SYN_DIST = ["triste","lent","petit","laid","finir","fort","méchant","lourd","bruyant","sombre","facile","vide","froid","sale","mou","pauvre","court","dur","faible","clair"];
   var CONTR = [
     {d:1,a:"grand",b:"petit"}, {d:1,a:"jour",b:"nuit"}, {d:1,a:"chaud",b:"froid"},
     {d:2,a:"vrai",b:"faux"}, {d:2,a:"ouvrir",b:"fermer"}, {d:2,a:"monter",b:"descendre"},
@@ -663,7 +768,14 @@
     {d:2,a:"plein",b:"vide"}, {d:2,a:"gagner",b:"perdre"}, {d:3,a:"devant",b:"derrière"},
     {d:3,a:"clair",b:"sombre"}, {d:3,a:"dur",b:"mou"}, {d:3,a:"riche",b:"pauvre"},
     {d:2,a:"haut",b:"bas"}, {d:3,a:"lourd",b:"léger"}, {d:4,a:"aimable",b:"désagréable"},
-    {d:4,a:"autoriser",b:"interdire"}, {d:3,a:"début",b:"fin"}
+    {d:4,a:"autoriser",b:"interdire"}, {d:3,a:"début",b:"fin"},
+    {d:1,a:"entrer",b:"sortir"}, {d:2,a:"acheter",b:"vendre"},
+    {d:2,a:"dur",b:"mou"}, {d:1,a:"grand",b:"petit"},
+    {d:3,a:"large",b:"étroit"}, {d:2,a:"aimer",b:"détester"},
+    {d:3,a:"premier",b:"dernier"}, {d:4,a:"souvent",b:"rarement"},
+    {d:2,a:"avancer",b:"reculer"}, {d:3,a:"mouillé",b:"sec"},
+    {d:4,a:"courageux",b:"peureux"}, {d:2,a:"jeune",b:"vieux"},
+    {d:3,a:"tôt",b:"tard"}, {d:5,a:"généreux",b:"avare"}
   ];
   var HOMO = [
     {d:3,ph:"On se baigne dans la ___ (grande étendue d'eau salée).",good:"mer",bad:["mère","maire","mers"]},
@@ -679,7 +791,14 @@
     {d:2,ph:"La grenouille saute dans l'___ (liquide).",good:"eau",bad:["au","haut","oh"]},
     {d:5,ph:"Le roi vit dans un ___ (grande demeure).",good:"palais",bad:["palet","palée","palaix"]},
     {d:4,ph:"Il y a ___ élèves dans l'école (nombre 100).",good:"cent",bad:["sang","sans","s'en"]},
-    {d:3,ph:"L'oiseau bat des ___ (pour voler).",good:"ailes",bad:["elles","aile","ails"]}
+    {d:3,ph:"L'oiseau bat des ___ (pour voler).",good:"ailes",bad:["elles","aile","ails"]},
+    {d:3,ph:"Le chat a mal à la ___ après le saut (partie du corps).",good:"patte",bad:["pâte","pate","pattes"]},
+    {d:4,ph:"On fait des crêpes avec de la ___ (mélange à cuire).",good:"pâte",bad:["patte","pate","pâtes"]},
+    {d:2,ph:"Le garçon lance le ___ à son chien (objet rond).",good:"ballon",bad:["balai","bâillon","ballons"]},
+    {d:3,ph:"Le chat guette la petite ___ grise (rongeur).",good:"souris",bad:["sourit","sourie","souri"]},
+    {d:4,ph:"Le prince épouse la belle ___ (fille du roi).",good:"reine",bad:["rêne","renne","reines"]},
+    {d:5,ph:"Le renne tire le traîneau grâce à sa ___ (lanière de cuir).",good:"rêne",bad:["reine","renne","rênes"]},
+    {d:4,ph:"Le chevalier porte une lourde ___ (protection de métal).",good:"armure",bad:["ramure","armurer","armures"]}
   ];
   var FAMILLE = [
     {d:2,ph:"Un petit jardin est un ___.",good:"jardinet",bad:["jardinier","jardinage","jardiner"]},
@@ -690,6 +809,14 @@
     {d:2,ph:"Un petit chat est un ___.",good:"chaton",bad:["chatte","chatière","chatton"]},
     {d:3,ph:"Celui qui coiffe les cheveux est le ___.",good:"coiffeur",bad:["coiffe","coiffure","coiffé"]},
     {d:4,ph:"L'action de laver s'appelle le ___.",good:"lavage",bad:["laveur","lavable","laver"]},
+    {d:2,ph:"Un petit garçon est un ___.",good:"garçonnet",bad:["garçonne","garagiste","gaminet"]},
+    {d:3,ph:"Une petite fille est une ___.",good:"fillette",bad:["filleul","filière","filet"]},
+    {d:3,ph:"Celui qui chante est un ___.",good:"chanteur",bad:["chanson","chantier","chanteuse"]},
+    {d:4,ph:"L'endroit où l'on vend des fleurs est la ___.",good:"fleuriste",bad:["fleurette","floraison","fleurir"]},
+    {d:5,ph:"Avec le préfixe « in- », « utile » devient ___.",good:"inutile",bad:["réutile","utilité","utiliser"]},
+    {d:3,ph:"Celui qui garde les buts est le ___.",good:"gardien",bad:["garderie","garage","gardienne"]},
+    {d:2,ph:"Un petit ours est un ___.",good:"ourson",bad:["oursin","oursonne","ourage"]},
+    {d:4,ph:"L'action de nager s'appelle la ___.",good:"natation",bad:["nageur","nageoire","nager"]},
     {d:3,ph:"Un petit livre est un ___.",good:"livret",bad:["libraire","librairie","livreur"]},
     {d:4,ph:"Celui qui vend du pain est le ___.",good:"boulanger",bad:["boulangerie","boulange","pain"]},
     {d:5,ph:"Avec le préfixe « re- », « lire » devient ___.",good:"relire",bad:["délire","élire","lecteur"]},
@@ -709,7 +836,17 @@
     {d:2,ph:"Quand il pleut, je prends mon ___.",good:"parapluie",bad:["chapeau","ballon","cartable"]},
     {d:3,ph:"Le médecin travaille à l'___.",good:"hôpital",bad:["école","usine","garage"]},
     {d:2,ph:"On achète le pain à la ___.",good:"boulangerie",bad:["pharmacie","librairie","boucherie"]},
-    {d:3,ph:"Un bébé de la vache est un ___.",good:"veau",bad:["poulain","agneau","chevreau"]}
+    {d:3,ph:"Un bébé de la vache est un ___.",good:"veau",bad:["poulain","agneau","chevreau"]},
+    {d:1,ph:"Pour dessiner, j'utilise un ___.",good:"crayon",bad:["couteau","marteau","balai"]},
+    {d:1,ph:"Je lis un ___ passionnant.",good:"livre",bad:["verre","banc","seau"]},
+    {d:2,ph:"On regarde un film à la ___.",good:"télévision",bad:["casserole","brouette","valise"]},
+    {d:2,ph:"Pour se brosser les dents, j'utilise une ___.",good:"brosse",bad:["fourchette","assiette","cuillère"]},
+    {d:3,ph:"Le boulanger fait cuire le pain dans le ___.",good:"four",bad:["frigo","lavabo","placard"]},
+    {d:2,ph:"Un bébé de la poule est un ___.",good:"poussin",bad:["chaton","chiot","veau"]},
+    {d:3,ph:"On achète des médicaments à la ___.",good:"pharmacie",bad:["boulangerie","librairie","boucherie"]},
+    {d:2,ph:"Pour manger la soupe, je m'assois à ___.",good:"table",bad:["chaise","lampe","porte"]},
+    {d:3,ph:"On garde le lait au ___.",good:"réfrigérateur",bad:["radiateur","grenier","garage"]},
+    {d:4,ph:"L'élève écrit au tableau avec une ___.",good:"craie",bad:["gomme","règle","trousse"]}
   ];
   function genVoc(sub, diff, cat){
     if(sub==="Synonymes"){
@@ -748,7 +885,16 @@
     {d:4,ph:"Je mets ___ chaussures.",good:"mes",bad:["mais","met","mets"],note:"mes / mais"},
     {d:5,ph:"Il pleure ___ il est tombé.",good:"car",bad:["quart","carre","quarts"],note:"car"},
     {d:4,ph:"La poule pond dans ___ nid.",good:"son",bad:["sont","sons","s'ont"],note:"son / sont"},
-    {d:3,ph:"Le chat ___ caché sous le lit.",good:"est",bad:["et","es","ait"],note:"est / et"}
+    {d:3,ph:"Le chat ___ caché sous le lit.",good:"est",bad:["et","es","ait"],note:"est / et"},
+    {d:4,ph:"Des bonbons ? Il ___ a beaucoup.",good:"en",bad:["an","ent","end"],note:"en / an"},
+    {d:5,ph:"Range tes jouets ___ de partir.",good:"avant",bad:["avent","avan","avans"],note:"avant / avent"},
+    {d:4,ph:"Je ne sais pas ___ elle habite.",good:"où",bad:["ou","houx","oût"],note:"où / ou"},
+    {d:3,ph:"___ chien aboie toute la nuit.",good:"Ce",bad:["Se","Ces","Ceux"],note:"ce / se"},
+    {d:5,ph:"Elles ___ promènent au parc.",good:"se",bad:["ce","ses","c'est"],note:"se / ce"},
+    {d:4,ph:"C'___ une très belle histoire.",good:"est",bad:["es","ait","et"],note:"c'est"},
+    {d:5,ph:"Il range ___ jouets dans la boîte.",good:"ses",bad:["ces","c'est","s'est"],note:"ses / ces"},
+    {d:5,ph:"Le chat ___ blessé en tombant.",good:"s'est",bad:["c'est","ses","ces"],note:"s'est / c'est"},
+    {d:3,ph:"Tu joues ___ moi aujourd'hui.",good:"avec",bad:["avek","avéc","avecque"],note:"avec"}
   ];
   var ER_E = [
     {d:3,ph:"Je vais ___ une pomme.",good:"manger",bad:["mangé","mangez","mangeais"],note:"infinitif après « vais »"},
@@ -761,7 +907,15 @@
     {d:5,ph:"Le chien vient de ___ un os.",good:"manger",bad:["mangé","mangeait","mangez"],note:"infinitif après « de »"},
     {d:5,ph:"Elle est ___ à l'école.",good:"allée",bad:["aller","allé","allez"],note:"participe (être, accord)"},
     {d:4,ph:"Il commence à ___.",good:"pleurer",bad:["pleuré","pleurez","pleurait"],note:"infinitif après « à »"},
-    {d:5,ph:"Les enfants ont ___ toute la journée.",good:"joué",bad:["jouer","jouez","jouaient"],note:"participe après « ont »"}
+    {d:5,ph:"Les enfants ont ___ toute la journée.",good:"joué",bad:["jouer","jouez","jouaient"],note:"participe après « ont »"},
+    {d:3,ph:"Je viens de ___ mes devoirs.",good:"finir",bad:["fini","finis","finit"],note:"infinitif après « de »"},
+    {d:4,ph:"Elle a ___ une belle chanson.",good:"chanté",bad:["chanter","chantez","chantée"],note:"participe (avoir, pas d'accord)"},
+    {d:3,ph:"Il ne faut pas ___ dans le couloir.",good:"courir",bad:["couru","courez","courrai"],note:"infinitif après « pas »"},
+    {d:5,ph:"Les fleurs ont ___ au printemps.",good:"poussé",bad:["pousser","poussez","poussaient"],note:"participe après « ont »"},
+    {d:4,ph:"Nous voulons ___ à ce jeu.",good:"jouer",bad:["joué","jouez","jouons"],note:"infinitif après « voulons »"},
+    {d:3,ph:"Tu vas ___ un dessin magnifique.",good:"dessiner",bad:["dessiné","dessinez","dessinais"],note:"infinitif après « vas »"},
+    {d:5,ph:"Elle est ___ très tôt ce matin.",good:"arrivée",bad:["arriver","arrivé","arrivez"],note:"participe (être, accord au féminin)"},
+    {d:4,ph:"J'ai ___ mon parapluie à la maison.",good:"oublié",bad:["oublier","oubliez","oubliée"],note:"participe après « ai »"}
   ];
   var ACCENTS = [
     {d:3,ph:"J'ai mangé un ___ au chocolat (dessert).",good:"gâteau",bad:["gateau","gâteaux","gatô"],note:"accent circonflexe"},
@@ -773,7 +927,15 @@
     {d:3,ph:"Le ___ est un félin rayé.",good:"tigre",bad:["tîgre","tigré","tigrè"],note:"pas d'accent"},
     {d:4,ph:"Il fait ses devoirs le ___.",good:"mercredi",bad:["mércredi","mercrédi","mèrcredi"],note:"un seul accent"},
     {d:5,ph:"La ___ tombe en hiver.",good:"neige",bad:["nêige","néige","nèige"],note:"pas d'accent sur e+i"},
-    {d:5,ph:"On boit une ___ chaude.",good:"crème",bad:["créme","crëme","creme"],note:"accent grave"}
+    {d:5,ph:"On boit une ___ chaude.",good:"crème",bad:["créme","crëme","creme"],note:"accent grave"},
+    {d:3,ph:"La ___ coule dans la vallée (cours d'eau).",good:"rivière",bad:["riviere","rivierre","riviére"],note:"accent grave"},
+    {d:2,ph:"Le ___ garde les moutons.",good:"berger",bad:["bérger","bergér","bèrger"],note:"un seul accent"},
+    {d:4,ph:"Il traverse la ___ pour aller à l'école.",good:"forêt",bad:["foret","forét","fôret"],note:"accent circonflexe"},
+    {d:3,ph:"Le ___ apporte le courrier.",good:"facteur",bad:["fàcteur","factèur","facteùr"],note:"pas d'accent"},
+    {d:4,ph:"Ma ___ prépare le dîner (maman de mon père).",good:"mère",bad:["mere","mére","mèrre"],note:"accent grave"},
+    {d:5,ph:"On écrit avec un ___ électronique aujourd'hui.",good:"écran",bad:["ecran","écrân","écrant"],note:"accent aigu au début"},
+    {d:2,ph:"Le ___ est très haut dans le ciel.",good:"nuage",bad:["nüage","nuagé","nuàge"],note:"pas d'accent"},
+    {d:3,ph:"J'aime beaucoup ce ___ salé (nourriture).",good:"repas",bad:["répas","repàs","repâs"],note:"pas d'accent"}
   ];
   var PLUR = [
     {d:3,ph:"J'ai vu trois ___.",good:"chevaux",bad:["chevals","chevaus","chevaual"],note:"pluriel de cheval"},
@@ -787,7 +949,16 @@
     {d:4,ph:"Deux ___ sur le toit.",good:"tuyaux",bad:["tuyeaux","tuyaus","tuyauxs"],note:"pluriel en -aux"},
     {d:2,ph:"Les ___ sont dans le pré.",good:"vaches",bad:["vache","vachs","vaces"],note:"pluriel simple en -s"},
     {d:4,ph:"Les ___ picorent des graines.",good:"oiseaux",bad:["oiseaus","oizeaux","oiseauxs"],note:"pluriel en -eaux"},
-    {d:5,ph:"Les ___ du château.",good:"travaux",bad:["travails","traveaux","travaus"],note:"pluriel de travail"}
+    {d:5,ph:"Les ___ du château.",good:"travaux",bad:["travails","traveaux","travaus"],note:"pluriel de travail"},
+    {d:2,ph:"Trois ___ jouent dans le jardin.",good:"chiens",bad:["chien","chiennes","chimens"],note:"pluriel simple en -s"},
+    {d:3,ph:"Les ___ de la classe sont neufs.",good:"cartables",bad:["cartable","cartaux","cartablons"],note:"pluriel simple en -s"},
+    {d:4,ph:"Deux ___ traversent la rivière.",good:"bateaux",bad:["bateau","batteaux","bateaus"],note:"pluriel en -eaux"},
+    {d:3,ph:"Les ___ chantent au printemps.",good:"oiseaux",bad:["oiseau","oizeaux","oiseaus"],note:"pluriel en -eaux"},
+    {d:4,ph:"Papa répare les ___ de la voiture.",good:"pneus",bad:["pneux","pneaux","pneus'"],note:"pluriel en -s (pas -x)"},
+    {d:5,ph:"Le berger garde ses ___.",good:"agneaux",bad:["agneau","agneaus","agnaux"],note:"pluriel en -eaux"},
+    {d:3,ph:"Les ___ portent une carapace.",good:"escargots",bad:["escargot","escargaux","escargotes"],note:"pluriel simple en -s"},
+    {d:4,ph:"On visite deux ___ magnifiques.",good:"châteaux",bad:["château","chateaux","châteaus"],note:"pluriel en -eaux"},
+    {d:5,ph:"Les ___ de mer sont salés.",good:"coraux",bad:["corails","coreaux","coraus"],note:"pluriel en -aux"}
   ];
   var MBP = [
     {d:2,ph:"Une ___ éclaire la nuit.",good:"lampe",bad:["lanpe","lempe","lampé"],note:"m devant p"},
@@ -801,7 +972,15 @@
     {d:4,ph:"Le ___ éteint le feu.",good:"pompier",bad:["ponpier","pompié","pumpier"],note:"m devant p"},
     {d:4,ph:"On change l'___ grillée.",good:"ampoule",bad:["anpoule","empoule","ampoulle"],note:"m devant p"},
     {d:5,ph:"Nous partons à la ___.",good:"campagne",bad:["canpagne","campane","cempagne"],note:"m devant p"},
-    {d:4,ph:"Elle range sa ___.",good:"chambre",bad:["chanbre","chambr","chembre"],note:"m devant b"}
+    {d:4,ph:"Elle range sa ___.",good:"chambre",bad:["chanbre","chambr","chembre"],note:"m devant b"},
+    {d:2,ph:"Le ___ pousse dans le jardin (long légume vert).",good:"concombre",bad:["conconbre","conconbré","concombr"],note:"m devant b"},
+    {d:3,ph:"Le vent fait ___ les feuilles.",good:"trembler",bad:["trenbler","tremblér","trambler"],note:"m devant b"},
+    {d:4,ph:"Le ___ souffle très fort aujourd'hui.",good:"tempête",bad:["tenpête","tempéte","tampête"],note:"m devant p"},
+    {d:3,ph:"L'arbre projette son ___ sur le sol.",good:"ombre",bad:["onbre","ombré","ambre"],note:"m devant b"},
+    {d:4,ph:"Écris le ___ vingt en chiffres.",good:"nombre",bad:["nonbre","nombré","nanbre"],note:"m devant b"},
+    {d:2,ph:"Il faut ___ à la corde à la récré.",good:"grimper",bad:["grinper","grimpér","grimpper"],note:"m devant p"},
+    {d:3,ph:"L'école recommence en ___.",good:"septembre",bad:["septenbre","septembré","septambre"],note:"m devant b"},
+    {d:4,ph:"Je cueille une ___ bien mûre (petit fruit rouge).",good:"framboise",bad:["franboise","framboisé","framboize"],note:"m devant b"}
   ];
   function genOrt(sub, diff, cat){
     var it, hint;
