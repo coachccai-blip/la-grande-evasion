@@ -15,30 +15,50 @@ compte, aucune donnée transmise en ligne.
 
 ## 🎮 Comment jouer
 
-1. Choisis ton animal parmi les 10 pensionnaires du zoo.
-2. Sélectionne une catégorie (ou le mode **Mélange**) puis lance le dé.
-3. Réponds à la question à trou :
-   - **Bonne réponse** → ton animal avance du nombre indiqué par le dé.
-   - **Mauvaise réponse** → il recule d'autant, et la bonne réponse s'affiche.
-4. Attention aux **cases spéciales** (banane, toboggan, gardien, défi éclair,
-   duel, case mystère) et aux **3 obstacles** (cases 18, 34, 45).
-5. Arrivé au **portail** (case 50), ouvre les 3 serrures : 3 bonnes réponses
-   d'affilée, sans dé. La moindre erreur referme tout !
-6. Gagne pour **libérer** ton animal : une coche verte marque sa mission
-   accomplie. Objectif : libérer les 10 animaux.
+Avant chaque partie, un petit assistant configure l'aventure :
+
+1. **La matière** : Conjugaison, Grammaire, Vocabulaire, Orthographe ou **Tout**.
+2. **Le thème** (sous-catégorie) : par ex. pour la Conjugaison — Présent, Passé
+   composé, Futur, Imparfait, Impératif, Subjonctif, Conditionnel présent, ou Tout.
+3. **La difficulté** : Très facile, Facile, Normal, Difficile, Très difficile,
+   Extrême. Plus la difficulté est élevée, plus **les bots sont forts** et plus
+   **les questions posées sont difficiles**.
+4. **L'animal** : choisis ton pensionnaire parmi les 10 du zoo.
+
+Ensuite, la course commence :
+
+- Lance le dé, réponds à la question à trou.
+  - **Bonne réponse** → ton animal avance du nombre indiqué par le dé.
+  - **Mauvaise réponse** → il recule d'autant, et la bonne réponse s'affiche.
+- Attention aux **cases spéciales** (banane, toboggan, ressort, cadeau, tornade,
+  piège, gardien, défi éclair, duel, case mystère) et aux **3 obstacles**
+  (cases 18, 34, 45).
+- Arrivé au **portail** (case 50), ouvre les 3 serrures : 3 bonnes réponses
+  d'affilée, sans dé. La moindre erreur referme tout !
+
+**Collection :** gagner libère ton animal pour la combinaison
+*matière · thème · difficulté* jouée (coche verte). Le vrai défi est de libérer
+**tous les animaux, dans toutes les matières, tous les thèmes et toutes les
+difficultés** — de quoi jouer très longtemps !
 
 L'onglet **Historique** conserve toutes les questions jouées (avec la bonne
 réponse mise en évidence) pour servir de carnet de révision. Tout est sauvegardé
 localement sur l'appareil et survit aux nouvelles parties.
 
+## 🔊 Son
+
+Musique d'ambiance et bruitages sont générés en direct (Web Audio, sans aucun
+fichier audio), et fonctionnent hors-ligne. Le bouton 🔊 / 🔇 en haut à droite
+coupe ou réactive le son (la préférence est mémorisée).
+
 ## 📁 Structure du projet
 
 | Fichier        | Rôle |
 |----------------|------|
-| `index.html`   | Interface, plateau, logique du jeu et rendu pixel art (canvas). |
-| `questions.js` | Banque de questions (40 au départ : 10 par catégorie). |
+| `index.html`   | Interface, assistant de configuration, plateau, logique du jeu, musique et bruitages. |
+| `questions.js` | Banque de questions, classées par matière, thème et difficulté. |
 | `animaux.js`   | Les 10 animaux : nom, trait de caractère et répliques de libération. |
-| `sprites.js`   | Sprites pixel art dessinés de façon procédurale (aucune image externe). |
+| `sprites.js`   | Décor du plateau dessiné de façon procédurale (les animaux sont des emojis HD). |
 
 ## ✏️ Ajouter des questions ou des répliques
 
@@ -49,7 +69,9 @@ compilation.
   Chaque question suit ce format :
 
   ```js
-  { cat: "conjugaison", // ou "grammaire", "vocabulaire", "orthographe"
+  { cat: "conjugaison",  // ou "grammaire", "vocabulaire", "orthographe"
+    sub: "Futur",         // le thème (voir la liste en tête de questions.js)
+    diff: 2,              // difficulté de 1 (très facile) à 6 (extrême)
     phrase: "Demain, nous ___ au parc.",  // le trou est noté ___
     options: ["irons", "allons", "irions", "allions"],
     answer: 0 }          // index (0 à 3) de la bonne réponse

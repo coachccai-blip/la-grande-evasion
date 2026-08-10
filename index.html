@@ -24,7 +24,7 @@
     background:radial-gradient(120% 80% at 50% 0%,#2a1c4d 0%,var(--bg) 60%,#0f0a1c 100%);
     overflow:hidden; user-select:none;
   }
-  img,canvas{image-rendering:pixelated; image-rendering:crisp-edges;}
+  canvas{image-rendering:auto;}
 
   /* Cadre appli : portrait, centré, plein écran mobile */
   #app{
@@ -36,9 +36,16 @@
 
   /* ============================== En-tête ============================== */
   header{
-    flex:0 0 auto; padding:10px 12px 8px; text-align:center;
+    flex:0 0 auto; padding:10px 12px 8px; text-align:center; position:relative;
     background:linear-gradient(180deg,rgba(0,0,0,.25),transparent);
   }
+  #soundBtn{
+    position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:11px;
+    border:1px solid var(--line); background:var(--panel); color:var(--ink); font-size:19px;
+    cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 0 #1c1436;
+  }
+  #soundBtn:active{transform:translateY(2px); box-shadow:none;}
   header h1{
     margin:0; font-size:20px; letter-spacing:2px; text-transform:uppercase;
     color:var(--accent); text-shadow:0 2px 0 #7a4a00, 0 0 12px rgba(242,193,78,.35);
@@ -70,6 +77,29 @@
 
   /* ========================= Écran Sélection ========================== */
   .lead{font-size:14px; color:var(--ink-soft); text-align:center; margin:2px 0 12px;}
+  .setup-step{margin-bottom:16px; transition:opacity .2s;}
+  .setup-step.locked{opacity:.38; pointer-events:none; filter:grayscale(.5);}
+  .step-title{font-size:15px; font-weight:800; margin:2px 0 9px; display:flex; align-items:center; gap:8px;}
+  .step-title .num{width:22px; height:22px; border-radius:50%; background:var(--accent); color:#241a12;
+    font-size:13px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip-btn{
+    border:2px solid var(--line); background:var(--panel); color:var(--ink);
+    border-radius:12px; padding:9px 13px; font-size:13px; font-weight:700; cursor:pointer;
+    font-family:var(--font); display:flex; align-items:center; gap:7px; transition:transform .06s;
+  }
+  .chip-btn:active{transform:scale(.95);}
+  .chip-btn .dot{width:11px; height:11px; border-radius:50%;}
+  .chip-btn.sel{border-color:var(--accent); background:var(--panel2); box-shadow:0 0 0 2px var(--accent) inset;}
+  .chip-btn.done-tick::after{content:"✓"; color:var(--ok2); font-weight:900; margin-left:2px;}
+  /* barre d'info en jeu (matière · thème · difficulté) */
+  .infobar{
+    flex:0 0 auto; display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; justify-content:center;
+    padding:8px 10px; font-size:12px; font-weight:700; color:var(--ink-soft);
+    background:rgba(0,0,0,.2); border-bottom:1px solid var(--line);
+  }
+  .infobar b{color:var(--ink);}
+  .infobar .diffpill{color:#241a12; padding:2px 9px; border-radius:20px; font-weight:800;}
   .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
   .animal-card{
     position:relative; background:var(--panel); border:2px solid var(--line);
@@ -79,6 +109,8 @@
   .animal-card:active{transform:scale(.96);}
   .animal-card.selected{border-color:var(--accent); background:var(--panel2); box-shadow:0 0 0 2px var(--accent) inset;}
   .animal-card canvas{width:64px; height:64px; display:block; margin:0 auto;}
+  .animal-card .emoji{font-size:46px; line-height:1; display:block; height:58px; margin-top:2px;
+    display:flex; align-items:center; justify-content:center;}
   .animal-card .nm{font-size:12px; font-weight:700; margin-top:4px;}
   .animal-card .mission{
     position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%;
@@ -117,6 +149,7 @@
   .players-mini{flex:1; display:flex; gap:8px; overflow-x:auto;}
   .pm{display:flex; align-items:center; gap:5px; background:rgba(0,0,0,.28); border-radius:10px; padding:4px 7px; font-size:11px; white-space:nowrap;}
   .pm canvas{width:22px; height:22px;}
+  .pm .emoji{font-size:18px; line-height:1;}
   .pm.you{outline:2px solid var(--accent);}
   .pm .pos{font-weight:800; color:var(--accent2);}
 
@@ -177,7 +210,8 @@
 
   /* ============================ Fin de partie ======================== */
   #endScreen .card{text-align:center;}
-  #endArt{width:96px; height:96px; margin:4px auto 8px;}
+  #endArt{font-size:78px; line-height:1; height:94px; margin:4px auto 8px;
+    display:flex; align-items:center; justify-content:center;}
   #endTitle{font-size:24px; margin:4px 0; letter-spacing:1px;}
   #endTitle.win{color:var(--accent2);} #endTitle.lose{color:var(--ko2);}
   .bubble{
@@ -237,17 +271,32 @@
   <header>
     <h1>La Grande Évasion</h1>
     <div class="sub">Réponds juste et aide ton animal à s'échapper du zoo&nbsp;!</div>
+    <button id="soundBtn" title="Activer / couper le son" aria-label="Son">🔊</button>
   </header>
 
   <main>
     <!-- ===================== Écran : Sélection ===================== -->
     <section id="selectScreen" class="screen active">
       <div class="scroll">
-        <div class="lead">Choisis ton animal</div>
-        <div id="animalGrid" class="grid"></div>
-        <div id="traitBox" class="trait-box">Touche un animal pour découvrir son caractère.</div>
+        <div class="setup-step" id="stepCat">
+          <div class="step-title"><span class="num">1</span> Choisis ta matière</div>
+          <div id="catChoices" class="chips"></div>
+        </div>
+        <div class="setup-step locked" id="stepSub">
+          <div class="step-title"><span class="num">2</span> Choisis le thème</div>
+          <div id="subChoices" class="chips"></div>
+        </div>
+        <div class="setup-step locked" id="stepDiff">
+          <div class="step-title"><span class="num">3</span> Choisis la difficulté</div>
+          <div id="diffChoices" class="chips"></div>
+        </div>
+        <div class="setup-step locked" id="stepAnimal">
+          <div class="step-title"><span class="num">4</span> Choisis ton animal</div>
+          <div id="animalGrid" class="grid"></div>
+          <div id="traitBox" class="trait-box">Touche un animal pour découvrir son caractère.</div>
+        </div>
         <div id="missionProgress" class="progress"></div>
-        <div style="margin-top:12px;">
+        <div style="margin:12px 0 24px;">
           <button id="startBtn" class="btn wide" disabled>C'est parti&nbsp;!</button>
         </div>
       </div>
@@ -255,7 +304,7 @@
 
     <!-- ======================= Écran : Jeu ======================== -->
     <section id="gameScreen" class="screen">
-      <div id="catbar" class="catbar"></div>
+      <div id="infoBar" class="infobar"></div>
       <div id="boardWrap"><canvas id="board"></canvas></div>
       <div class="gamebar">
         <div id="playersMini" class="players-mini"></div>
@@ -309,7 +358,7 @@
     <!-- =================== Écran : Fin de partie ================== -->
     <div id="endScreen" class="overlay">
       <div class="card">
-        <canvas id="endArt" width="96" height="96"></canvas>
+        <div id="endArt"></div>
         <div id="endTitle"></div>
         <div id="endBubbleWrap"></div>
         <div id="endMsg" style="font-size:14px;color:var(--ink-soft);margin-bottom:14px;"></div>
@@ -342,17 +391,52 @@ var BOT_SUCCESS = 0.55;         // probabilité de réussite des bots (§2.4)
 var DEFI_TIME = 10;             // secondes du défi éclair
 
 var CATS = ["conjugaison","grammaire","vocabulaire","orthographe"];
-var CAT_LABEL = {conjugaison:"Conjugaison",grammaire:"Grammaire",vocabulaire:"Vocabulaire",orthographe:"Orthographe",melange:"Mélange"};
+var CAT_LABEL = {conjugaison:"Conjugaison",grammaire:"Grammaire",vocabulaire:"Vocabulaire",orthographe:"Orthographe",melange:"Mélange",tout:"Tout"};
 var CAT_COLOR = {
   conjugaison:"#3b82f6", grammaire:"#8b5cf6", vocabulaire:"#f59e0b",
-  orthographe:"#22c55e", melange:"#ec78ac"
+  orthographe:"#22c55e", melange:"#ec78ac", tout:"#ec78ac"
+};
+var CAT_EMOJI = {conjugaison:"⏳",grammaire:"🧩",vocabulaire:"📚",orthographe:"✏️",tout:"🌈"};
+
+/* Emojis HD pour chaque animal (rendus par la police système). */
+var EMOJI={lion:"🦁",elephant:"🐘",girafe:"🦒",singe:"🐵",panda:"🐼",
+  manchot:"🐧",flamant:"🦩",crocodile:"🐊",zebre:"🦓",hibou:"🦉"};
+function drawEmoji(ctx, ch, cx, cy, size){
+  ctx.font=size+"px 'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif";
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(ch, cx, cy);
+}
+
+/* Sous-catégories (thèmes) par matière. */
+var SUBCATS = {
+  conjugaison:["Présent","Passé composé","Futur","Imparfait","Impératif","Subjonctif","Conditionnel présent"],
+  grammaire:  ["Nature des mots","Déterminants","Pronoms","Prépositions","Accords","Types de phrases"],
+  vocabulaire:["Synonymes","Contraires","Homonymes","Familles de mots","Mots du quotidien"],
+  orthographe:["Homophones","é ou er","Accents","Pluriels","m devant m, b, p"]
 };
 
-/* Cases spéciales (§4.2) — ~1 case sur 4. */
-var SPECIALS = {3:"banane",6:"gardien",9:"mystere",13:"toboggan",16:"duel",
-  22:"defi",26:"banane",29:"gardien",33:"mystere",38:"toboggan",42:"duel",47:"defi"};
+/* Niveaux de difficulté : force des bots + difficulté des questions. */
+var DIFFS = [
+  {key:"tres-facile",   name:"Très facile",   diff:1, bot:0.35},
+  {key:"facile",        name:"Facile",        diff:2, bot:0.45},
+  {key:"normal",        name:"Normal",        diff:3, bot:0.55},
+  {key:"difficile",     name:"Difficile",     diff:4, bot:0.65},
+  {key:"tres-difficile",name:"Très difficile",diff:5, bot:0.73},
+  {key:"extreme",       name:"Extrême",       diff:6, bot:0.82}
+];
+function diffByKey(k){ for(var i=0;i<DIFFS.length;i++){ if(DIFFS[i].key===k) return DIFFS[i]; } return DIFFS[2]; }
+
+/* Cases spéciales (§4.2) — nombreuses et variées pour plus de fun. */
+var SPECIALS = {
+  2:"cadeau", 3:"banane", 5:"ressort", 6:"gardien", 8:"piege", 9:"mystere",
+  11:"toboggan", 13:"tornade", 15:"duel", 16:"defi",
+  21:"cadeau", 22:"defi", 24:"ressort", 26:"banane", 27:"piege", 29:"gardien",
+  31:"mystere", 33:"toboggan", 36:"duel", 38:"tornade",
+  42:"defi", 44:"cadeau", 46:"ressort", 47:"banane", 49:"gardien"
+};
 var SPECIAL_LABEL = {banane:"Banane bonus",toboggan:"Toboggan",gardien:"Gardien !",
-  defi:"Défi éclair",duel:"Duel",mystere:"Case mystère"};
+  defi:"Défi éclair",duel:"Duel",mystere:"Case mystère",
+  ressort:"Ressort",piege:"Piège",cadeau:"Cadeau",tornade:"Tornade"};
 
 /* Obstacles fixes (§4.3) */
 var OBSTACLES = {18:"le pont de singe",34:"la rivière des crocodiles",45:"la grille d'entretien"};
@@ -401,75 +485,201 @@ function toast(msg, ms){
 
 function animalById(id){ for(var i=0;i<ANIMAUX.length;i++){ if(ANIMAUX[i].id===id) return ANIMAUX[i]; } return null; }
 
-/* Choix d'une question en respectant RG10 (pas de répétition prématurée). */
-function pickQuestion(cat){
-  var realCat = (cat==="melange") ? CATS[randint(CATS.length)] : cat;
-  var pool = [];
-  for(var i=0;i<QUESTIONS.length;i++){ if(QUESTIONS[i].cat===realCat) pool.push(i); }
-  if(pool.length===0){ // repli : n'importe quelle catégorie
-    for(var k=0;k<QUESTIONS.length;k++) pool.push(k); realCat = QUESTIONS[pool[0]].cat;
+/* ==================================================================== */
+/*                     MUSIQUE & BRUITAGES (Web Audio)                  */
+/*   100 % procédural : aucun fichier audio, fonctionne hors-ligne.     */
+/* ==================================================================== */
+var Sound=(function(){
+  var actx=null, master=null, musicGain=null, sfxGain=null;
+  var muted=false, seq=null, step=0;
+  function ensure(){
+    if(actx) return;
+    try{
+      actx=new (window.AudioContext||window.webkitAudioContext)();
+      master=actx.createGain(); master.gain.value=muted?0:0.9; master.connect(actx.destination);
+      musicGain=actx.createGain(); musicGain.gain.value=0.5; musicGain.connect(master);
+      sfxGain=actx.createGain();   sfxGain.gain.value=1.0;   sfxGain.connect(master);
+    }catch(e){ actx=null; }
   }
-  var used = usedQ[realCat] || (usedQ[realCat]=[]);
-  var fresh = pool.filter(function(idx){ return used.indexOf(idx)<0; });
-  if(fresh.length===0){ used.length=0; fresh = pool.slice(); }   // cycle recommencé
-  var chosen = fresh[randint(fresh.length)];
+  function T(){ return actx.currentTime; }
+  function tone(freq,dur,type,vol,dest,slideTo){
+    if(!actx) return;
+    var o=actx.createOscillator(), g=actx.createGain();
+    o.type=type||"square"; o.frequency.setValueAtTime(freq,T());
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(1,slideTo),T()+dur);
+    g.gain.setValueAtTime(0.0001,T());
+    g.gain.exponentialRampToValueAtTime(vol||0.2,T()+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,T()+dur);
+    o.connect(g); g.connect(dest||sfxGain); o.start(); o.stop(T()+dur+0.03);
+  }
+  function seqAt(list){ // list of [delayMs, freq, dur, type, vol]
+    list.forEach(function(n){ setTimeout(function(){ tone(n[1],n[2],n[3]||"square",n[4]||0.2); }, n[0]); });
+  }
+  // Boucle mélodique enjouée (do majeur) + basse douce.
+  var MEL =[523,0,659,0,784,0,659,0, 587,0,698,0,880,0,784,0, 523,0,659,784,880,0,784,659, 587,0,523,0,494,0,0,0];
+  var BASS=[131,0,0,0,196,0,0,0, 147,0,0,0,196,0,0,0, 165,0,0,0,196,0,0,0, 131,0,0,0,196,0,131,0];
+  function tick(){
+    if(!actx||muted){ step++; return; }
+    var f=MEL[step%MEL.length]; if(f) tone(f,0.24,"square",0.05,musicGain);
+    var bf=BASS[step%BASS.length]; if(bf) tone(bf,0.26,"triangle",0.06,musicGain);
+    if(step%8===0) tone(1568,0.05,"square",0.02,musicGain); // petite clochette
+    step++;
+  }
+  return {
+    resume:function(){ ensure(); if(actx&&actx.state==="suspended") actx.resume(); },
+    setMuted:function(b){ muted=b; if(master) master.gain.value=b?0:0.9; },
+    isMuted:function(){ return muted; },
+    startMusic:function(){ ensure(); if(!actx||seq) return; step=0; seq=setInterval(tick,300); },
+    stopMusic:function(){ if(seq){ clearInterval(seq); seq=null; } },
+    click:function(){ tone(330,0.05,"square",0.10); },
+    roll:function(){ tone(160+Math.random()*160,0.04,"square",0.09); },
+    step:function(){ tone(520,0.05,"triangle",0.07); },
+    good:function(){ seqAt([[0,523,0.10,"square",0.2],[95,659,0.10,"square",0.2],[190,784,0.16,"square",0.22]]); },
+    bad:function(){ tone(300,0.2,"sawtooth",0.15,null,150); setTimeout(function(){ tone(190,0.24,"sawtooth",0.14,null,110); },110); },
+    special:function(){ tone(700,0.09,"triangle",0.14,null,1300); setTimeout(function(){ tone(1050,0.1,"triangle",0.13,null,1600); },85); },
+    boing:function(){ tone(240,0.12,"square",0.16,null,720); setTimeout(function(){ tone(720,0.12,"square",0.14,null,320); },110); },
+    trap:function(){ tone(420,0.16,"sawtooth",0.16,null,90); setTimeout(function(){ tone(120,0.2,"square",0.14); },120); },
+    coin:function(){ tone(988,0.08,"square",0.16); setTimeout(function(){ tone(1319,0.14,"square",0.16); },80); },
+    whoosh:function(){ tone(300,0.28,"triangle",0.12,null,1400); },
+    lock:function(){ tone(500,0.09,"square",0.16,null,880); setTimeout(function(){ tone(950,0.08,"square",0.14); },90); },
+    win:function(){ seqAt([[0,523,0.18,"square",0.22],[150,659,0.18,"square",0.22],[300,784,0.18,"square",0.22],[450,1047,0.32,"square",0.24],[520,659,0.32,"square",0.16],[520,784,0.32,"square",0.16]]); },
+    lose:function(){ seqAt([[0,440,0.26,"triangle",0.2],[180,392,0.26,"triangle",0.2],[360,330,0.28,"triangle",0.2],[540,262,0.4,"triangle",0.2]]); }
+  };
+})();
+
+/* Choix d'une question selon la matière/thème/difficulté choisis (G.setup),
+   en respectant RG10 (pas de répétition prématurée) et en visant la difficulté. */
+function pickQuestion(){
+  var cat=G.setup.cat, sub=G.setup.sub, target=G.setup.diffVal;
+  var pool=QUESTIONS.filter(function(q){
+    return (cat==="tout" || q.cat===cat) && (!sub || sub==="Tout" || q.sub===sub);
+  });
+  if(!pool.length) pool=QUESTIONS.filter(function(q){ return cat==="tout"||q.cat===cat; });
+  if(!pool.length) pool=QUESTIONS.slice();
+
+  var key=cat+"|"+sub;
+  var used=usedQ[key]||(usedQ[key]=[]);
+  var fresh=pool.filter(function(q){ return used.indexOf(q)<0; });
+  if(!fresh.length){ used.length=0; fresh=pool.slice(); }   // cycle recommencé
+
+  // biais difficulté : on privilégie les questions les plus proches de la cible
+  var minD=Infinity;
+  fresh.forEach(function(q){ var d=Math.abs(q.diff-target); if(d<minD) minD=d; });
+  var near=fresh.filter(function(q){ return Math.abs(q.diff-target)===minD; });
+  var chosen=near[randint(near.length)];
   used.push(chosen);
-  return {index:chosen, q:QUESTIONS[chosen], cat:realCat};
+  return {q:chosen, cat:chosen.cat};
 }
 
+/* Clé de mission : un animal libéré pour une combinaison matière/thème/difficulté donnée. */
+function missionKey(animalId, cat, sub, diffKey){ return animalId+"|"+cat+"|"+sub+"|"+diffKey; }
+
 /* ----------------------- Sprites utilitaires ----------------------- */
-function makeAnimalCanvas(id, px){
-  var c=document.createElement("canvas");
-  var u=Math.floor(px/16); c.width=16*u; c.height=16*u;
-  c.style.width=px+"px"; c.style.height=px+"px";
-  var ctx=c.getContext("2d");
-  SPRITES.animal(ctx, id, 0, 0, u);
-  return c;
+function animalEl(id, cls){
+  var s=document.createElement("span");
+  s.className=cls||"emoji"; s.textContent=EMOJI[id]||"❓";
+  return s;
 }
 
 /* ==================================================================== */
 /*                        ÉCRAN DE SÉLECTION                            */
 /* ==================================================================== */
 var selectedAnimal = null;
-function buildSelect(){
-  var grid=$("animalGrid"); grid.innerHTML="";
-  ANIMAUX.forEach(function(a){
-    var card=document.createElement("div");
-    card.className="animal-card" + (store.missions[a.id]?" done":"");
-    card.appendChild(makeAnimalCanvas(a.id,64));
-    var nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.name; card.appendChild(nm);
-    var m=document.createElement("div"); m.className="mission"; m.textContent="✓"; card.appendChild(m);
-    card.onclick=function(){ selectAnimal(a.id, card); };
-    grid.appendChild(card);
-  });
+var setup = { cat:null, sub:null, diff:null };  // choix de l'assistant (diff = clé)
+
+/* Assistant de configuration : matière → thème → difficulté → animal. */
+function buildSetup(){
+  buildCatChoices();
+  buildDiffChoices();
+  buildSubChoices();
+  buildSelect();
+  refreshLocks();
   updateMissionProgress();
 }
-function selectAnimal(id, card){
-  selectedAnimal=id;
-  var cards=document.querySelectorAll(".animal-card");
-  for(var i=0;i<cards.length;i++) cards[i].classList.remove("selected");
-  if(card) card.classList.add("selected");
+function chipBtn(label, sel, emoji, color, onclick){
+  var b=document.createElement("button"); b.className="chip-btn"+(sel?" sel":"");
+  if(color){ var d=document.createElement("span"); d.className="dot"; d.style.background=color; b.appendChild(d); }
+  var t=document.createElement("span"); t.textContent=(emoji?emoji+" ":"")+label; b.appendChild(t);
+  b.onclick=onclick; return b;
+}
+function buildCatChoices(){
+  var box=$("catChoices"); box.innerHTML="";
+  var cats=CATS.concat(["tout"]);
+  cats.forEach(function(cat){
+    box.appendChild(chipBtn(CAT_LABEL[cat], setup.cat===cat, CAT_EMOJI[cat], CAT_COLOR[cat], function(){
+      Sound.click(); setup.cat=cat; setup.sub=null; setup.diff=null; selectedAnimal=null;
+      buildSetup();
+    }));
+  });
+}
+function buildSubChoices(){
+  var box=$("subChoices"); box.innerHTML="";
+  if(!setup.cat){ box.innerHTML="<span style='font-size:13px;color:var(--ink-soft)'>Choisis d'abord une matière.</span>"; return; }
+  var subs;
+  if(setup.cat==="tout"){ subs=["Tout"]; if(!setup.sub) setup.sub="Tout"; }
+  else { subs=["Tout"].concat(SUBCATS[setup.cat]||[]); }
+  subs.forEach(function(sub){
+    box.appendChild(chipBtn(sub, setup.sub===sub, null, CAT_COLOR[setup.cat], function(){
+      Sound.click(); setup.sub=sub; setup.diff=setup.diff||null; selectedAnimal=null;
+      buildSetup();
+    }));
+  });
+}
+function buildDiffChoices(){
+  var box=$("diffChoices"); box.innerHTML="";
+  DIFFS.forEach(function(d){
+    box.appendChild(chipBtn(d.name, setup.diff===d.key, null, null, function(){
+      Sound.click(); setup.diff=d.key; selectedAnimal=null; buildSetup();
+    }));
+  });
+}
+function buildSelect(){
+  var grid=$("animalGrid"); grid.innerHTML="";
+  var ready = setup.cat && setup.sub && setup.diff;
+  ANIMAUX.forEach(function(a){
+    var doneHere = ready && store.missions[missionKey(a.id, setup.cat, setup.sub, setup.diff)];
+    var card=document.createElement("div");
+    card.className="animal-card"+(doneHere?" done":"")+(selectedAnimal===a.id?" selected":"");
+    card.appendChild(animalEl(a.id));
+    var nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.name; card.appendChild(nm);
+    var m=document.createElement("div"); m.className="mission"; m.textContent="✓"; card.appendChild(m);
+    card.onclick=function(){ Sound.click(); selectAnimal(a.id); };
+    grid.appendChild(card);
+  });
+}
+function selectAnimal(id){
+  selectedAnimal=id; buildSelect();
   var a=animalById(id);
+  var done = store.missions[missionKey(id, setup.cat, setup.sub, setup.diff)];
   $("traitBox").innerHTML = "<b>"+a.name+"</b> — "+a.trait +
-    (store.missions[id] ? " <span style='color:var(--ok2)'>(mission accomplie ✓)</span>" : "");
-  $("startBtn").disabled=false;
+    (done ? " <span style='color:var(--ok2)'>(déjà libéré ici ✓)</span>" : "");
+  refreshLocks();
+}
+function refreshLocks(){
+  $("stepSub").classList.toggle("locked", !setup.cat);
+  $("stepDiff").classList.toggle("locked", !(setup.cat && setup.sub));
+  $("stepAnimal").classList.toggle("locked", !(setup.cat && setup.sub && setup.diff));
+  $("startBtn").disabled = !(setup.cat && setup.sub && setup.diff && selectedAnimal);
 }
 function updateMissionProgress(){
-  var done=0; ANIMAUX.forEach(function(a){ if(store.missions[a.id]) done++; });
-  $("missionProgress").textContent = "Missions : "+done+" / "+ANIMAUX.length+" animaux libérés";
+  var done=Object.keys(store.missions).length;
+  var freed={}; Object.keys(store.missions).forEach(function(k){ freed[k.split("|")[0]]=1; });
+  var nFreed=Object.keys(freed).length;
+  $("missionProgress").innerHTML = "🏆 Aventures réussies : <b>"+done+"</b> &nbsp;·&nbsp; Animaux libérés : <b>"+nFreed+" / "+ANIMAUX.length+"</b>";
 }
 
 /* ==================================================================== */
 /*                          PLATEAU (canvas)                            */
 /* ==================================================================== */
-var COLS=5, ROWS=11, COLW=64, ROWH=64, SIDE=60, TOPPAD=150, BOTPAD=176;
+var COLS=5, ROWS=11, COLW=64, ROWH=64, SIDE=60, TOPPAD=150, BOTPAD=120;
 var boardW=SIDE*2+COLS*COLW, boardH=TOPPAD+ROWS*ROWH+BOTPAD;
 var bctx=null, boardStatic=null;
 var DECO=SPRITES.deco, ELL=SPRITES.ellipse, CIR=SPRITES.circle, RQ=SPRITES.R;
+var SCALE=2;   // sur-échantillonnage pour un rendu net (emojis HD, tracés lisses)
 
 function initBoard(){
-  var cv=$("board"); cv.width=boardW; cv.height=boardH; bctx=cv.getContext("2d");
-  boardStatic=document.createElement("canvas"); boardStatic.width=boardW; boardStatic.height=boardH;
+  var cv=$("board"); cv.width=boardW*SCALE; cv.height=boardH*SCALE; bctx=cv.getContext("2d");
+  boardStatic=document.createElement("canvas"); boardStatic.width=boardW*SCALE; boardStatic.height=boardH*SCALE;
   buildStaticBoard();
 }
 function cellOf(s){
@@ -492,7 +702,8 @@ function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.im
 function buildStaticBoard(){
   var ctx=boardStatic.getContext("2d");
   var rng=mulberry32(20260810);
-  ctx.clearRect(0,0,boardW,boardH);
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,boardW*SCALE,boardH*SCALE);
+  ctx.setTransform(SCALE,0,0,SCALE,0,0);
 
   // --- fond herbe ---
   var g=ctx.createLinearGradient(0,0,0,boardH);
@@ -546,17 +757,20 @@ function buildStaticBoard(){
   DECO.rock(ctx, boardW-46, cellOf(40).cy-14, 1.4);
   DECO.rock(ctx, 44, cellOf(30).cy, 1.2);
 
-  // --- grands animaux décoratifs (dans les marges) ---
-  function bigAnimal(id,cx,cy,u){ SPRITES.animal(ctx, id, cx-8*u, cy-8*u, u); }
+  // --- grands animaux décoratifs (emojis HD, dans les marges) ---
+  function bigAnimal(id,cx,cy){
+    ctx.save(); ctx.shadowColor="rgba(0,0,0,.25)"; ctx.shadowBlur=3; ctx.shadowOffsetY=2;
+    drawEmoji(ctx, EMOJI[id], cx, cy, 46); ctx.restore();
+  }
   var LX=34, RX=boardW-34;
-  bigAnimal("lion",     LX, cellOf(11).cy, 3);
-  bigAnimal("girafe",   RX, cellOf(17).cy, 3);
-  bigAnimal("singe",    LX, cellOf(23).cy, 3);
-  bigAnimal("panda",    RX, cellOf(27).cy, 3);
-  bigAnimal("manchot",  LX, cellOf(34).cy, 3);
-  bigAnimal("elephant", RX, cellOf(32).cy, 3);
-  bigAnimal("crocodile",RX, cellOf(38).cy, 3);
-  bigAnimal("flamant",  LX, cellOf(44).cy, 3);
+  bigAnimal("lion",     LX, cellOf(11).cy);
+  bigAnimal("girafe",   RX, cellOf(17).cy);
+  bigAnimal("singe",    LX, cellOf(23).cy);
+  bigAnimal("panda",    RX, cellOf(27).cy);
+  bigAnimal("manchot",  LX, cellOf(34).cy);
+  bigAnimal("elephant", RX, cellOf(32).cy);
+  bigAnimal("crocodile",RX, cellOf(38).cy);
+  bigAnimal("flamant",  LX, cellOf(44).cy);
 
   // panneaux de zone
   DECO.sign(ctx, RX, cellOf(4).cy, "Les enclos");
@@ -597,11 +811,6 @@ function buildStaticBoard(){
     else if(SPECIALS[s2]){ DECO.star(ctx, c.cx+tw/2-8, ty+9, 7, "#ffd94a"); }
     if(s2===0){ ctx.fillStyle="#2c7a3a"; ctx.font="bold 8px monospace"; ctx.fillText("★",c.cx-tw/2+8,ty+9); }
   }
-
-  // --- panneau RÈGLES (bas-gauche) ---
-  drawLegend(ctx, 10, boardH-150);
-  // --- panneau hibou (bas-droite) ---
-  drawOwlPanel(ctx, boardW-118, boardH-150);
 }
 
 // Segment de chemin (capsule) entre deux centres, axes alignés.
@@ -611,47 +820,26 @@ function linkSeg(ctx,x1,y1,x2,y2,half,color){
   roundRect(ctx,minx,miny,w,h,half,color,null);
 }
 
-function drawLegend(ctx,x,y){
-  roundRect(ctx,x,y,150,140,8,"#7a4a24",null);
-  roundRect(ctx,x+3,y+3,144,134,6,"#6b431f",null);
-  roundRect(ctx,x+6,y+6,138,128,6,"#c98f57",null);
-  ctx.fillStyle="#3a2410"; ctx.font="bold 12px monospace"; ctx.textAlign="left"; ctx.textBaseline="middle";
-  ctx.fillText("RÈGLES", x+16, y+20);
-  var ly=y+42;
-  ctx.fillStyle="#2c8342"; ctx.fillText("▲", x+16, ly); ctx.fillStyle="#3a2410"; ctx.font="10px monospace"; ctx.fillText("Bonne réponse : avance", x+30, ly);
-  ly+=26; ctx.font="bold 12px monospace"; ctx.fillStyle="#c0392b"; ctx.fillText("▼", x+16, ly); ctx.fillStyle="#3a2410"; ctx.font="10px monospace"; ctx.fillText("Mauvaise : recule", x+30, ly);
-  ly+=26; DECO.star(ctx, x+18, ly, 6, "#ffd94a"); ctx.fillStyle="#3a2410"; ctx.fillText("Case spéciale", x+30, ly);
-  ly+=26; DECO.rock(ctx, x+18, ly, 0.8); ctx.fillStyle="#3a2410"; ctx.fillText("Obstacle", x+30, ly);
-}
-function drawOwlPanel(ctx,x,y){
-  roundRect(ctx,x,y,108,140,8,"#7a4a24",null);
-  roundRect(ctx,x+4,y+4,100,132,6,"#c98f57",null);
-  SPRITES.animal(ctx,"hibou", x+34, y+14, 2.4);
-  ctx.fillStyle="#3a2410"; ctx.font="bold 11px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText("APPRENDS", x+54, y+78);
-  ctx.fillText("JOUE", x+54, y+96);
-  ctx.fillText("ÉCHAPPE !", x+54, y+114);
-}
-
 function drawBoard(){
   if(!bctx) return;
   if(!boardStatic) buildStaticBoard();
-  bctx.clearRect(0,0,boardW,boardH);
-  bctx.drawImage(boardStatic,0,0);
+  bctx.setTransform(1,0,0,1,0,0);
+  bctx.clearRect(0,0,boardW*SCALE,boardH*SCALE);
+  bctx.drawImage(boardStatic,0,0);          // copie 1:1 (déjà en résolution device)
+  bctx.setTransform(SCALE,0,0,SCALE,0,0);   // pions en coordonnées logiques
   if(G){
     var byCell={};
     G.players.forEach(function(p,i){ (byCell[p.pos]=byCell[p.pos]||[]).push(i); });
     Object.keys(byCell).forEach(function(pos){
       var occ=byCell[pos], c=cellOf(+pos);
       occ.forEach(function(pi,k){
-        var p=G.players[pi], u=2, sz=16*u;
-        var dx=(occ.length>1)?((k%2)?9:-9):0;
-        var dy=(occ.length>2)?((k<2)?-7:7):0;
-        var cx=c.cx+dx, cy=c.cy+dy-4;
-        var ox=cx-sz/2, oy=cy-sz/2;
-        bctx.fillStyle="rgba(0,0,0,.28)"; ELL(bctx, cx, oy+sz-1, sz*0.34, sz*0.14, "rgba(0,0,0,.28)");
-        if(pi===0){ DECO.star(bctx, cx, oy-4, 5, "#ffd94a"); }  // marqueur "toi"
-        SPRITES.animal(bctx, p.animalId, ox, oy, u);
+        var p=G.players[pi], sz=30;
+        var dx=(occ.length>1)?((k%2)?10:-10):0;
+        var dy=(occ.length>2)?((k<2)?-8:8):0;
+        var cx=c.cx+dx, cy=c.cy+dy-2;
+        ELL(bctx, cx, cy+sz*0.42, sz*0.36, sz*0.15, "rgba(0,0,0,.30)");  // ombre
+        if(pi===0){ DECO.star(bctx, cx, cy-sz*0.55, 6, "#ffd94a"); }     // marqueur "toi"
+        drawEmoji(bctx, EMOJI[p.animalId], cx, cy, sz);
       });
     });
   }
@@ -672,25 +860,21 @@ function drawPlayersMini(){
   var wrap=$("playersMini"); wrap.innerHTML="";
   G.players.forEach(function(p,i){
     var d=document.createElement("div"); d.className="pm"+(i===0?" you":"");
-    d.appendChild(makeAnimalCanvas(p.animalId,22));
+    d.appendChild(animalEl(p.animalId));
     var s=document.createElement("span"); s.innerHTML=(i===0?"Toi":animalById(p.animalId).name)+" <span class='pos'>"+p.pos+"</span>";
     d.appendChild(s); wrap.appendChild(d);
   });
 }
 
-/* barre des catégories */
-function buildCatbar(){
-  var bar=$("catbar"); bar.innerHTML="";
-  var list=CATS.concat(["melange"]);
-  list.forEach(function(cat){
-    var b=document.createElement("div"); b.className="cat-btn"+(G && G.category===cat?" active":"");
-    b.style.background="rgba(0,0,0,.25)";
-    var dot=document.createElement("span"); dot.className="dot"; dot.style.background=CAT_COLOR[cat];
-    b.appendChild(dot);
-    var t=document.createElement("span"); t.textContent=CAT_LABEL[cat]; b.appendChild(t);
-    b.onclick=function(){ if(busy) return; G.category=cat; persist(); buildCatbar(); };
-    bar.appendChild(b);
-  });
+/* barre d'info en jeu : matière · thème · difficulté (lecture seule) */
+function buildInfoBar(){
+  var bar=$("infoBar"); bar.innerHTML="";
+  var s=G.setup, dcol=CAT_COLOR[s.cat]||"#888";
+  var m=document.createElement("span"); m.innerHTML="<b>"+CAT_LABEL[s.cat]+"</b>";
+  var sub=document.createElement("span"); sub.innerHTML="🎯 "+s.sub;
+  var diff=document.createElement("span"); diff.className="diffpill"; diff.textContent="⚑ "+diffByKey(s.diffKey).name;
+  diff.style.background=dcol;
+  bar.appendChild(m); bar.appendChild(sub); bar.appendChild(diff);
 }
 
 /* ==================================================================== */
@@ -706,8 +890,8 @@ function rollDiceAnim(){
   return new Promise(function(resolve){
     var final=1+randint(6), n=0;
     var iv=setInterval(function(){
-      renderDice(1+randint(6)); n++;
-      if(n>=10){ clearInterval(iv); renderDice(final); resolve(final); }
+      renderDice(1+randint(6)); Sound.roll(); n++;
+      if(n>=10){ clearInterval(iv); renderDice(final); Sound.step(); resolve(final); }
     }, 70);
   });
 }
@@ -716,7 +900,7 @@ function rollDiceAnim(){
    opts: {cat, contextLabel, timed:bool, record:bool} */
 function askQuestion(opts){
   return new Promise(function(resolve){
-    var picked=pickQuestion(opts.cat);
+    var picked=pickQuestion();
     var q=picked.q, realCat=picked.cat;
     var ov=$("questionOverlay");
     $("qBadge").textContent=CAT_LABEL[realCat]; $("qBadge").style.background=CAT_COLOR[realCat];
@@ -747,6 +931,7 @@ function askQuestion(opts){
       note.textContent = timedOut ? "⏱ Temps écoulé ! La bonne réponse : "+q.options[q.answer]
                        : (correct ? "Bravo, c'est juste !" : "Raté ! La bonne réponse : "+q.options[q.answer]);
       note.className="qnote "+(correct?"good":"bad");
+      if(correct) Sound.good(); else Sound.bad();
       // historique (RG12)
       if(opts.record){
         store.history.unshift({
@@ -783,38 +968,43 @@ function askQuestion(opts){
 /* ==================================================================== */
 /*                     DÉMARRAGE / RESTAURATION                         */
 /* ==================================================================== */
+function makeSetup(){
+  var d=diffByKey(setup.diff);
+  return { cat:setup.cat, sub:setup.sub, diffKey:setup.diff, diffVal:d.diff, botSuccess:d.bot };
+}
 function startGame(animalId){
   // 3 bots tirés au sort parmi les animaux non choisis (§2.4)
   var others=ANIMAUX.filter(function(a){ return a.id!==animalId; }).map(function(a){return a.id;});
   shuffle(others); var bots=others.slice(0,3);
+  var sp=makeSetup();
   G={
-    animalId:animalId, category:"melange",
+    animalId:animalId, setup:sp, botSuccess:sp.botSuccess,
     players:[{animalId:animalId, pos:0, skip:false, bot:false}]
       .concat(bots.map(function(b){ return {animalId:b, pos:0, skip:false, bot:true}; })),
     turnStartPos:0, over:false
   };
-  store.game={animalId:animalId, category:G.category,
-    players:G.players.map(function(p){return {animalId:p.animalId,pos:p.pos,skip:p.skip,bot:p.bot};}),
-    turnStartPos:0, over:false};
-  persist();
+  usedQ={};   // nouvelle banque de suivi pour cette configuration
+  saveGameState();
   enterGame();
 }
 function restoreGame(){
-  var g=store.game; if(!g || g.over) return false;
-  G={animalId:g.animalId, category:g.category||"melange",
+  var g=store.game; if(!g || g.over || !g.setup) return false;
+  G={animalId:g.animalId, setup:g.setup, botSuccess:g.setup.botSuccess||0.55,
      players:g.players.map(function(p){return {animalId:p.animalId,pos:p.pos,skip:!!p.skip,bot:!!p.bot};}),
      turnStartPos:g.turnStartPos||0, over:false};
+  // resynchronise l'assistant sur la partie reprise
+  setup={cat:g.setup.cat, sub:g.setup.sub, diff:g.setup.diffKey};
   return true;
 }
 function saveGameState(){
   if(!G) return;
-  store.game={animalId:G.animalId, category:G.category,
+  store.game={animalId:G.animalId, setup:G.setup,
     players:G.players.map(function(p){return {animalId:p.animalId,pos:p.pos,skip:p.skip,bot:p.bot};}),
     turnStartPos:G.turnStartPos, over:G.over};
   persist();
 }
 function enterGame(){
-  buildCatbar(); drawPlayersMini(); renderDice(1);
+  buildInfoBar(); drawPlayersMini(); renderDice(1);
   showScreen("game"); setTab("game");
   drawBoard();
   $("rollBtn").disabled=false;
@@ -884,7 +1074,7 @@ async function stepTo(pi, target){
   var p=G.players[pi]; target=clamp(target,0,BOARD);
   var dir = target>p.pos ? 1 : -1;
   while(p.pos!==target){
-    p.pos+=dir; drawBoard(); drawPlayersMini(); await sleep(150);
+    p.pos+=dir; Sound.step(); drawBoard(); drawPlayersMini(); await sleep(150);
   }
 }
 
@@ -894,24 +1084,35 @@ async function applySpecial(pi){
   var type=SPECIALS[p.pos]; if(!type) return;
   await sleep(200);
   if(type==="banane"){
-    toast("🍌 Banane bonus ! Relance et avance.");
+    Sound.coin(); toast("🍌 Banane bonus ! Relance et avance.");
     var d=await rollDiceAnim(); await stepTo(pi, p.pos+d);
   } else if(type==="toboggan"){
-    toast("🛝 Toboggan ! +4 cases."); await stepTo(pi, p.pos+4);
+    Sound.whoosh(); toast("🛝 Toboggan ! +4 cases."); await stepTo(pi, p.pos+4);
+  } else if(type==="ressort"){
+    Sound.boing(); toast("🤸 Ressort ! +3 cases."); await stepTo(pi, p.pos+3);
+  } else if(type==="cadeau"){
+    var dc=1+randint(3); Sound.coin(); toast("🎁 Cadeau ! +"+dc+" cases."); await stepTo(pi, p.pos+dc);
+  } else if(type==="tornade"){
+    var dt=1+randint(6); Sound.whoosh(); toast("🌪️ Tornade ! +"+dt+" cases."); await stepTo(pi, p.pos+dt);
+  } else if(type==="piege"){
+    Sound.trap(); toast("🕳️ Piège ! −3 cases."); await stepTo(pi, Math.max(0,p.pos-3));
   } else if(type==="gardien"){
+    Sound.special();
     toast("👮 Le gardien patrouille !");
     var r=await askQuestion({cat:G.category, record:true, contextLabel:"Évite le gardien"});
     if(!r.correct){ toast("Repéré ! −3 cases."); await stepTo(pi, Math.max(0,p.pos-3)); }
     else toast("Ni vu ni connu !");
   } else if(type==="defi"){
+    Sound.special();
     toast("⚡ Défi éclair ! 10 secondes.");
-    var r2=await askQuestion({cat:G.category, record:true, timed:true, contextLabel:"Vite ! +3 / −1"});
+    var r2=await askQuestion({record:true, timed:true, contextLabel:"Vite ! +3 / −1"});
     if(r2.correct){ toast("+3 cases !"); await stepTo(pi, p.pos+3); }
     else { toast("−1 case."); await stepTo(pi, Math.max(0,p.pos-1)); }
   } else if(type==="duel"){
+    Sound.special();
     toast("⚔️ Duel avec l'animal devant toi !");
     var ahead=nearestAhead(pi);
-    var r3=await askQuestion({cat:G.category, record:true, contextLabel:"Gagne pour échanger de place"});
+    var r3=await askQuestion({record:true, contextLabel:"Gagne pour échanger de place"});
     if(r3.correct && ahead>=0){
       var tmp=G.players[pi].pos; G.players[pi].pos=G.players[ahead].pos; G.players[ahead].pos=tmp;
       toast("Échange réussi avec "+animalById(G.players[ahead].animalId).name+" !");
@@ -919,6 +1120,7 @@ async function applySpecial(pi){
     } else if(r3.correct){ toast("Personne devant toi… duel gagné dans le vide !"); }
     else { toast("Duel perdu."); }
   } else if(type==="mystere"){
+    Sound.special();
     var roll=randint(4);
     if(roll===0){ toast("🍃 Vent favorable ! +2"); await stepTo(pi, p.pos+2); }
     else if(roll===1){ toast("🥜 Chute de cacahuètes ! +1"); await stepTo(pi, p.pos+1); }
@@ -943,7 +1145,7 @@ function portalChallenge(){
     for(var n=0;n<3;n++){
       var r=await askQuestion({cat:G.category, record:true, contextLabel:"Serrure "+(n+1)+"/3"});
       if(r.correct){
-        locks[n].classList.add("open"); locks[n].textContent="🔓";
+        locks[n].classList.add("open"); locks[n].textContent="🔓"; Sound.lock();
         $("portalStatus").textContent=(n+1)+" / 3 serrures ouvertes !";
         await sleep(500);
       } else {
@@ -966,14 +1168,15 @@ async function botsPlay(){
 async function botTurn(i){
   var b=G.players[i];
   if(b.skip){ b.skip=false; return; }
+  var P=G.botSuccess;
   var start=b.pos;
   var d=1+randint(6);
-  var ok=Math.random()<BOT_SUCCESS;
+  var ok=Math.random()<P;
   if(ok){
     // avance en gérant les obstacles
-    var target=b.pos+d, blocked=false, cur=b.pos;
+    var target=b.pos+d;
     for(var s=b.pos+1;s<=Math.min(target,BOARD);s++){
-      if(OBSTACLES[s]){ if(Math.random()<BOT_SUCCESS){ /* franchit */ } else { target=s-1; blocked=true; break; } }
+      if(OBSTACLES[s]){ if(Math.random()<P){ /* franchit */ } else { target=s-1; break; } }
     }
     await botStep(i, Math.min(target,BOARD));
   } else {
@@ -981,14 +1184,14 @@ async function botTurn(i){
   }
   // portail
   if(b.pos>=BOARD){
-    var pass = Math.random()<BOT_SUCCESS && Math.random()<BOT_SUCCESS && Math.random()<BOT_SUCCESS;
+    var pass = Math.random()<P && Math.random()<P && Math.random()<P;
     if(pass){ return finishGame(false, i); }
     else { await botStep(i, start); toast(animalById(b.animalId).name+" a raté le portail !"); return; }
   }
   // effet de case (simulé, pas d'historique)
   await botSpecial(i);
   if(b.pos>=BOARD){
-    var pass2 = Math.random()<BOT_SUCCESS && Math.random()<BOT_SUCCESS && Math.random()<BOT_SUCCESS;
+    var pass2 = Math.random()<P && Math.random()<P && Math.random()<P;
     if(pass2){ return finishGame(false, i); }
     else { await botStep(i, start); }
   }
@@ -1001,13 +1204,16 @@ async function botStep(i, target){
 }
 async function botSpecial(i){
   var b=G.players[i]; if(b.pos<=0||b.pos>=BOARD) return;
-  var type=SPECIALS[b.pos]; if(!type) return;
-  if(type==="banane"){ await botStep(i, b.pos+1+randint(6)); }
+  var P=G.botSuccess, type=SPECIALS[b.pos]; if(!type) return;
+  if(type==="banane"||type==="tornade"){ await botStep(i, b.pos+1+randint(6)); }
   else if(type==="toboggan"){ await botStep(i, b.pos+4); }
-  else if(type==="gardien"){ if(Math.random()>=BOT_SUCCESS) await botStep(i, Math.max(0,b.pos-3)); }
-  else if(type==="defi"){ if(Math.random()<BOT_SUCCESS) await botStep(i, b.pos+3); else await botStep(i, Math.max(0,b.pos-1)); }
+  else if(type==="ressort"){ await botStep(i, b.pos+3); }
+  else if(type==="cadeau"){ await botStep(i, b.pos+1+randint(3)); }
+  else if(type==="piege"){ await botStep(i, Math.max(0,b.pos-3)); }
+  else if(type==="gardien"){ if(Math.random()>=P) await botStep(i, Math.max(0,b.pos-3)); }
+  else if(type==="defi"){ if(Math.random()<P) await botStep(i, b.pos+3); else await botStep(i, Math.max(0,b.pos-1)); }
   else if(type==="duel"){
-    if(Math.random()<BOT_SUCCESS){ var a=nearestAhead(i); if(a>=0){ var t=b.pos; b.pos=G.players[a].pos; G.players[a].pos=t; drawBoard(); drawPlayersMini(); } }
+    if(Math.random()<P){ var a=nearestAhead(i); if(a>=0){ var t=b.pos; b.pos=G.players[a].pos; G.players[a].pos=t; drawBoard(); drawPlayersMini(); } }
   }
   else if(type==="mystere"){
     var r=randint(4);
@@ -1022,20 +1228,21 @@ function finishGame(playerWon, winnerIndex){
   var winner=G.players[winnerIndex];
   var a=animalById(winner.animalId);
   if(playerWon){
-    store.missions[a.id]=true;   // RG14
-  }
+    store.missions[missionKey(a.id, G.setup.cat, G.setup.sub, G.setup.diffKey)]=true;   // RG14
+    Sound.win();
+  } else { Sound.lose(); }
   saveGameState(); persist();
   // écran de fin
-  var ctx=$("endArt").getContext("2d"); ctx.clearRect(0,0,96,96);
-  SPRITES.animal(ctx, a.id, 0, 0, 6);
+  $("endArt").textContent = EMOJI[a.id]||"🎉";
   var title=$("endTitle");
   var bw=$("endBubbleWrap"); bw.innerHTML="";
   if(playerWon){
     title.textContent="ÉVASION RÉUSSIE !"; title.className="win";
     var phrase=a.phrases[randint(a.phrases.length)];   // RG13
     bw.innerHTML="<div class='bubble'>« "+phrase+" »</div>";
-    $("endMsg").textContent="Mission accomplie : "+a.name+" est libre ! ✓";
-    updateMissionProgress(); buildSelect();
+    $("endMsg").innerHTML="Mission accomplie : "+a.name+" est libre ! ✓<br><span style='font-size:12px;color:var(--ink-soft)'>"+
+      CAT_LABEL[G.setup.cat]+" · "+G.setup.sub+" · "+diffByKey(G.setup.diffKey).name+"</span>";
+    updateMissionProgress(); buildSetup();
   } else {
     title.textContent="Presque !"; title.className="lose";
     $("endMsg").textContent=a.name+" s'est échappé avant toi. Tente une revanche !";
@@ -1085,33 +1292,59 @@ function setTab(which){
   $("tabHist").classList.toggle("active", which==="hist");
 }
 
+/* ------------------------------ SON -------------------------------- */
+function updateSoundBtn(){ $("soundBtn").textContent = Sound.isMuted() ? "🔇" : "🔊"; }
+function toggleSound(){
+  var nowMuted = !Sound.isMuted();
+  Sound.setMuted(nowMuted);
+  store.muted = nowMuted; persist();
+  if(nowMuted){ Sound.stopMusic(); }
+  else { Sound.resume(); Sound.startMusic(); }
+  updateSoundBtn();
+}
+
 /* ============================== INIT =============================== */
 function init(){
   loadSave();
+  Sound.setMuted(!!store.muted); updateSoundBtn();
   initBoard();
-  buildSelect();
+  buildSetup();
 
-  $("startBtn").onclick=function(){ if(selectedAnimal) startGame(selectedAnimal); };
+  $("soundBtn").onclick=toggleSound;
 
-  $("rollBtn").onclick=function(){ playerRoll(); };
+  $("startBtn").onclick=function(){ Sound.click(); if(selectedAnimal) startGame(selectedAnimal); };
+
+  $("rollBtn").onclick=function(){ Sound.click(); playerRoll(); };
 
   $("tabGame").onclick=function(){
-    setTab("game");
+    Sound.click(); setTab("game");
     if(G){ showScreen("game"); drawBoard(); } else showScreen("select");
   };
-  $("tabHist").onclick=function(){ setTab("hist"); showScreen("hist"); renderHistory(); };
+  $("tabHist").onclick=function(){ Sound.click(); setTab("hist"); showScreen("hist"); renderHistory(); };
 
   $("clearHist").onclick=function(){
+    Sound.click();
     if(store.history.length && confirm("Effacer tout l'historique des questions ?")){
       store.history=[]; persist(); renderHistory();
     }
   };
 
-  $("rematchBtn").onclick=function(){ $("endScreen").classList.remove("show"); startGame(G? G.animalId : selectedAnimal); };
+  $("rematchBtn").onclick=function(){ Sound.click(); $("endScreen").classList.remove("show"); startGame(G? G.animalId : selectedAnimal); };
   $("backSelectBtn").onclick=function(){
+    Sound.click();
     $("endScreen").classList.remove("show"); store.game=null; persist();
-    G=null; buildSelect(); showScreen("select"); setTab("game");
+    G=null; selectedAnimal=null; buildSetup(); showScreen("select"); setTab("game");
   };
+
+  // démarre l'audio au premier geste de l'utilisateur (politique navigateur)
+  function firstGesture(){
+    Sound.resume();
+    if(!Sound.isMuted()) Sound.startMusic();
+    window.removeEventListener("pointerdown", firstGesture);
+    window.removeEventListener("keydown", firstGesture);
+  }
+  window.addEventListener("pointerdown", firstGesture);
+  window.addEventListener("keydown", firstGesture);
 
   // restauration d'une partie en cours (RG15)
   if(restoreGame()){ enterGame(); toast("Partie reprise !"); }
