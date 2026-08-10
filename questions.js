@@ -834,11 +834,65 @@
     {d:4,ph:"La leçon est ___ par le professeur.",good:"expliquée",bad:["expliqué","expliqués","expliquer"],note:"Passif : accord (f.s.)."},
     {d:5,ph:"Les fruits sont ___ au marché.",good:"vendus",bad:["vendu","vendue","vendre"],note:"Passif : accord (m.p.)."}
   ];
+  /* --- Déterminants : générateur PARTITIONNÉ par difficulté ---
+     Chaque nom appartient à UNE seule difficulté ; comme la phrase contient le
+     nom, les questions d'un niveau ne peuvent pas apparaître dans un autre.
+     12 noms × 5 tournures = 60 phrases uniques par difficulté (≥ 50), disjointes. */
+  var NOUNS_DET=[
+    // d1 (très facile)
+    {w:"chat",g:"m",d:1},{w:"table",g:"f",d:1},{w:"chien",g:"m",d:1},{w:"pomme",g:"f",d:1},
+    {w:"livre",g:"m",d:1},{w:"balle",g:"f",d:1},{w:"lit",g:"m",d:1},{w:"porte",g:"f",d:1},
+    {w:"vélo",g:"m",d:1},{w:"fleur",g:"f",d:1},{w:"sac",g:"m",d:1},{w:"souris",g:"f",d:1},
+    // d2 (facile)
+    {w:"maison",g:"f",d:2},{w:"jardin",g:"m",d:2},{w:"oiseau",g:"m",v:1,d:2},{w:"voiture",g:"f",d:2},
+    {w:"gâteau",g:"m",d:2},{w:"chaise",g:"f",d:2},{w:"ballon",g:"m",d:2},{w:"tasse",g:"f",d:2},
+    {w:"crayon",g:"m",d:2},{w:"bateau",g:"m",d:2},{w:"robe",g:"f",d:2},{w:"cartable",g:"m",d:2},
+    // d3 (normal)
+    {w:"montagne",g:"f",d:3},{w:"village",g:"m",d:3},{w:"rivière",g:"f",d:3},{w:"château",g:"m",d:3},
+    {w:"forêt",g:"f",d:3},{w:"tigre",g:"m",d:3},{w:"fenêtre",g:"f",d:3},{w:"bureau",g:"m",d:3},
+    {w:"nuage",g:"m",d:3},{w:"épée",g:"f",v:1,d:3},{w:"avion",g:"m",v:1,d:3},{w:"orage",g:"m",v:1,d:3},
+    // d4 (difficile)
+    {w:"horloge",g:"f",v:1,d:4},{w:"éléphant",g:"m",v:1,d:4},{w:"ordinateur",g:"m",v:1,d:4},{w:"aventure",g:"f",v:1,d:4},
+    {w:"hôpital",g:"m",v:1,d:4},{w:"escalier",g:"m",v:1,d:4},{w:"araignée",g:"f",v:1,d:4},{w:"image",g:"f",v:1,d:4},
+    {w:"étoile",g:"f",v:1,d:4},{w:"histoire",g:"f",v:1,d:4},{w:"arbre",g:"m",v:1,d:4},{w:"ourson",g:"m",v:1,d:4},
+    // d5 (très difficile)
+    {w:"armoire",g:"f",v:1,d:5},{w:"échelle",g:"f",v:1,d:5},{w:"éclair",g:"m",v:1,d:5},{w:"ampoule",g:"f",v:1,d:5},
+    {w:"oreille",g:"f",v:1,d:5},{w:"automne",g:"m",v:1,d:5},{w:"aiguille",g:"f",v:1,d:5},{w:"encre",g:"f",v:1,d:5},
+    {w:"orchestre",g:"m",v:1,d:5},{w:"univers",g:"m",v:1,d:5},{w:"ancre",g:"f",v:1,d:5},{w:"ustensile",g:"m",v:1,d:5},
+    // d6 (extrême)
+    {w:"hippopotame",g:"m",v:1,d:6},{w:"encyclopédie",g:"f",v:1,d:6},{w:"interrupteur",g:"m",v:1,d:6},{w:"orchidée",g:"f",v:1,d:6},
+    {w:"obstacle",g:"m",v:1,d:6},{w:"aquarium",g:"m",v:1,d:6},{w:"itinéraire",g:"m",v:1,d:6},{w:"hémisphère",g:"m",v:1,d:6},
+    {w:"échafaudage",g:"m",v:1,d:6},{w:"ambassade",g:"f",v:1,d:6},{w:"engrenage",g:"m",v:1,d:6},{w:"hélicoptère",g:"m",v:1,d:6}
+  ];
+  var DET_FRAMES=[
+    {ph:"___ {N} est ici.",k:"def"},
+    {ph:"J'ai vu ___ {N}.",k:"indef"},
+    {ph:"Regarde ___ {N} !",k:"dem"},
+    {ph:"C'est ___ {N}.",k:"poss"},
+    {ph:"Je cherche ___ {N}.",k:"def"}
+  ];
+  function detOptions(kind,n){
+    var good, pool;
+    if(kind==="def"){ good=n.v?"l'":(n.g==="m"?"le":"la"); pool=["le","la","l'","les"]; }
+    else if(kind==="indef"){ good=n.g==="m"?"un":"une"; pool=["un","une","des","de"]; }
+    else if(kind==="dem"){ good=n.v?(n.g==="m"?"cet":"cette"):(n.g==="m"?"ce":"cette"); pool=["ce","cet","cette","ces"]; }
+    else { good=n.v?"mon":(n.g==="m"?"mon":"ma"); pool=["mon","ma","mes","ton"]; }
+    return { good:good, bad:pool.filter(function(x){return x!==good;}) };
+  }
+  function genDeterminants(diff,cat,sub){
+    var pool=NOUNS_DET.filter(function(n){return n.d===diff;});   // STRICT → niveaux disjoints
+    if(pool.length<3){ for(var w=1;w<=5 && pool.length<3;w++) pool=NOUNS_DET.filter(function(n){return Math.abs(n.d-diff)<=w;}); }
+    var n=pick(pool), fr=pick(DET_FRAMES), o=detOptions(fr.k,n);
+    return { cat:cat, sub:sub, phrase:fr.ph.replace("{N}",n.w), hint:"Choisis le bon déterminant",
+      note:"Le déterminant s'accorde en genre et en nombre avec le nom (le/la/l', un/une, ce/cet/cette, mon/ma…).",
+      options:build(o.good,o.bad.slice()), answer:0 };
+  }
+
   function genGram(sub, diff, cat){
     if(sub==="Nature des mots"){ var it=pickByDiff(NATURE,diff);
       var bad=shuffle(NATURE_OPTS.filter(function(o){return o!==it.n;})).slice(0,3);
       return { cat:cat, sub:sub, phrase:it.ph, hint:"Donne la nature (classe) du mot", note:"La nature (ou classe) d'un mot : nom, verbe, adjectif, adverbe, déterminant, pronom, préposition, conjonction.", options:build(it.n,bad), answer:0 }; }
-    if(sub==="Déterminants") return fromGood(pickByDiff(DET,diff),"Choisis le bon déterminant",cat,sub);
+    if(sub==="Déterminants") return genDeterminants(diff,cat,sub);
     if(sub==="Pronoms") return fromGood(pickByDiff(PRON,diff),"Choisis le bon pronom",cat,sub);
     if(sub==="Prépositions") return fromGood(pickByDiff(PREP,diff),"Choisis la bonne préposition",cat,sub);
     if(sub==="Accords") return fromGood(pickByDiff(ACCORD,diff),"Accorde correctement (genre et nombre)",cat,sub);
