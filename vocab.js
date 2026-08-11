@@ -268,13 +268,13 @@
   }
 
   function actionRow(wd, afterSlash){
+    // Plus de « 斩 » ici : le saut se fait via « 跳过 ⏭️ » (en haut de la carte).
+    // Marquer un mot comme « déjà connu » (斩) reste possible depuis le dictionnaire.
     var row=el("div","vk-actions");
     var p=prog(wd.id);
-    var cut=el("button","vk-abtn","🗡️ 斩"); cut.title="我已认识（移出学习）";
-    cut.onclick=function(){ slash(wd.id); toast("已斩 🗡️"); if(afterSlash) afterSlash(); };
     var fav=el("button","vk-abtn"+((p&&p.fav)?" on":""), (p&&p.fav)?"⭐ 已收藏":"☆ 收藏");
     fav.onclick=function(){ var v=toggleFav(wd.id); fav.textContent=v?"⭐ 已收藏":"☆ 收藏"; fav.classList.toggle("on",v); };
-    row.appendChild(cut); row.appendChild(fav);
+    row.appendChild(fav);
     return row;
   }
 
