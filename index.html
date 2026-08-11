@@ -510,6 +510,17 @@
   .emp-card{max-width:360px; text-align:center;}
   .emp-card .emp-card-t{font-size:16px; font-weight:900; color:var(--accent2); margin-bottom:8px;}
   .emp-card .emp-card-x{font-size:15px; line-height:1.5;}
+  /* Carte illustrée « case où l'on arrive » */
+  #empCaseOv .emp-casecard{width:100%; max-width:330px; background:var(--panel); border-radius:20px;
+    overflow:hidden; box-shadow:0 18px 48px rgba(0,0,0,.42); text-align:center;
+    animation:empCasePop .34s cubic-bezier(.2,1.35,.5,1);}
+  @keyframes empCasePop{0%{transform:scale(.55) translateY(28px); opacity:0} 100%{transform:scale(1) translateY(0); opacity:1}}
+  .emp-caseart{font-size:74px; line-height:1; padding:24px 0 16px;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,.22));}
+  .emp-casename{font-size:20px; font-weight:900; color:var(--ink); padding:0 16px;}
+  .emp-casedesc{font-size:13.5px; line-height:1.5; color:var(--ink-soft); padding:9px 20px 2px;}
+  .emp-casedesc b{color:var(--ink);}
+  .emp-casehint{font-size:11px; color:var(--ink-soft); opacity:.7; padding:12px 0 15px;}
 
   /* ============================= Nav du bas ========================== */
   nav{
@@ -658,6 +669,15 @@
 
     <!-- ============= Écran : L'Empire des Évadés (jeu 2) ========== -->
     <section id="empireScreen" class="screen"></section>
+    <!-- Carte illustrée de la case où l'on arrive -->
+    <div id="empCaseOv" class="overlay">
+      <div class="emp-casecard">
+        <div id="empCaseArt" class="emp-caseart"></div>
+        <div id="empCaseName" class="emp-casename"></div>
+        <div id="empCaseDesc" class="emp-casedesc"></div>
+        <div class="emp-casehint">👆 Touche pour continuer</div>
+      </div>
+    </div>
     <!-- Carte événement (Coup de Patte / Cagnotte) -->
     <div id="empCardOv" class="overlay">
       <div class="card emp-card">

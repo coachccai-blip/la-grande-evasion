@@ -13,22 +13,22 @@
   /* ----------------------------- DONNÉES ---------------------------------- */
   // 8 quartiers de 2 propriétés. Prix croissants (60 → 400 ₵).
   var QUARTIERS=[
-    {name:"Le Terrier d'Entrée", col:"#c9a06b", price:60,  build:50},
-    {name:"La Canopée des Singes",col:"#8bbf5a", price:100, build:50},
-    {name:"La Plage des Flamants",col:"#f28fb1", price:140, build:100},
-    {name:"Le Bosquet des Pandas", col:"#5bbf8a", price:180, build:100},
-    {name:"La Rivière des Crocos", col:"#3fae86", price:220, build:150},
-    {name:"La Plaine des Zèbres",  col:"#7a86f0", price:260, build:150},
-    {name:"La Falaise des Hiboux", col:"#b98ce0", price:320, build:200},
-    {name:"Les Hauteurs du Lion",  col:"#f2c14e", price:400, build:200}
+    {name:"Le Terrier d'Entrée", col:"#c9a06b", price:60,  build:50,  emoji:"🏚️"},
+    {name:"La Canopée des Singes",col:"#8bbf5a", price:100, build:50,  emoji:"🐒"},
+    {name:"La Plage des Flamants",col:"#f28fb1", price:140, build:100, emoji:"🦩"},
+    {name:"Le Bosquet des Pandas", col:"#5bbf8a", price:180, build:100, emoji:"🐼"},
+    {name:"La Rivière des Crocos", col:"#3fae86", price:220, build:150, emoji:"🐊"},
+    {name:"La Plaine des Zèbres",  col:"#7a86f0", price:260, build:150, emoji:"🦓"},
+    {name:"La Falaise des Hiboux", col:"#b98ce0", price:320, build:200, emoji:"🦉"},
+    {name:"Les Hauteurs du Lion",  col:"#f2c14e", price:400, build:200, emoji:"🦁"}
   ];
   var RENT_MULT=[3,6,10,16];   // Stand, Boutique, Grand Magasin, Palais
   var BUILD_LABEL=["Stand","Boutique","Grand Magasin","Palais"];
 
-  function prop(q,name){ return {type:"prop", q:q, name:name, price:QUARTIERS[q].price,
+  function prop(q,name){ return {type:"prop", q:q, name:name, price:QUARTIERS[q].price, emoji:QUARTIERS[q].emoji,
     rentBase:Math.round(QUARTIERS[q].price*0.1), build:QUARTIERS[q].build, owner:-1, level:0, mortgaged:false}; }
-  function transport(name){ return {type:"transport", name:name, price:200, owner:-1, mortgaged:false}; }
-  function service(name){ return {type:"service", name:name, price:150, owner:-1, mortgaged:false}; }
+  function transport(name,emoji){ return {type:"transport", name:name, price:200, emoji:emoji||"🚌", owner:-1, mortgaged:false}; }
+  function service(name,emoji){ return {type:"service", name:name, price:150, emoji:emoji||"⚙️", owner:-1, mortgaged:false}; }
 
   // 32 cases (ring 9×9). Coins : 0 Baobab, 8 Fourrière(visite), 16 Point d'Eau, 24 Gardien.
   function buildBoard(){
@@ -38,29 +38,29 @@
       {type:"cagnotte", name:"Cagnotte de la Meute", emoji:"🐾"},  // 2
       prop(0,"Nid de brindilles"),                                 // 3
       {type:"impot", name:"Impôt sur les croquettes", emoji:"🧾", amount:100}, // 4
-      transport("Le Bus de la Jungle"),                            // 5
+      transport("Le Bus de la Jungle","🚌"),                            // 5
       prop(1,"Cabane suspendue"),                                  // 6
       {type:"patte", name:"Coup de Patte", emoji:"🐆"},            // 7
       {type:"fourriere", name:"Fourrière (visite)", emoji:"🔒"},   // 8 (coin)
       prop(1,"Stand de bananes"),                                  // 9
-      service("Le Château d'Eau"),                                 // 10
+      service("Le Château d'Eau","🚿"),                                 // 10
       prop(2,"Parasol rose"),                                      // 11
-      transport("La Rivière Express"),                             // 12
+      transport("La Rivière Express","🚤"),                             // 12
       prop(2,"Boutique de mode"),                                  // 13
       prop(3,"Spa de bambou"),                                     // 14
       {type:"patte", name:"Coup de Patte", emoji:"🐆"},            // 15
       {type:"repos", name:"Le Point d'Eau", emoji:"💧"},           // 16 (coin)
       prop(3,"Bar à bambou"),                                      // 17
       prop(4,"Guinguette flottante"),                              // 18
-      transport("Le Téléphérique"),                                // 19
+      transport("Le Téléphérique","🚡"),                                // 19
       prop(4,"Restaurant des lucioles"),                           // 20
       {type:"cagnotte", name:"Cagnotte de la Meute", emoji:"🐾"},  // 21
       prop(5,"Piste de course"),                                   // 22
-      service("La Centrale à Bananes"),                            // 23
+      service("La Centrale à Bananes","🍌"),                            // 23
       {type:"gardien", name:"Le Gardien !", emoji:"🚓"},           // 24 (coin)
       prop(5,"Station rapide"),                                    // 25
       prop(6,"Bibliothèque perchée"),                              // 26
-      transport("La Montgolfière"),                                // 27
+      transport("La Montgolfière","🎈"),                                // 27
       prop(6,"Observatoire étoilé"),                               // 28
       {type:"patte", name:"Coup de Patte", emoji:"🐆"},            // 29
       prop(7,"Palais doré"),                                       // 30
@@ -323,11 +323,57 @@
     await sleep(250);
   }
 
+  /* ------------------- CARTE ILLUSTRÉE DE LA CASE (jeu clair) -------------- */
+  function caseInfo(c){
+    var big=c.emoji||"•", bg="linear-gradient(160deg,#eef4ff,#fff)", name=c.name, desc="";
+    if(c.type==="prop"){
+      bg="linear-gradient(160deg,"+QUARTIERS[c.q].col+" 0%, #fff8ec 70%)";
+      var status=c.owner<0?"<b>Propriété LIBRE</b> — à acheter !":(c.owner===0?"C'est <b>ta</b> propriété.":"Propriété de <b>"+ownerName(c)+"</b>.");
+      desc="<b>"+QUARTIERS[c.q].name+"</b><br>Prix : <b>₵"+c.price+"</b> · Loyer de base : ₵"+c.rentBase+" (×2 si quartier complet)<br>"+status
+        +(c.level>0?"<br>🏠 Niveau : <b>"+BUILD_LABEL[c.level-1]+"</b>":"");
+    } else if(c.type==="transport"){ bg="linear-gradient(160deg,#cfe0ff,#fff)";
+      desc="<b>Route migratoire</b> — Transport à acheter (<b>₵200</b>).<br>Le loyer grimpe avec le nombre de lignes possédées (50 → 200 ₵)."; }
+    else if(c.type==="service"){ bg="linear-gradient(160deg,#d5f0e0,#fff)";
+      desc="<b>Service de la vallée</b> — À acheter (<b>₵150</b>).<br>Loyer = <b>10 × le total des dés</b> du visiteur."; }
+    else if(c.type==="depart"){ bg="linear-gradient(160deg,#dcf3b6,#fff)";
+      desc="<b>Grand Baobab (Départ)</b><br>Touche <b>200 ₵</b> de salaire à chaque passage. Tente la <b>Prime de la Jungle</b> pour le doubler !"; }
+    else if(c.type==="impot"){ bg="linear-gradient(160deg,#ffd9d0,#fff)";
+      desc="<b>Impôt sur les croquettes</b><br>Paie <b>100 ₵</b> à la banque."; }
+    else if(c.type==="patte"){ bg="linear-gradient(160deg,#ffe6b0,#fff)";
+      desc="<b>Coup de Patte</b><br>Tire une carte : <b>bonne ou mauvaise</b> surprise !"; }
+    else if(c.type==="cagnotte"){ bg="linear-gradient(160deg,#d8e6ff,#fff)";
+      desc="<b>Cagnotte de la Meute</b><br>Tire une carte de la caisse commune, <b>plutôt favorable</b>."; }
+    else if(c.type==="fourriere"){ bg="linear-gradient(160deg,#e6eaee,#fff)";
+      desc="<b>Fourrière (visite)</b><br>Simple visite : rien ne se passe… sauf si tu y es enfermé !"; }
+    else if(c.type==="gardien"){ bg="linear-gradient(160deg,#ffd0d0,#fff)";
+      desc="<b>Le Gardien !</b><br>Il te repère : direction la <b>Fourrière</b>, sans salaire au passage."; }
+    else if(c.type==="repos"){ bg="linear-gradient(160deg,#cdeeff,#fff)";
+      desc="<b>Le Point d'Eau</b><br>Case repos : on souffle, rien ne se passe."; }
+    return {big:big, bg:bg, name:name, desc:desc};
+  }
+  function showCaseCard(i){
+    return new Promise(function(res){
+      var ov=$("empCaseOv"); if(!ov){ res(); return; }
+      var info=caseInfo(cell(i));
+      $("empCaseArt").textContent=info.big; $("empCaseArt").style.background=info.bg;
+      $("empCaseName").textContent=info.name; $("empCaseDesc").innerHTML=info.desc;
+      ov.classList.add("show"); EB.Sound.whoosh&&EB.Sound.whoosh();
+      var done=false, t=setTimeout(close,2600);
+      function close(){ if(done) return; done=true; clearTimeout(t); ov.onclick=null; ov.classList.remove("show"); setTimeout(res,160); }
+      ov.onclick=close;
+    });
+  }
+  // Annonce ce qu'un bot vient de faire (message central + petite bulle toast).
+  function botSay(pi, action){
+    var a=EB.animalById(E.players[pi].animalId), em=EB.EMOJI[E.players[pi].animalId]||"";
+    say(em+" "+a.name+" "+action); EB.toast(em+" "+a.name+" "+action, 1500);
+  }
+
   /* ---------------------------- ATTERRISSAGE ------------------------------ */
   async function landOn(pi, diceTotal, human){
     var p=E.players[pi], c=cell(p.pos);
-    say((EB.animalById(p.animalId).name)+" arrive sur « "+c.name+" ».");
-    await sleep(300);
+    if(human){ await showCaseCard(p.pos); }
+    else { say(EB.animalById(p.animalId).name+" arrive sur « "+c.name+" »."); await sleep(250); }
     if(c.type==="depart"){ if(human) await primeFlow(pi); }
     else if(c.type==="impot"){ transfer(pi,-1,c.amount); renderCenter(); say("Impôt : −"+c.amount+" ₵."); EB.Sound.bad&&EB.Sound.bad(); await sleep(500); await checkSolvency(pi); }
     else if(c.type==="gardien"){ say("Le gardien te repère : direction la Fourrière !"); EB.Sound.net&&EB.Sound.net(); await sleep(600); sendToJail(pi); renderTokens(); renderCenter(); }
@@ -382,8 +428,8 @@
   /* ------------------------------ LOYER ----------------------------------- */
   async function rentFlow(pi, diceTotal){
     var c=cell(E.players[pi].pos), rent=rentOf(c, diceTotal), owner=c.owner;
-    var choice=await threeWay("« "+c.name+" » appartient à "+ownerName(c)+". Loyer : ₵"+rent+".",
-      "Négocier (loyer ÷2 si juste)","OPA sauvage (3 bonnes réponses)","Payer ₵"+rent);
+    var choice=await threeWay("« "+c.name+" » appartient à "+ownerName(c)+". Loyer à payer : ₵"+rent+".",
+      "Négocier (loyer ÷2 si juste)","OPA : racheter de force (3 bonnes réponses)","Payer ₵"+rent);
     if(choice==="pay"){ transfer(pi,owner,rent); say("Loyer payé : −₵"+rent+"."); EB.Sound.bad&&EB.Sound.bad(); }
     else if(choice==="negotiate"){
       var ok=await ask("Négociation de loyer — loyer ÷2 si tu réussis");
@@ -397,7 +443,7 @@
   }
   async function opaFlow(pi){
     var c=cell(E.players[pi].pos), owner=c.owner, price150=Math.round(c.price*1.5), rent=rentOf(c,E.lastDice);
-    say("OPA sauvage sur « "+c.name+" » : 3 bonnes réponses d'affilée !");
+    say("OPA sauvage (rachat forcé) sur « "+c.name+" » : réussis 3 questions d'affilée !");
     EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(500);
     for(var n=0;n<3;n++){
       var ok=await ask("OPA "+(n+1)+"/3 — rachat forcé de « "+c.name+" »");
@@ -451,7 +497,7 @@
   async function drawCard(pi, deck, title, human){
     var card=deck[rint(deck.length)];
     if(human){ await showCard(title, card.t); }
-    else say(EB.animalById(E.players[pi].animalId).name+" — "+title+" : "+card.t);
+    else botSay(pi,"— "+title+" : "+card.t);
     // effets
     if(card.d) transfer(pi,-1,-card.d);                 // gain (+) ou perte (−)
     if(card.each){ E.players.forEach(function(pp,j){ if(j!==pi&&alive(pp)){ transfer(j,pi,card.each); } }); }
@@ -511,12 +557,12 @@
   async function botBuy(pi){
     var c=cell(E.players[pi].pos), p=E.players[pi];
     if(c.owner>=0) return;
-    if(p.cash - c.price >= 150 && botAnswers()){ c.owner=pi; transfer(pi,-1,c.price); say(EB.animalById(p.animalId).name+" achète "+c.name+"."); }
+    if(p.cash - c.price >= 150 && botAnswers()){ c.owner=pi; transfer(pi,-1,c.price); botSay(pi,"a acheté « "+c.name+" » (₵"+c.price+")."); }
     renderTokens(); renderCenter(); await sleep(250);
   }
   async function botRent(pi, diceTotal){
     var c=cell(E.players[pi].pos), rent=rentOf(c,diceTotal);
-    transfer(pi,c.owner,rent); say(EB.animalById(E.players[pi].animalId).name+" paie ₵"+rent+" de loyer.");
+    transfer(pi,c.owner,rent); botSay(pi,"a payé ₵"+rent+" de loyer à "+EB.animalById(E.players[c.owner].animalId).name+".");
     renderTokens(); renderCenter(); await sleep(250);
     await checkSolvency(pi);
   }
@@ -526,7 +572,7 @@
       if(p.cash-cost>=250 && botAnswers()){ transfer(pi,-1,cost);
         var minL=Math.min.apply(null,levelsOf(pi,q)); var done=false;
         E.board.forEach(function(c){ if(!done&&c.type==="prop"&&c.q===q&&c.owner===pi&&c.level===minL){ c.level++; done=true; } });
-        say(EB.animalById(p.animalId).name+" construit dans "+QUARTIERS[q].name+"."); renderTokens(); renderCenter(); await sleep(300);
+        botSay(pi,"a construit dans "+QUARTIERS[q].name+"."); renderTokens(); renderCenter(); await sleep(300);
       }
     }
   }
