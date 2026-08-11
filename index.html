@@ -435,38 +435,66 @@
   /* ================= L'Empire des Évadés (jeu 2) ==================== */
   #empireScreen{padding:0; display:none; flex-direction:column; height:100%;}
   #empireScreen.active{display:flex;}
-  .emp-scroll{flex:1; overflow:auto; padding:8px; background:
-    radial-gradient(circle at 30% 15%, #eaf6ff 0%, transparent 40%),
-    radial-gradient(circle at 80% 85%, #fff2d9 0%, transparent 45%), var(--bg2);}
-  .emp-board{display:grid; grid-template-columns:repeat(9,1fr); grid-template-rows:repeat(9,1fr);
-    gap:3px; width:100%; max-width:560px; margin:0 auto; aspect-ratio:1/1;}
-  .emp-cell{position:relative; background:var(--panel); border:1px solid var(--line); border-radius:6px;
-    min-width:0; overflow:hidden; cursor:pointer; display:flex; padding:2px;}
-  .emp-cell .emp-cc{display:flex; flex-direction:column; align-items:center; justify-content:center;
-    width:100%; text-align:center; gap:1px;}
-  .emp-cell .emp-band{height:8px; align-self:stretch; border-radius:3px; background:var(--qcol,#ccc);}
-  .emp-cell .emp-nm{font-size:8px; line-height:1.05; font-weight:700; color:var(--ink);
-    max-height:22px; overflow:hidden;}
-  .emp-cell .emp-pr{font-size:8px; font-weight:800; color:var(--accent2);}
-  .emp-cell .emp-ico{font-size:20px; line-height:1;}
-  .emp-cell .emp-lvl{font-size:8px; color:#e0a020; letter-spacing:-1px;}
-  .emp-cell.mortg{opacity:.5;}
-  .emp-token{position:absolute; bottom:1px; right:1px; width:17px; height:17px; border-radius:50%;
-    background:#fff; border:2px solid #888; font-size:11px; line-height:14px; text-align:center;
-    box-shadow:0 1px 2px rgba(0,0,0,.3); z-index:3;}
-  .emp-token.me{width:19px; height:19px; font-size:12px; line-height:16px; z-index:4;}
-  .emp-center{background:var(--panel); border:2px solid var(--line); border-radius:12px;
-    padding:8px; display:flex; flex-direction:column; gap:6px; overflow:auto;}
-  .emp-center .emp-title{font-size:13px; font-weight:900; text-align:center; color:var(--accent2);}
+  .emp-scroll{flex:1; overflow:auto; padding:12px; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 12%, #eaf6ff 0%, transparent 42%),
+      radial-gradient(circle at 82% 88%, #fff2d9 0%, transparent 46%), var(--bg2);}
+  .emp-board{position:relative; display:grid; grid-template-columns:repeat(9,1fr); grid-template-rows:repeat(9,1fr);
+    gap:2px; width:min(94vw,540px); aspect-ratio:1/1; padding:6px; border-radius:16px;
+    background:linear-gradient(135deg,#3f7245,#2c5a34); box-shadow:0 14px 34px rgba(30,50,25,.32), inset 0 0 0 2px rgba(255,255,255,.08);}
+  .emp-cell{position:relative; background:linear-gradient(#fffdf7,#f3ead6); border-radius:5px;
+    min-width:0; overflow:hidden; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.14);}
+  .emp-cell.owned{box-shadow:0 1px 2px rgba(0,0,0,.14), inset 0 0 0 2.5px var(--own,transparent);}
+  .emp-cell.mortg{filter:grayscale(.7) opacity(.55);}
+  .emp-cell .emp-cc{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; gap:1px; padding:2px;}
+  /* bande de quartier orientée vers l'INTÉRIEUR du plateau (façon Monopoly) */
+  .emp-cell.isprop.top .emp-cc{padding-bottom:36%;}
+  .emp-cell.isprop.bottom .emp-cc{padding-top:36%;}
+  .emp-cell.isprop.left .emp-cc{padding-right:36%;}
+  .emp-cell.isprop.right .emp-cc{padding-left:36%;}
+  .emp-band{position:absolute; background:var(--qcol,#ccc); display:flex; align-items:center;
+    justify-content:center; z-index:2; box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);}
+  .top .emp-band{left:0; right:0; bottom:0; height:34%;}
+  .bottom .emp-band{left:0; right:0; top:0; height:34%;}
+  .left .emp-band{top:0; bottom:0; right:0; width:34%;}
+  .right .emp-band{top:0; bottom:0; left:0; width:34%;}
+  .emp-blds{display:flex; gap:1px; align-items:flex-end; justify-content:center; flex-wrap:wrap; padding:1px;}
+  .left .emp-blds, .right .emp-blds{flex-direction:column; align-items:center;}
+  .emp-bld{width:11px; height:10px; filter:drop-shadow(0 1px 0 rgba(0,0,0,.2));}
+  .emp-bld.emp-pal{width:19px; height:14px;}
+  .emp-nm{font-size:7.5px; line-height:1.06; font-weight:800; color:#4a3a1e; max-height:24px; overflow:hidden;}
+  .emp-pr{font-size:8px; font-weight:900; color:#2c7a4a;}
+  .emp-ico{font-size:18px; line-height:1;}
+  /* coins & cases repères */
+  .emp-cornerc{gap:2px;}
+  .emp-cornerc .emp-cico{font-size:22px; line-height:1;}
+  .emp-cornerc .emp-cnm{font-size:6.5px; font-weight:800; color:#6a4f24; line-height:1.05; max-height:20px; overflow:hidden;}
+  .corner .emp-cc{background:linear-gradient(135deg,#fff2d0,#ffe1a0);}
+  .emp-token{position:absolute; bottom:1px; width:16px; height:16px; border-radius:50%;
+    background:#fff; border:2px solid #888; font-size:10px; line-height:13px; text-align:center;
+    box-shadow:0 1px 3px rgba(0,0,0,.35); z-index:5;}
+  .emp-token.me{width:18px; height:18px; font-size:12px; line-height:15px; z-index:6;
+    box-shadow:0 0 0 2px #fff, 0 1px 3px rgba(0,0,0,.4);}
+  /* centre illustré (la Vallée Sauvage + portail du zoo au loin) */
+  .emp-center{position:relative; border-radius:12px; overflow:hidden;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.5), 0 2px 8px rgba(0,0,0,.15);}
+  .emp-scene{position:absolute; inset:0; width:100%; height:100%;}
+  .emp-cover{position:absolute; inset:0; display:flex; flex-direction:column; gap:5px;
+    padding:8px 8px 6px; overflow:auto;}
+  .emp-center .emp-title{font-size:13px; font-weight:900; text-align:center; color:#8a5a12;
+    text-shadow:0 1px 0 rgba(255,255,255,.7);}
   .emp-hud{display:flex; flex-direction:column; gap:3px;}
-  .emp-p{display:flex; align-items:center; gap:5px; font-size:11px; border-left:4px solid #ccc;
-    padding:2px 5px; border-radius:5px; background:var(--bg2);}
-  .emp-p.me{font-weight:800;}
+  .emp-p{display:flex; align-items:center; gap:5px; font-size:11px;
+    padding:3px 6px; border-radius:8px; background:rgba(255,255,255,.82);
+    box-shadow:0 1px 2px rgba(0,0,0,.12); border-left:4px solid var(--pcol,#ccc);}
+  .emp-p.me{font-weight:800; background:rgba(255,255,255,.95);}
   .emp-p.ko{opacity:.5; text-decoration:line-through;}
   .emp-p .emp-pe{font-size:15px;} .emp-p .emp-pn{flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
-  .emp-p .emp-pc{font-weight:800; color:var(--accent2);}
-  .emp-dice{display:flex; gap:8px; justify-content:center; font-size:30px; line-height:1;}
-  .emp-msg{font-size:11px; text-align:center; color:var(--ink-soft); min-height:26px;}
+  .emp-p .emp-pc{font-weight:900; color:#2c7a4a;}
+  .emp-dice{display:flex; gap:8px; justify-content:center; font-size:30px; line-height:1;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.25)); margin-top:auto;}
+  .emp-msg{font-size:11px; text-align:center; color:#4a3a1e; font-weight:600; min-height:24px;
+    background:rgba(255,255,255,.7); border-radius:8px; padding:3px 6px;}
   .emp-panel{flex:0 0 auto; padding:8px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
     border-top:1px solid var(--line); background:var(--bg);}
   .emp-btn{border:0; border-radius:11px; padding:11px 14px; font-family:var(--font); font-weight:800;

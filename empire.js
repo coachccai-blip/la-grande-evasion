@@ -154,26 +154,45 @@
     if(i<=24) return [9, 9-(i-16)];    // 16..24 -> col 9..1
     return [9-(i-24), 1];              // 25..31 -> rows 8..2
   }
+  function sideOf(i){
+    if(i===0||i===8||i===16||i===24) return "corner";
+    if(i<8) return "top"; if(i<16) return "right"; if(i<24) return "bottom"; return "left";
+  }
+  // Petit immeuble dessiné (SVG) : maison verte (niv. 1-3) puis palais doré (niv. 4).
+  function houseSVG(){ return '<svg viewBox="0 0 22 20" class="emp-bld"><polygon points="11,2 21,10 1,10" fill="#2e9e6f"/><rect x="3.5" y="10" width="15" height="9" rx="1" fill="#fff8ec" stroke="#a9793f" stroke-width="1"/><rect x="9" y="13" width="4" height="6" fill="#8b5a24"/></svg>'; }
+  function palaceSVG(){ return '<svg viewBox="0 0 30 22" class="emp-bld emp-pal"><polygon points="15,1 8,8 22,8" fill="#e0a824"/><polygon points="5,8 1,8 3,4" fill="#e0a824"/><polygon points="25,8 29,8 27,4" fill="#e0a824"/><rect x="2" y="8" width="26" height="12" rx="1.5" fill="#f4c657" stroke="#c99a2e"/><rect x="13" y="13" width="4" height="7" fill="#8b5a24"/><rect x="6" y="11" width="3" height="3" fill="#fff8ec"/><rect x="21" y="11" width="3" height="3" fill="#fff8ec"/></svg>'; }
+  function buildingsHTML(level){ if(level<=0) return ""; if(level>=4) return palaceSVG(); var s=""; for(var i=0;i<Math.min(level,3);i++) s+=houseSVG(); return s; }
+  // Décor illustré du centre : ciel, soleil, collines de la Vallée Sauvage + le portail du zoo à l'horizon.
+  var SCENE_SVG='<svg class="emp-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
+    +'<defs><linearGradient id="empSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c3e8ff"/><stop offset="1" stop-color="#eaf7ff"/></linearGradient></defs>'
+    +'<rect width="100" height="100" fill="url(#empSky)"/>'
+    +'<circle cx="82" cy="16" r="8" fill="#ffe08a"/><circle cx="82" cy="16" r="12" fill="#ffe08a" opacity=".3"/>'
+    +'<ellipse cx="22" cy="20" rx="11" ry="5" fill="#ffffff" opacity=".85"/><ellipse cx="30" cy="18" rx="8" ry="5" fill="#ffffff" opacity=".85"/>'
+    +'<path d="M0,66 Q26,54 50,64 T100,60 L100,100 L0,100 Z" fill="#d7ecac"/>'
+    // acacias de la savane (silhouettes discrètes sur la colline)
+    +'<g opacity=".65" fill="#6a9a48"><g><rect x="17.4" y="58" width="1.1" height="6" fill="#8a6a3a"/><ellipse cx="18" cy="57.4" rx="5" ry="1.7"/></g>'
+    +'<g><rect x="77" y="60" width="1" height="5" fill="#8a6a3a"/><ellipse cx="77.5" cy="59.6" rx="4" ry="1.4"/></g></g>'
+    +'<path d="M0,80 Q30,68 60,78 T100,76 L100,100 L0,100 Z" fill="#a9d47a"/>'
+    +'</svg>';
+
   function mount(){
     var root=$("empireScreen"); root.innerHTML="";
     var scroll=el("div","emp-scroll");
     var boardWrap=el("div","emp-board"); boardWrap.id="empBoard";
-    // cases
     E.board.forEach(function(c,i){
-      var gp=gridPos(i);
-      var cellEl=el("div","emp-cell"); cellEl.id="empCell"+i;
+      var gp=gridPos(i), side=sideOf(i);
+      var cellEl=el("div","emp-cell "+side+(isProp(c)?" isprop":"")+(c.type==="prop"?" q"+c.q:""));
+      cellEl.id="empCell"+i;
       cellEl.style.gridRow=gp[0]; cellEl.style.gridColumn=gp[1];
-      if(isProp(c)&&c.type==="prop") cellEl.style.setProperty("--qcol",QUARTIERS[c.q].col);
+      if(c.type==="prop") cellEl.style.setProperty("--qcol",QUARTIERS[c.q].col);
       cellEl.appendChild(renderCellContent(c,i));
       cellEl.onclick=function(){ showPropInfo(i); };
       boardWrap.appendChild(cellEl);
     });
-    // centre : HUD + dés + actions
     var center=el("div","emp-center"); center.style.gridRow="2 / 9"; center.style.gridColumn="2 / 9"; center.id="empCenter";
     boardWrap.appendChild(center);
     scroll.appendChild(boardWrap);
     root.appendChild(scroll);
-    // panneau d'actions (bas)
     var panel=el("div","emp-panel"); panel.id="empPanel";
     root.appendChild(panel);
     renderCenter(); renderTokens(); renderPanel();
@@ -181,12 +200,16 @@
   function renderCellContent(c,i){
     var w=el("div","emp-cc");
     if(c.type==="prop"){
-      w.appendChild(el("div","emp-band"));
+      var band=el("div","emp-band"); var blds=el("div","emp-blds"); blds.innerHTML=buildingsHTML(c.level);
+      band.appendChild(blds); w.appendChild(band);
       w.appendChild(el("div","emp-nm",c.name));
       w.appendChild(el("div","emp-pr","₵"+c.price));
+    } else if(["depart","fourriere","repos","gardien"].indexOf(c.type)>=0){
+      w.classList.add("emp-cornerc");
+      w.appendChild(el("div","emp-cico",c.emoji||"•"));
+      w.appendChild(el("div","emp-cnm",c.name));
     } else {
-      var e=el("div","emp-ico", c.emoji|| (c.type==="transport"?"🚌":c.type==="service"?"⚙️":"•"));
-      w.appendChild(e);
+      w.appendChild(el("div","emp-ico", c.emoji|| (c.type==="transport"?"🚌":c.type==="service"?"⚙️":"•")));
       w.appendChild(el("div","emp-nm",c.name));
       if(c.price) w.appendChild(el("div","emp-pr","₵"+c.price));
     }
@@ -194,42 +217,45 @@
   }
   function tokenColor(pi){ return ["#ffd94a","#7ad0ff","#ff9bb0","#9be59b"][pi]||"#fff"; }
   function renderTokens(){
-    // efface anciens
     Array.prototype.forEach.call(document.querySelectorAll(".emp-token"),function(t){ t.remove(); });
-    E.players.forEach(function(p,pi){ if(p.bankrupt) return;
-      var host=$("empCell"+p.pos); if(!host) return;
-      var t=el("div","emp-token", EB.EMOJI[p.animalId]||"🦁");
-      t.style.borderColor=tokenColor(pi);
-      if(pi===0) t.classList.add("me");
-      host.appendChild(t);
-      // liseré propriétaire
+    // regroupe les pions par case pour les décaler s'ils se superposent
+    var byCell={};
+    E.players.forEach(function(p,pi){ if(p.bankrupt) return; (byCell[p.pos]=byCell[p.pos]||[]).push(pi); });
+    Object.keys(byCell).forEach(function(pos){
+      var host=$("empCell"+pos); if(!host) return;
+      byCell[pos].forEach(function(pi,k){
+        var t=el("div","emp-token"+(pi===0?" me":""), EB.EMOJI[E.players[pi].animalId]||"🦁");
+        t.style.borderColor=tokenColor(pi);
+        t.style.left=(2+k*9)+"px";
+        host.appendChild(t);
+      });
     });
-    // couleurs propriétaires
     E.board.forEach(function(c,i){ var host=$("empCell"+i); if(!host||!isProp(c)) return;
       host.classList.toggle("owned", c.owner>=0);
-      host.style.boxShadow = c.owner>=0 ? ("inset 0 0 0 3px "+tokenColor(c.owner)) : "";
-      var b=host.querySelector(".emp-lvl"); if(b) b.remove();
-      if(c.type==="prop"&&c.level>0){ var lv=el("div","emp-lvl","★".repeat(c.level)); host.querySelector(".emp-cc").appendChild(lv); }
-      if(c.mortgaged){ host.classList.add("mortg"); } else host.classList.remove("mortg");
+      host.style.setProperty("--own", c.owner>=0?tokenColor(c.owner):"transparent");
+      host.classList.toggle("mortg", !!c.mortgaged);
+      if(c.type==="prop"){ var blds=host.querySelector(".emp-blds"); if(blds) blds.innerHTML=buildingsHTML(c.level); }
     });
   }
   function renderCenter(){
-    var c=$("empCenter"); if(!c) return; c.innerHTML="";
-    c.appendChild(el("div","emp-title","👑 L'Empire des Évadés"));
+    var c=$("empCenter"); if(!c) return; c.innerHTML=SCENE_SVG;
+    var cover=el("div","emp-cover");
+    cover.appendChild(el("div","emp-title","👑 L'Empire des Évadés"));
     var hud=el("div","emp-hud");
     E.players.forEach(function(p,pi){
       var row=el("div","emp-p"+(pi===0?" me":"")+(p.bankrupt?" ko":""));
-      row.style.borderColor=tokenColor(pi);
+      row.style.setProperty("--pcol",tokenColor(pi));
       var em=el("span","emp-pe",EB.EMOJI[p.animalId]);
       var nm=el("span","emp-pn",EB.animalById(p.animalId).name+(p.jail>0?" 🔒":""));
-      var cash=el("span","emp-pc", p.bankrupt?"FAILLITE":("₵"+p.cash));
+      var cash=el("span","emp-pc", p.bankrupt?"✖ ruiné":("₵"+p.cash));
       row.appendChild(em); row.appendChild(nm); row.appendChild(cash);
       hud.appendChild(row);
     });
-    c.appendChild(hud);
+    cover.appendChild(hud);
     var dice=el("div","emp-dice"); dice.id="empDice"; dice.innerHTML="<span id='empD1'>🎲</span><span id='empD2'>🎲</span>";
-    c.appendChild(dice);
-    var msg=el("div","emp-msg"); msg.id="empMsg"; c.appendChild(msg);
+    cover.appendChild(dice);
+    var msg=el("div","emp-msg"); msg.id="empMsg"; cover.appendChild(msg);
+    c.appendChild(cover);
   }
   function say(t){ var m=$("empMsg"); if(m) m.textContent=t; }
   function renderPanel(){
@@ -649,6 +675,7 @@
     init:function(bridge){ EB=bridge; },
     start:function(setup){ newGame(setup); mount(); attachManage(); saveState(); },
     resume:function(){ var s=EB.store.empireGame; if(!s) return false; deserialize(s); mount(); attachManage(); return true; },
-    hasSave:function(){ return !!EB.store.empireGame; }
+    hasSave:function(){ return !!EB.store.empireGame; },
+    _dbg:{ state:function(){ return E; }, refresh:function(){ renderTokens(); renderCenter(); } }
   };
 })();
