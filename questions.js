@@ -1532,22 +1532,88 @@
     {ph:"Faire contre mauvaise fortune bon ___ (accepter l'adversité).",good:"cœur",bad:["gré","sort","vent"],note:"« Faire contre mauvaise fortune bon cœur » = accepter l'adversité de bonne grâce.",d:6}
   ];
   var IDIOM_FRAMES=["{PH}","Complète l'expression imagée : {PH}","Expression française — {PH}","Trouve le mot qui manque : {PH}"];
-  var REGISTRE = [ // registres de langue (familier / courant / soutenu)
-    {d:5,ph:"En registre soutenu, « manger » se dit ___.",good:"se restaurer",bad:["bouffer","grailler","boulotter"],note:"« se restaurer » (soutenu) vs « bouffer » (familier)."},
-    {d:5,ph:"En registre soutenu, « avoir peur » se dit ___.",good:"être effrayé",bad:["flipper","avoir les jetons","avoir la trouille"],note:"« être effrayé » (soutenu) vs « flipper » (familier)."},
-    {d:4,ph:"En registre familier, « une voiture » se dit ___.",good:"une bagnole",bad:["un véhicule","une automobile","une berline"],note:"« bagnole » = familier ; « véhicule / automobile » = courant ou soutenu."},
-    {d:6,ph:"En registre soutenu, « travailler » se dit ___.",good:"œuvrer",bad:["bosser","trimer","turbiner"],note:"« œuvrer » (soutenu) vs « bosser » (familier)."},
-    {d:5,ph:"En registre soutenu, « se dépêcher » se dit ___.",good:"se hâter",bad:["se grouiller","se magner","se bouger"],note:"« se hâter » (soutenu) vs « se grouiller » (familier)."},
-    {d:4,ph:"En registre familier, « de l'argent » se dit ___.",good:"du fric",bad:["des fonds","des espèces","des capitaux"],note:"« fric » = familier ; les autres relèvent du courant ou du soutenu."},
-    {d:6,ph:"En registre soutenu, « content » se dit ___.",good:"ravi",bad:["aux anges","hyper content","trop bien"],note:"« ravi » (soutenu) ; « aux anges » (courant/familier)."},
-    {d:5,ph:"En registre soutenu, « une maison » se dit ___.",good:"une demeure",bad:["une baraque","une piaule","une cabane"],note:"« demeure » (soutenu) vs « baraque » (familier)."},
-    {d:5,ph:"En registre familier, « la tête » se dit ___.",good:"la caboche",bad:["le crâne","le visage","le front"],note:"« caboche » = familier."},
-    {d:6,ph:"En registre soutenu, « comprendre » se dit ___.",good:"saisir",bad:["piger","capter","entraver"],note:"« saisir » (soutenu) ; « piger » (familier)."},
-    {d:5,ph:"En registre soutenu, « fatigué » se dit ___.",good:"harassé",bad:["crevé","claqué","lessivé"],note:"« harassé » (soutenu) ; « crevé » (familier)."},
-    {d:4,ph:"En registre familier, « un enfant » se dit ___.",good:"un gosse",bad:["un élève","un adolescent","un nourrisson"],note:"« gosse » = familier."},
-    {d:6,ph:"En registre soutenu, « parler » se dit ___.",good:"s'exprimer",bad:["jacter","causer","baratiner"],note:"« s'exprimer » (soutenu) ; « jacter » (familier)."},
-    {d:5,ph:"En registre soutenu, « beaucoup » se dit ___.",good:"considérablement",bad:["vachement","carrément","hyper"],note:"« considérablement » (soutenu) ; « vachement » (familier)."}
+  /* --- Registres de langue : générateur PARTITIONNÉ (familier/courant/soutenu) --- */
+  var REG_ITEMS = [
+    {ph:"En registre familier, « une voiture » se dit ___.",good:"une bagnole",bad:["un véhicule","une automobile","une berline"],note:"« bagnole » = familier ; « véhicule / automobile » = courant ou soutenu.",d:1},
+    {ph:"En registre familier, « de l'argent » se dit ___.",good:"du fric",bad:["des fonds","des espèces","des capitaux"],note:"« fric » = familier ; les autres relèvent du courant ou du soutenu.",d:1},
+    {ph:"En registre familier, « un enfant » se dit ___.",good:"un gosse",bad:["un élève","un adolescent","un nourrisson"],note:"« gosse » = familier ; « enfant / adolescent » = courant.",d:1},
+    {ph:"En registre familier, « la tête » se dit ___.",good:"la caboche",bad:["le crâne","le visage","le front"],note:"« caboche » = familier ; les autres sont courants.",d:1},
+    {ph:"En registre familier, « manger » se dit ___.",good:"bouffer",bad:["dîner","déjeuner","souper"],note:"« bouffer » = familier ; « dîner / déjeuner » = courant.",d:1},
+    {ph:"En registre familier, « dormir » se dit ___.",good:"pioncer",bad:["sommeiller","reposer","somnoler"],note:"« pioncer » = familier ; les autres sont courants ou soutenus.",d:1},
+    {ph:"En registre familier, « une maison » se dit ___.",good:"une baraque",bad:["un logis","une villa","un pavillon"],note:"« baraque » = familier ; « logis » = soutenu.",d:1},
+    {ph:"En registre familier, « un travail » se dit ___.",good:"un boulot",bad:["un emploi","un métier","une fonction"],note:"« boulot » = familier ; « emploi / métier » = courant.",d:1},
+    {ph:"En registre familier, « fatigué » se dit ___.",good:"crevé",bad:["fatigué","las","épuisé"],note:"« crevé » = familier ; « las » = soutenu.",d:1},
+    {ph:"En registre familier, « avoir peur » se dit ___.",good:"avoir la trouille",bad:["être craintif","être effrayé","redouter"],note:"« avoir la trouille » = familier ; « être effrayé » = courant.",d:1},
+    {ph:"En registre familier, « s'en aller » se dit ___.",good:"se tirer",bad:["partir","s'éloigner","se retirer"],note:"« se tirer » = familier ; « partir » = courant.",d:1},
+    {ph:"En registre familier, « rire » se dit ___.",good:"se marrer",bad:["s'amuser","sourire","plaisanter"],note:"« se marrer » = familier ; « s'amuser » = courant.",d:1},
+    {ph:"En registre familier, « un copain » se dit ___.",good:"un pote",bad:["un ami","un camarade","un compagnon"],note:"« pote » = familier ; « ami / camarade » = courant.",d:1},
+    {ph:"En registre soutenu, « manger » se dit ___.",good:"se restaurer",bad:["bouffer","grailler","boulotter"],note:"« se restaurer » = soutenu ; « bouffer » = familier.",d:2},
+    {ph:"En registre soutenu, « une maison » se dit ___.",good:"une demeure",bad:["une baraque","une piaule","une cabane"],note:"« demeure » = soutenu ; « baraque » = familier.",d:2},
+    {ph:"En registre familier, « de la nourriture » se dit ___.",good:"de la bouffe",bad:["des mets","des aliments","des victuailles"],note:"« bouffe » = familier ; « mets » = soutenu.",d:2},
+    {ph:"En registre familier, « voler (dérober) » se dit ___.",good:"piquer",bad:["dérober","subtiliser","dévaliser"],note:"« piquer » = familier ; « dérober » = courant/soutenu.",d:2},
+    {ph:"En registre familier, « comprendre » se dit ___.",good:"piger",bad:["saisir","assimiler","concevoir"],note:"« piger » = familier ; « saisir » = soutenu.",d:2},
+    {ph:"En registre familier, « un policier » se dit ___.",good:"un flic",bad:["un agent","un gendarme","un gardien"],note:"« flic » = familier ; « agent » = courant.",d:2},
+    {ph:"En registre familier, « un vêtement » se dit ___.",good:"une fringue",bad:["un habit","une tenue","un costume"],note:"« fringue » = familier ; « habit / tenue » = courant.",d:2},
+    {ph:"En registre familier, « la télévision » se dit ___.",good:"la télé",bad:["le poste","l'écran","le téléviseur"],note:"« télé » = familier ; « téléviseur » = courant.",d:2},
+    {ph:"En registre familier, « un problème » se dit ___.",good:"un pépin",bad:["un souci","un ennui","une difficulté"],note:"« pépin » = familier ; « souci / difficulté » = courant.",d:2},
+    {ph:"En registre familier, « de la chance » se dit ___.",good:"du bol",bad:["de la fortune","du hasard","de la réussite"],note:"« bol » = familier ; « fortune / réussite » = courant.",d:2},
+    {ph:"En registre soutenu, « très beau » se dit ___.",good:"splendide",bad:["chouette","canon","top"],note:"« splendide » = soutenu ; « chouette / top » = familier.",d:2},
+    {ph:"En registre familier, « être content » se dit ___.",good:"être aux anges",bad:["être satisfait","être comblé","être enchanté"],note:"« aux anges » = familier ; « satisfait / comblé » = courant/soutenu.",d:2},
+    {ph:"En registre soutenu, « content » se dit ___.",good:"ravi",bad:["aux anges","hyper content","trop content"],note:"« ravi » = soutenu ; « aux anges » = familier.",d:2},
+    {ph:"En registre soutenu, « se dépêcher » se dit ___.",good:"se hâter",bad:["se grouiller","se magner","se bouger"],note:"« se hâter » = soutenu ; « se grouiller » = familier.",d:3},
+    {ph:"En registre soutenu, « avoir peur » se dit ___.",good:"être effrayé",bad:["flipper","avoir les jetons","avoir la trouille"],note:"« être effrayé » = soutenu ; « flipper » = familier.",d:3},
+    {ph:"En registre soutenu, « fatigué » se dit ___.",good:"harassé",bad:["crevé","claqué","lessivé"],note:"« harassé » = soutenu ; « crevé » = familier.",d:3},
+    {ph:"En registre soutenu, « très beau » se dit ___.",good:"admirable",bad:["chouette","génial","super"],note:"« admirable » = soutenu ; « chouette / génial » = familier.",d:3},
+    {ph:"En registre soutenu, « commencer » se dit ___.",good:"entamer",bad:["démarrer","attaquer","embrayer"],note:"« entamer » = soutenu ; « attaquer / embrayer » = familier.",d:3},
+    {ph:"En registre soutenu, « finir » se dit ___.",good:"achever",bad:["terminer","boucler","finaliser"],note:"« achever » = soutenu ; « boucler » = familier.",d:3},
+    {ph:"En registre soutenu, « demander » se dit ___.",good:"solliciter",bad:["réclamer","quémander","exiger"],note:"« solliciter » = soutenu ; nuance polie de la demande.",d:3},
+    {ph:"En registre soutenu, « donner » se dit ___.",good:"offrir",bad:["filer","refiler","balancer"],note:"« offrir » = soutenu ; « filer / refiler » = familier.",d:3},
+    {ph:"En registre soutenu, « regarder » se dit ___.",good:"contempler",bad:["mater","reluquer","zieuter"],note:"« contempler » = soutenu ; « mater / zieuter » = familier.",d:3},
+    {ph:"En registre soutenu, « parler » se dit ___.",good:"s'exprimer",bad:["jacter","causer","baratiner"],note:"« s'exprimer » = soutenu ; « jacter » = familier.",d:3},
+    {ph:"En registre soutenu, « comprendre » se dit ___.",good:"saisir",bad:["piger","capter","entraver"],note:"« saisir » = soutenu ; « piger / capter » = familier.",d:3},
+    {ph:"En registre soutenu, « travailler » se dit ___.",good:"œuvrer",bad:["bosser","trimer","turbiner"],note:"« œuvrer » = soutenu ; « bosser » = familier.",d:3},
+    {ph:"En registre soutenu, « beaucoup » se dit ___.",good:"considérablement",bad:["vachement","carrément","hyper"],note:"« considérablement » = soutenu ; « vachement » = familier.",d:3},
+    {ph:"En registre familier, « de l'argent » (autre mot) se dit ___.",good:"du pognon",bad:["des deniers","des liquidités","un pécule"],note:"« pognon » = familier ; « deniers / pécule » = soutenu.",d:4},
+    {ph:"En registre soutenu, « une habitation » se dit ___.",good:"une résidence",bad:["une piaule","un squat","une turne"],note:"« résidence » = soutenu ; « piaule / turne » = familier.",d:4},
+    {ph:"En registre familier, « le visage » se dit ___.",good:"la tronche",bad:["le faciès","la physionomie","les traits"],note:"« tronche » = familier ; « physionomie » = soutenu.",d:4},
+    {ph:"En registre soutenu, « se moquer » se dit ___.",good:"railler",bad:["charrier","chambrer","vanner"],note:"« railler » = soutenu ; « charrier / vanner » = familier.",d:4},
+    {ph:"En registre soutenu, « mentir » se dit ___.",good:"affabuler",bad:["bobarder","baratiner","raconter des salades"],note:"« affabuler » = soutenu ; « baratiner » = familier.",d:4},
+    {ph:"En registre soutenu, « voler (dérober) » se dit ___.",good:"dérober",bad:["piquer","faucher","chourer"],note:"« dérober » = soutenu ; « piquer / faucher » = familier.",d:4},
+    {ph:"En registre familier, « s'enfuir » se dit ___.",good:"se barrer",bad:["fuir","s'éloigner","se retirer"],note:"« se barrer » = familier ; « fuir » = courant.",d:4},
+    {ph:"En registre soutenu, « manger avec plaisir » se dit ___.",good:"savourer",bad:["bâfrer","s'empiffrer","se goinfrer"],note:"« savourer » = soutenu ; « bâfrer / se goinfrer » = familier.",d:4},
+    {ph:"En registre soutenu, « un problème » se dit ___.",good:"une difficulté",bad:["un pépin","un os","un hic"],note:"« difficulté » = soutenu ; « pépin / hic » = familier.",d:4},
+    {ph:"En registre familier, « être ivre » se dit ___.",good:"être bourré",bad:["être éméché","être enivré","être pris de boisson"],note:"« bourré » = familier ; « pris de boisson » = soutenu.",d:4},
+    {ph:"En registre soutenu, « se reposer » se dit ___.",good:"se délasser",bad:["glander","buller","lézarder"],note:"« se délasser » = soutenu ; « glander / buller » = familier.",d:4},
+    {ph:"En registre soutenu, « un livre » se dit ___.",good:"un ouvrage",bad:["un bouquin","un pavé","un poche"],note:"« ouvrage » = soutenu ; « bouquin / pavé » = familier.",d:4},
+    {ph:"En registre familier, « rire (fort) » se dit ___.",good:"se poiler",bad:["s'esclaffer","se gausser","pouffer"],note:"« se poiler » = familier ; « s'esclaffer » = soutenu.",d:4},
+    {ph:"En registre soutenu, « la colère » se dit ___.",good:"le courroux",bad:["la rogne","les nerfs","la grogne"],note:"« courroux » = soutenu ; « rogne » = familier.",d:5},
+    {ph:"En registre soutenu, « la peur » se dit ___.",good:"l'effroi",bad:["la frousse","la trouille","les jetons"],note:"« effroi » = soutenu ; « frousse / trouille » = familier.",d:5},
+    {ph:"En registre soutenu, « la tristesse » se dit ___.",good:"l'affliction",bad:["le cafard","le blues","le bourdon"],note:"« affliction » = soutenu ; « cafard / bourdon » = familier.",d:5},
+    {ph:"En registre soutenu, « un ami proche » se dit ___.",good:"un intime",bad:["un pote","un copain","un poteau"],note:"« intime » = soutenu ; « pote / poteau » = familier.",d:5},
+    {ph:"En registre soutenu, « mourir » se dit ___.",good:"trépasser",bad:["clamser","calancher","canner"],note:"« trépasser » = soutenu ; « clamser » = familier.",d:5},
+    {ph:"En registre soutenu, « un logement » se dit ___.",good:"un logis",bad:["une piaule","une turne","un gourbi"],note:"« logis » = soutenu ; « piaule / turne » = familier.",d:5},
+    {ph:"En registre soutenu, « se réjouir » se dit ___.",good:"jubiler",bad:["kiffer","triper","planer"],note:"« jubiler » = soutenu ; « kiffer » = familier.",d:5},
+    {ph:"En registre soutenu, « insulter » se dit ___.",good:"invectiver",bad:["engueuler","enguirlander","incendier"],note:"« invectiver » = soutenu ; « engueuler » = familier.",d:5},
+    {ph:"En registre soutenu, « un discours » se dit ___.",good:"une allocution",bad:["un laïus","un topo","un speech"],note:"« allocution » = soutenu ; « laïus / topo » = familier.",d:5},
+    {ph:"En registre soutenu, « de la nourriture raffinée » se dit ___.",good:"des mets",bad:["de la bouffe","de la boustifaille","du casse-croûte"],note:"« mets » = soutenu ; « bouffe » = familier.",d:5},
+    {ph:"En registre soutenu, « s'ennuyer (attendre) » se dit ___.",good:"languir",bad:["se raser","poireauter","moisir"],note:"« languir » = soutenu ; « poireauter » = familier.",d:5},
+    {ph:"En registre soutenu, « l'expression du visage » se dit ___.",good:"la physionomie",bad:["la trombine","la bouille","la binette"],note:"« physionomie » = soutenu ; « trombine / binette » = familier.",d:5},
+    {ph:"En registre soutenu, « riche » se dit ___.",good:"fortuné",bad:["plein aux as","friqué","blindé"],note:"« fortuné » = soutenu ; « friqué / blindé » = familier.",d:5},
+    {ph:"En registre soutenu, « la faim » se dit ___.",good:"l'inanition",bad:["la fringale","la dalle","le petit creux"],note:"« inanition » = soutenu ; « fringale / dalle » = familier.",d:6},
+    {ph:"En registre soutenu, « flatter » se dit ___.",good:"aduler",bad:["cirer les pompes","lécher les bottes","passer de la pommade"],note:"« aduler » = soutenu ; « cirer les pompes » = familier.",d:6},
+    {ph:"En registre soutenu, « bavard » se dit ___.",good:"prolixe",bad:["pipelette","moulin à paroles","bavasseur"],note:"« prolixe » = soutenu ; « pipelette » = familier.",d:6},
+    {ph:"En registre soutenu, « paresseux » se dit ___.",good:"indolent",bad:["flemmard","cossard","tire-au-flanc"],note:"« indolent » = soutenu ; « flemmard » = familier.",d:6},
+    {ph:"En registre soutenu, « se plaindre » se dit ___.",good:"se lamenter",bad:["râler","rouspéter","ronchonner"],note:"« se lamenter » = soutenu ; « râler / rouspéter » = familier.",d:6},
+    {ph:"En registre soutenu, « obéir » se dit ___.",good:"obtempérer",bad:["marcher droit","filer doux","s'écraser"],note:"« obtempérer » = soutenu ; « filer doux » = familier.",d:6},
+    {ph:"En registre soutenu, « renvoyer (congédier) » se dit ___.",good:"congédier",bad:["virer","sacquer","lourder"],note:"« congédier » = soutenu ; « virer / lourder » = familier.",d:6},
+    {ph:"En registre soutenu, « un miséreux » se dit ___.",good:"un indigent",bad:["un clodo","un traîne-misère","un va-nu-pieds"],note:"« indigent » = soutenu ; « clodo » = familier.",d:6},
+    {ph:"En registre soutenu, « colérique » se dit ___.",good:"irascible",bad:["soupe au lait","à cran","chatouilleux"],note:"« irascible » = soutenu ; « soupe au lait » = familier.",d:6},
+    {ph:"En registre soutenu, « avare » se dit ___.",good:"pingre",bad:["radin","rapiat","près de ses sous"],note:"« pingre » = soutenu ; « radin » = familier.",d:6},
+    {ph:"En registre soutenu, « ivre » se dit ___.",good:"aviné",bad:["bourré","beurré","rond"],note:"« aviné » = soutenu ; « bourré / rond » = familier.",d:6},
+    {ph:"En registre soutenu, « un mensonge » se dit ___.",good:"une affabulation",bad:["un bobard","un baratin","une salade"],note:"« affabulation » = soutenu ; « bobard / salade » = familier.",d:6},
+    {ph:"En registre soutenu, « abondant » se dit ___.",good:"pléthorique",bad:["à gogo","à la pelle","en pagaille"],note:"« pléthorique » = soutenu ; « à gogo / à la pelle » = familier.",d:6}
   ];
+  var REG_FRAMES=["{PH}","Question de registre — {PH}","Niveau de langue : {PH}","Trouve le bon niveau de langue — {PH}"];
   var PARONYM = [ // paronymes (mots proches souvent confondus)
     {d:5,ph:"Un danger ___ nous menace (tout proche).",good:"imminent",bad:["éminent","immanent","imminant"],note:"« imminent » = tout proche ; « éminent » = remarquable."},
     {d:5,ph:"C'est un ___ professeur (remarquable).",good:"éminent",bad:["imminent","immanent","éminant"],note:"« éminent » = remarquable ; « imminent » = tout proche."},
@@ -1746,13 +1812,19 @@
       note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
   }
 
+  function genRegistres(diff,cat,sub){
+    var it=pick(bandFilter(REG_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(REG_FRAMES).replace("{PH}",it.ph), hint:"Registre de langue",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genVoc(sub, diff, cat){
     if(sub==="Synonymes") return genSynonymes(diff,cat,sub);
     if(sub==="Contraires") return genContraires(diff,cat,sub);
     if(sub==="Homonymes") return genHomonymes(diff,cat,sub);
     if(sub==="Familles de mots") return genFamilles(diff,cat,sub);
     if(sub==="Expressions idiomatiques") return genIdiomes(diff,cat,sub);
-    if(sub==="Registres de langue") return fromGood(pickByDiff(REGISTRE,diff),"Registre de langue",cat,sub);
+    if(sub==="Registres de langue") return genRegistres(diff,cat,sub);
     if(sub==="Paronymes") return fromGood(pickByDiff(PARONYM,diff),"Paronymes (mots proches à ne pas confondre)",cat,sub);
     if(sub==="Mots du quotidien") return genQuotidien(diff,cat,sub);
     return genQuotidien(diff,cat,sub);
