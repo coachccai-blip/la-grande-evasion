@@ -2196,24 +2196,89 @@
   ];
   var MBP_FRAMES=["{PH}","Orthographe — {PH}","Écris correctement le mot : {PH}","Attention à la règle m/n : {PH}"];
   /* ---- Orthographe de niveau avancé (vers le C1) ---- */
-  var HOMOG = [ // homophones GRAMMATICAUX avancés
-    {d:4,ph:"Je me demande ___ heure il est.",good:"quelle",bad:["qu'elle","quel","quels"],note:"« quelle » = déterminant interrogatif (féminin) ; « qu'elle » = que + elle."},
-    {d:5,ph:"Je crois ___ viendra demain.",good:"qu'elle",bad:["quelle","quel","quels"],note:"« qu'elle » = que + elle ; « quelle » = déterminant."},
-    {d:4,ph:"___ tu seras grand, tu comprendras.",good:"Quand",bad:["Quant","Qu'en","Camp"],note:"« quand » = lorsque ; « quant à » = en ce qui concerne ; « qu'en » = que + en."},
-    {d:5,ph:"___ à moi, je préfère rester.",good:"Quant",bad:["Quand","Qu'en","Camp"],note:"« quant à » = en ce qui concerne."},
-    {d:6,ph:"___ penses-tu ? (= que + en)",good:"Qu'en",bad:["Quand","Quant","Camp"],note:"« qu'en » = que + en (Qu'en penses-tu ?)."},
-    {d:4,ph:"Les enfants rangent ___ jouets.",good:"leurs",bad:["leur","leures","l'heure"],note:"« leurs » (déterminant pluriel : plusieurs jouets) ; « leur » (singulier ou pronom)."},
-    {d:5,ph:"Je ___ ai donné un cadeau.",good:"leur",bad:["leurs","l'heure","leures"],note:"« leur » pronom personnel (= à eux) est INVARIABLE."},
-    {d:4,ph:"Il ___ a pris sans permission.",good:"l'a",bad:["la","là","las"],note:"« l'a » = le/la + a (avoir) ; « la » = déterminant ; « là » = lieu."},
-    {d:4,ph:"Pose le livre ___, sur l'étagère.",good:"là",bad:["la","l'a","las"],note:"« là » indique le lieu ; « la » = déterminant."},
-    {d:5,ph:"Elle ___ venir si elle veut.",good:"peut",bad:["peux","peu","peus"],note:"« peut » (il/elle) ; « peux » (je/tu) ; « peu » = petite quantité."},
-    {d:4,ph:"Il mange très ___.",good:"peu",bad:["peut","peux","peus"],note:"« peu » = petite quantité ; « peut/peux » = verbe pouvoir."},
-    {d:5,ph:"Le train est ___ à partir.",good:"prêt",bad:["près","prés","prêts"],note:"« prêt » = préparé ; « près » = à côté."},
-    {d:4,ph:"Assieds-toi ___ de moi.",good:"près",bad:["prêt","prés","prêts"],note:"« près de » = à côté ; « prêt » = préparé."},
-    {d:5,ph:"___ ne me dérange pas du tout.",good:"Ça",bad:["Sa","Çà","Sà"],note:"« ça » = cela ; « sa » = déterminant possessif."},
-    {d:4,ph:"Il prend ___ veste et s'en va.",good:"sa",bad:["ça","çà","sà"],note:"« sa » = possessif (sa veste) ; « ça » = cela."},
-    {d:6,ph:"Il est ___ malade qu'il reste couché.",good:"si",bad:["s'y","ci","scie"],note:"« si » = tellement ; « s'y » = se + y."}
+  /* --- Homophones grammaticaux : générateur PARTITIONNÉ (le choix dépend de la nature du mot) --- */
+  var HOMOG_ITEMS = [
+    {ph:"Les enfants rangent ___ jouets (à eux, plusieurs).",good:"leurs",bad:["leur","leures","l'heure"],note:"« leurs » = déterminant pluriel ; « leur » = singulier ou pronom.",d:1},
+    {ph:"Je ___ ai offert un joli cadeau (à eux).",good:"leur",bad:["leurs","l'heure","leures"],note:"« leur » pronom (= à eux) est INVARIABLE.",d:1},
+    {ph:"___ âge as-tu cette année ? (masculin)",good:"Quel",bad:["Quelle","Quels","Qu'elle"],note:"« quel » = déterminant interrogatif masculin.",d:1},
+    {ph:"___ heure est-il maintenant ? (féminin)",good:"Quelle",bad:["Quel","Quels","Qu'elle"],note:"« quelle » = déterminant interrogatif féminin.",d:1},
+    {ph:"Il mange vraiment très ___ (petite quantité).",good:"peu",bad:["peut","peux","peus"],note:"« peu » = petite quantité ; « peut/peux » = verbe pouvoir.",d:1},
+    {ph:"Elle ___ venir si elle le souhaite (il/elle).",good:"peut",bad:["peu","peux","peus"],note:"« peut » = pouvoir à la 3ᵉ personne.",d:1},
+    {ph:"Je ___ t'aider si tu veux (je).",good:"peux",bad:["peut","peu","peus"],note:"« peux » = pouvoir à la 1ʳᵉ/2ᵉ personne.",d:1},
+    {ph:"Assieds-toi ___ de moi (à côté).",good:"près",bad:["prêt","prés","prêts"],note:"« près de » = à côté ; « prêt » = préparé.",d:1},
+    {ph:"Le repas est ___ à être servi (préparé).",good:"prêt",bad:["près","prés","prêts"],note:"« prêt » = préparé ; « près » = à côté.",d:1},
+    {ph:"Il a mangé ___ le gâteau à lui seul (en entier).",good:"tout",bad:["tous","toux","toue"],note:"« tout » = en entier (singulier).",d:1},
+    {ph:"___ les élèves sont présents ce matin (l'ensemble).",good:"Tous",bad:["Tout","Toux","Toue"],note:"« tous » = l'ensemble (pluriel).",d:1},
+    {ph:"___ tu seras grand, tu comprendras (lorsque).",good:"Quand",bad:["Quant","Qu'en","Camp"],note:"« quand » = lorsque.",d:1},
+    {ph:"___ à moi, je préfère rester ici (en ce qui me concerne).",good:"Quant",bad:["Quand","Qu'en","Camp"],note:"« quant à » = en ce qui concerne.",d:1},
+    {ph:"Je crois ___ viendra demain (que + elle).",good:"qu'elle",bad:["quelle","quel","quels"],note:"« qu'elle » = que + elle ; « quelle » = déterminant.",d:2},
+    {ph:"___ sont tes films préférés ? (masculin pluriel)",good:"Quels",bad:["Quelles","Quel","Qu'elles"],note:"« quels » = déterminant interrogatif masculin pluriel.",d:2},
+    {ph:"___ sont tes couleurs préférées ? (féminin pluriel)",good:"Quelles",bad:["Quels","Quelle","Qu'elles"],note:"« quelles » = déterminant interrogatif féminin pluriel.",d:2},
+    {ph:"Alors, ___ penses-tu, toi ? (que + en)",good:"qu'en",bad:["quand","quant","camp"],note:"« qu'en » = que + en.",d:2},
+    {ph:"Il ___ a pris sans permission (l' + a, avoir).",good:"l'a",bad:["la","là","las"],note:"« l'a » = le/la + a (avoir) ; « la » = déterminant.",d:2},
+    {ph:"Pose le livre ___, sur l'étagère (le lieu).",good:"là",bad:["la","l'a","las"],note:"« là » = le lieu ; « la » = déterminant.",d:2},
+    {ph:"Tu ___ vu partir ce matin (l' + as, tu).",good:"l'as",bad:["la","là","las"],note:"« l'as » = le/la + as (tu) ; « la » = déterminant.",d:2},
+    {ph:"___ ne me dérange pas du tout (cela).",good:"Ça",bad:["Sa","Çà","Sà"],note:"« ça » = cela ; « sa » = déterminant possessif.",d:2},
+    {ph:"Il enfile ___ veste et s'en va (la sienne).",good:"sa",bad:["ça","çà","sà"],note:"« sa » = possessif ; « ça » = cela.",d:2},
+    {ph:"Il est ___ fatigué qu'il dort debout (tellement).",good:"si",bad:["s'y","ci","scie"],note:"« si » = tellement ; « s'y » = se + y.",d:2},
+    {ph:"Il adore la mer et il ___ baigne souvent (se + y).",good:"s'y",bad:["si","ci","scie"],note:"« s'y » = se + y ; « si » = tellement/condition.",d:2},
+    {ph:"Range ___ livres-là sur l'étagère (ceux-là).",good:"ces",bad:["ses","c'est","s'est"],note:"« ces » = démonstratif (ceux-là) ; « ses » = possessif.",d:2},
+    {ph:"Il cherche ___ clés partout (les siennes).",good:"ses",bad:["ces","c'est","s'est"],note:"« ses » = possessif (les siens) ; « ces » = démonstratif.",d:2},
+    {ph:"___ une magnifique journée d'été (cela est).",good:"C'est",bad:["S'est","Ces","Ses"],note:"« c'est » = cela est ; « s'est » = se + est.",d:3},
+    {ph:"Le chat ___ endormi au soleil (se + est).",good:"s'est",bad:["c'est","ses","ces"],note:"« s'est » = se + est ; « c'est » = cela est.",d:3},
+    {ph:"Il sort ___ parapluie sous l'averse (privation).",good:"sans",bad:["s'en","cent","sang"],note:"« sans » = privation ; « s'en » = se + en.",d:3},
+    {ph:"Il ___ va sans dire au revoir (se + en).",good:"s'en",bad:["sans","cent","sang"],note:"« s'en » = se + en ; « sans » = privation.",d:3},
+    {ph:"___ est trop, j'arrête tout de suite ! (ce + en)",good:"C'en",bad:["S'en","Sans","Cent"],note:"« c'en » = ce + en (c'en est trop).",d:3},
+    {ph:"Il reste ___ temps avant le départ (un peu de).",good:"quelque",bad:["quel que","quelques","quelqu'un"],note:"« quelque » (déterminant, un seul mot) = un certain.",d:3},
+    {ph:"___ soit ton choix, je te soutiendrai (quel + que).",good:"Quel que",bad:["Quelque","Quelques","Quels que"],note:"« quel que » (deux mots) + verbe être : s'accorde avec le sujet.",d:3},
+    {ph:"Je prendrais ___ du thé que du café (de préférence).",good:"plutôt",bad:["plus tôt","plutot","plustôt"],note:"« plutôt » = de préférence ; « plus tôt » = avant.",d:3},
+    {ph:"Réveille-toi ___ demain matin (avant l'heure habituelle).",good:"plus tôt",bad:["plutôt","plustôt","plus tot"],note:"« plus tôt » = avant ; « plutôt » = de préférence.",d:3},
+    {ph:"Il sort se promener ___ il pleuve (bien que).",good:"quoique",bad:["quoi que","quoi-que","quoiqe"],note:"« quoique » (un mot) = bien que.",d:3},
+    {ph:"___ tu fasses, fais-le sérieusement (peu importe ce que).",good:"Quoi que",bad:["Quoique","Quoi-que","Quoiqe"],note:"« quoi que » (deux mots) = quelle que soit la chose que.",d:3},
+    {ph:"J'en voudrais ___, s'il en reste (plus, une quantité en plus).",good:"davantage",bad:["d'avantage","daventage","d'avantages"],note:"« davantage » (un mot) = plus.",d:3},
+    {ph:"Elle est ___ étonnée par la nouvelle (tout à fait).",good:"tout",bad:["toute","tous","touts"],note:"« tout » adverbe = tout à fait ; invariable devant un adjectif féminin commençant par une voyelle.",d:3},
+    {ph:"Elle est ___ contente de te revoir (entièrement).",good:"toute",bad:["tout","toutes","touts"],note:"« tout » adverbe s'accorde (toute) devant un adjectif féminin commençant par une consonne.",d:4},
+    {ph:"Il y avait ___ mille spectateurs dans le stade (environ).",good:"quelque",bad:["quelques","quel que","quelqu'un"],note:"« quelque » adverbe (= environ) devant un nombre est invariable.",d:4},
+    {ph:"Ces vieilles photos, je ___ trouve un charme fou (à elles).",good:"leur",bad:["leurs","l'heure","leures"],note:"« leur » pronom placé devant le verbe est toujours invariable.",d:4},
+    {ph:"Dis-moi ___ tu comptes arriver (à quel moment).",good:"quand",bad:["quant","qu'en","camp"],note:"« quand » interrogatif = à quel moment.",d:4},
+    {ph:"Ce garçon est ___ à tout pour gagner (disposé à).",good:"prêt",bad:["près","prés","prêts"],note:"« prêt à » = disposé à ; « près de » = sur le point de.",d:4},
+    {ph:"Il viendra ___ demain, s'il a le temps (probablement).",good:"peut-être",bad:["peut être","peut-etre","peut-êtres"],note:"« peut-être » (adverbe, avec trait d'union) = probablement.",d:4},
+    {ph:"Ce livre ___ très utile pour ton exposé (pouvoir + être).",good:"peut être",bad:["peut-être","peut-etre","peux être"],note:"« peut être » (deux mots) = verbe pouvoir suivi de être.",d:4},
+    {ph:"Il ___ a plus personne dans la salle (ne + y).",good:"n'y",bad:["ni","ny","n'i"],note:"« n'y » = ne + y ; « ni » = conjonction de négation.",d:4},
+    {ph:"Pas de dessert, ___ de bonbons ce soir ! (négation).",good:"ni",bad:["n'y","nie","nid"],note:"« ni » = conjonction de négation ; « n'y » = ne + y.",d:4},
+    {ph:"Je vais ___ au cinéma le week-end (parfois).",good:"quelquefois",bad:["quelques fois","quelque fois","quelquefoi"],note:"« quelquefois » (un mot) = parfois.",d:4},
+    {ph:"Les grandes vacances arrivent ___ (dans peu de temps).",good:"bientôt",bad:["bien tôt","biento","bientot"],note:"« bientôt » (un mot) = dans peu de temps.",d:4},
+    {ph:"Il est reparti ___ après le déjeuner (immédiatement après).",good:"aussitôt",bad:["aussi tôt","aussitot","ausitôt"],note:"« aussitôt » (un mot) = immédiatement.",d:4},
+    {ph:"Je ne pensais pas te croiser ___ (à une heure aussi matinale).",good:"aussi tôt",bad:["aussitôt","aussitot","ausi tôt"],note:"« aussi tôt » (deux mots) = à une heure aussi peu avancée.",d:4},
+    {ph:"Range tes affaires ___ de sortir jouer (avant que).",good:"avant",bad:["avent","avnt","avans"],note:"« avant » = le temps ; ne pas confondre avec « avent » (période de Noël).",d:4},
+    {ph:"___ soient les difficultés, il persévère (quels + que, masculin pluriel).",good:"Quels que",bad:["Quelque","Quelques","Quel que"],note:"« quels que » (deux mots) + être : s'accorde avec le sujet masculin pluriel.",d:5},
+    {ph:"___ soient tes raisons, respecte la règle (quelles + que, féminin pluriel).",good:"Quelles que",bad:["Quelque","Quelques","Quel que"],note:"« quelles que » (deux mots) + être : s'accorde au féminin pluriel.",d:5},
+    {ph:"Le danger est réel ; il faut ___ préparer sérieusement (se + y).",good:"s'y",bad:["si","ci","scie"],note:"« s'y » = se + y ; « si » = condition/tellement.",d:5},
+    {ph:"Je réussis ___ je travaille beaucoup (à cause du fait que).",good:"parce que",bad:["par ce que","parceque","parsque"],note:"« parce que » (cause) s'écrit en deux mots.",d:5},
+    {ph:"___ il aura terminé, il te préviendra (lorsque).",good:"Quand",bad:["Quant","Qu'en","Camp"],note:"« quand » = lorsque ; « quant à » = en ce qui concerne.",d:5},
+    {ph:"L'ascension est difficile, ___ impossible (et même).",good:"voire",bad:["voir","voires","voirent"],note:"« voire » = et même ; « voir » = le verbe.",d:5},
+    {ph:"Ce soir, je vais ___ un film au cinéma (regarder).",good:"voir",bad:["voire","voit","voix"],note:"« voir » = le verbe ; « voire » = et même.",d:5},
+    {ph:"Ne ___ fais pas, tout ira bien (te + en).",good:"t'en",bad:["tant","temps","tend"],note:"« t'en » = te + en ; « tant » = tellement.",d:5},
+    {ph:"Je t'apprécie ___, mon vieil ami (tellement).",good:"tant",bad:["temps","tend","t'en"],note:"« tant » = tellement ; « t'en » = te + en.",d:5},
+    {ph:"Tu ___ donné une excellente idée (m' + as, tu).",good:"m'as",bad:["ma","m'a","mas"],note:"« m'as » = m' + as (tu) ; « ma » = possessif ; « m'a » = m' + a (il).",d:5},
+    {ph:"Depuis, je ___ comprends plus rien du tout (ne + y).",good:"n'y",bad:["ni","ny","n'i"],note:"« n'y » = ne + y ; « ni » = conjonction de négation.",d:5},
+    {ph:"J'ai bien posé mes clés ___ (à un endroit indéterminé).",good:"quelque part",bad:["quelques parts","quelque parts","quel que part"],note:"« quelque part » (locution) = à un endroit ; « quelque » reste invariable ici.",d:5},
+    {ph:"Les élèves lèvent ___ main pour répondre (chacun la sienne).",good:"leur",bad:["leurs","l'heure","leures"],note:"« leur » déterminant reste au singulier : chacun n'a qu'une main.",d:5},
+    {ph:"Il persévère, ___ la tâche soit ardue (bien que).",good:"quoique",bad:["quoi que","quoi-que","quoiqe"],note:"« quoique » (un mot) = bien que.",d:6},
+    {ph:"___ l'on en dise, il n'en fait qu'à sa tête (peu importe ce que).",good:"Quoi que",bad:["Quoique","Quoi-que","Quoiqe"],note:"« quoi que » (deux mots) = quelle que soit la chose que.",d:6},
+    {ph:"___ soit le temps, la course aura bien lieu (quel + que).",good:"Quel que",bad:["Quelque","Quelques","Quels que"],note:"« quel que » (deux mots) + être : s'accorde avec le sujet.",d:6},
+    {ph:"Le document a été ___ signé par le maire (comme il se doit).",good:"dûment",bad:["dument","dûmment","dumment"],note:"« dûment » (adverbe) = selon les formes requises ; circonflexe sur le u.",d:6},
+    {ph:"Il apprécie les fruits, ___ les fraises (en particulier).",good:"notamment",bad:["notament","notemment","notaument"],note:"« notamment » = en particulier ; deux m.",d:6},
+    {ph:"Le témoin a menti ___, en connaissance de cause (volontairement).",good:"sciemment",bad:["sciament","sciemant","siemment"],note:"« sciemment » = en connaissance de cause (adjectif « scient » → -emment).",d:6},
+    {ph:"Hélas, ___ est fini de nos belles vacances (ce + en).",good:"C'en",bad:["S'en","Sans","Cent"],note:"« c'en » = ce + en (c'en est fini).",d:6},
+    {ph:"Il ne ___ souvient absolument plus (se + en).",good:"s'en",bad:["c'en","sans","cent"],note:"« s'en » = se + en ; « c'en » = ce + en.",d:6},
+    {ph:"___ à vos remarques, j'en tiendrai compte (en ce qui concerne).",good:"Quant",bad:["Quand","Qu'en","Camp"],note:"« quant à » = en ce qui concerne ; « quand » = lorsque.",d:6},
+    {ph:"Il ne sortira ___ cas d'urgence absolue (que + en).",good:"qu'en",bad:["quand","quant","camp"],note:"« qu'en » = que + en (ne… qu'en) ; « quand » = lorsque.",d:6},
+    {ph:"Mieux vaut arriver ___ que bien trop tard (avant l'heure).",good:"plus tôt",bad:["plutôt","plustôt","plus tot"],note:"« plus tôt » = avant ; « plutôt » = de préférence.",d:6},
+    {ph:"___ faire, autant le faire correctement (puisqu'il faut le faire).",good:"Tant qu'à",bad:["Quant à","Tant qu'a","Temps qu'à"],note:"« tant qu'à faire » = puisqu'il faut le faire ; ne pas confondre avec « quant à ».",d:6},
+    {ph:"Je n'y vois pas ___ à en tirer (de + avantage).",good:"d'avantage",bad:["davantage","d'avantages","daventage"],note:"« d'avantage » = de + avantage (un profit) ; « davantage » = plus.",d:6}
   ];
+  var HG_FRAMES=["{PH}","Homophone grammatical — {PH}","Quelle est la bonne graphie ? {PH}","Attention à la nature du mot — {PH}"];
   var ADVMENT = [ // formation des adverbes en -ment
     {d:3,ph:"lent → il avance ___.",good:"lentement",bad:["lentment","lenteument","lengtement"],note:"Adjectif au féminin (lente) + -ment."},
     {d:3,ph:"rapide → il court ___.",good:"rapidement",bad:["rapidment","rapidemant","rapiddement"],note:"Adjectif terminé par -e : on ajoute simplement -ment."},
@@ -2394,6 +2459,12 @@
       note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
   }
 
+  function genHomogram(diff,cat,sub){
+    var it=pick(bandFilter(HOMOG_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(HG_FRAMES).replace("{PH}",it.ph), hint:"Homophones grammaticaux",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genOrt(sub, diff, cat){
     var it, hint;
     if(sub==="Pluriels") return genPluriels(diff,cat,sub);
@@ -2402,9 +2473,9 @@
     if(sub==="m devant m, b, p") return genMbp(diff,cat,sub);
     if(sub==="Accents") return genAccents(diff,cat,sub);
     if(sub==="Homophones") return genHomophones(diff,cat,sub);
+    if(sub==="Homophones grammaticaux") return genHomogram(diff,cat,sub);
     if(sub==="é ou er"){ it=pickByDiff(ER_E,diff); hint="é (participe) ou er (infinitif) ?"; }
     else if(sub==="Pluriels"){ it=pickByDiff(PLUR,diff); hint="Écris le bon pluriel"; }
-    else if(sub==="Homophones grammaticaux"){ it=pickByDiff(HOMOG,diff); hint="Homophones grammaticaux"; }
     else if(sub==="Adverbes en -ment"){ it=pickByDiff(ADVMENT,diff); hint="Forme l'adverbe en -ment"; }
     else return genHomophones(diff,cat,sub);
     return { cat:cat, sub:sub, phrase:it.ph, hint:hint, note:it.note||"", options:build(it.good, it.bad.slice()), answer:0 };
