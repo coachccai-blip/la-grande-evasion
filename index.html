@@ -325,10 +325,10 @@
   .qzh-panel{display:none; margin-bottom:10px; background:rgba(224,71,47,.08);
     border:1px solid rgba(224,71,47,.28); border-radius:10px; padding:8px 11px; text-align:center;}
   .qzh-panel.open{display:block;}
-  .qzh-load{font-size:13px; color:var(--ink-soft);}
-  .qzh-phrase{font-size:16px; font-weight:800; color:var(--ink); line-height:1.5;}
-  .qzh-hint{font-size:13px; color:var(--accent2); font-weight:700; margin-top:5px;}
-  .qzh-tip{font-size:11px; color:var(--ink-soft); margin-top:6px;}
+  .qzh-load{font-size:14px; color:var(--ink-soft);}
+  .qzh-phrase{font-size:19px; font-weight:800; color:var(--ink); line-height:1.55;}
+  .qzh-hint{font-size:15px; color:var(--accent2); font-weight:700; margin-top:6px;}
+  .qzh-tip{font-size:12.5px; color:var(--ink-soft); margin-top:6px;}
   .timer{height:8px; border-radius:6px; background:rgba(0,0,0,.35); overflow:hidden; margin-bottom:10px; display:none;}
   .timer > i{display:block; height:100%; width:100%; background:linear-gradient(90deg,var(--ko),var(--accent)); transition:width .1s linear;}
   .qtext{font-size:18px; line-height:1.5; margin:6px 2px 14px; text-align:center;}
@@ -430,6 +430,13 @@
   .badges-head{margin-bottom:12px;}
   .badges-count{font-size:15px; font-weight:800; color:var(--ink);}
   .badges-sub{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  /* Sélecteur de langue des badges (FR / EN / 中文) */
+  .badge-lang{display:flex; gap:6px; margin-top:8px;}
+  .badge-lang button{border:1px solid var(--line); background:var(--panel); color:var(--ink-soft);
+    font-family:var(--font); font-weight:800; font-size:12px; padding:5px 11px; border-radius:20px; cursor:pointer;}
+  .badge-lang button:active{transform:translateY(1px);}
+  .badge-lang button.on{background:linear-gradient(90deg,#3b82f6,#6366f1); color:#fff; border-color:transparent;
+    box-shadow:0 1px 3px rgba(59,130,246,.35);}
   #badgesGrid{display:grid; grid-template-columns:1fr; gap:8px;}
   @media(min-width:520px){ #badgesGrid{grid-template-columns:1fr 1fr;} }
   .badge-card{
@@ -796,7 +803,12 @@
       <div class="scroll">
         <div class="badges-head">
           <div id="badgesCount" class="badges-count">🏅 Badges débloqués : <b>0 / 0</b></div>
-          <div class="badges-sub">Relève tous les défis pour tous les débloquer !</div>
+          <div id="badgesSub" class="badges-sub">Relève tous les défis pour tous les débloquer !</div>
+          <div id="badgeLangSw" class="badge-lang">
+            <button type="button" data-lang="fr" class="on">🇫🇷 FR</button>
+            <button type="button" data-lang="en">🇬🇧 EN</button>
+            <button type="button" data-lang="zh">🇨🇳 中文</button>
+          </div>
         </div>
         <div id="badgesGrid"></div>
       </div>
@@ -1024,6 +1036,7 @@ function loadSave(){
       store.seen = o.seen||{}; store.seenN = o.seenN||0; store.attempts = o.attempts||{};
       store.stats = o.stats||store.stats; store.badges = o.badges||{};
       store.empires = o.empires||{}; store.empireGame = o.empireGame||null;
+      store.badgeLang = o.badgeLang || "fr";
       // complète les champs de stats manquants (compat. anciennes sauvegardes)
       var d={bestStreak:0,curStreak:0,duelWins:0,flawless:0,errViewed:0,errSigs:{}};
       for(var k in d){ if(store.stats[k]===undefined) store.stats[k]=d[k]; } }
@@ -2860,6 +2873,44 @@ function badgeDefs(){
     {id:"escape_guards",ic:"🚓",t:"Plus rapide que les gardiens", d:"Gagner une partie malgré les gardiens", v:s.guardEscapes||0, g:1}
   ];
 }
+/* Traductions natives (anglais & chinois) des badges — jeu fixe, traduit à la
+   main pour une qualité irréprochable et disponible hors-ligne. */
+var BADGE_I18N={
+  first_free:{ en:{t:"First Escape",d:"Free one animal"}, zh:{t:"首次越狱",d:"解救一只动物"} },
+  all_free:{ en:{t:"Grand Liberation",d:"Free all 10 animals at least once"}, zh:{t:"大解放",d:"至少各解救全部10只动物一次"} },
+  zoo_empty:{ en:{t:"Full House",d:"Have all 10 animals free at the same time"}, zh:{t:"全员自由",d:"同时让10只动物都获得自由"} },
+  flawless:{ en:{t:"Flawless",d:"Finish an adventure with no mistakes"}, zh:{t:"完美无误",d:"零失误完成一次冒险"} },
+  streak5:{ en:{t:"On Fire",d:"5 correct answers in a row"}, zh:{t:"火力全开",d:"连续答对5题"} },
+  streak20:{ en:{t:"Impressive Streak",d:"20 correct answers in a row"}, zh:{t:"惊人连胜",d:"连续答对20题"} },
+  streak100:{ en:{t:"Centurion",d:"100 correct answers in a row"}, zh:{t:"百题达人",d:"连续答对100题"} },
+  streak250:{ en:{t:"Answer Machine",d:"250 correct answers in a row"}, zh:{t:"答题机器",d:"连续答对250题"} },
+  streak500:{ en:{t:"Living Legend",d:"500 correct answers in a row"}, zh:{t:"活着的传奇",d:"连续答对500题"} },
+  errors5:{ en:{t:"Review Your Mistakes",d:"Review 5 of your mistakes"}, zh:{t:"复习错误",d:"查看5个做错的题"} },
+  duel1:{ en:{t:"First Duel Won",d:"Win 1 duel"}, zh:{t:"首胜对决",d:"赢得1场对决"} },
+  duel10:{ en:{t:"Duelist",d:"Win 10 duels"}, zh:{t:"决斗者",d:"赢得10场对决"} },
+  duel50:{ en:{t:"Duel Master",d:"Win 50 duels"}, zh:{t:"对决大师",d:"赢得50场对决"} },
+  duel100:{ en:{t:"Undisputed Champion",d:"Win 100 duels"}, zh:{t:"无可争议的冠军",d:"赢得100场对决"} },
+  adv10:{ en:{t:"Great Adventurer",d:"Complete 10 adventures"}, zh:{t:"伟大冒险家",d:"完成10次冒险"} },
+  escape_guards:{ en:{t:"Faster Than the Guards",d:"Win a game despite the guards"}, zh:{t:"比看守更快",d:"在看守出动的情况下赢得一局"} }
+};
+var BADGE_UI={
+  fr:{ count:"🏅 Badges débloqués : ", sub:"Relève tous les défis pour tous les débloquer !", got:"Débloqué ✓", todo:"À débloquer" },
+  en:{ count:"🏅 Badges unlocked: ",    sub:"Take on every challenge to unlock them all!",    got:"Unlocked ✓", todo:"To unlock" },
+  zh:{ count:"🏅 已解锁徽章：",          sub:"挑战所有关卡，解锁全部徽章！",                    got:"已解锁 ✓",   todo:"待解锁" }
+};
+var badgeLang="fr";
+function setBadgeLang(lang){
+  badgeLang=(lang==="en"||lang==="zh")?lang:"fr";
+  store.badgeLang=badgeLang; persist();
+  var sw=$("badgeLangSw");
+  if(sw){ Array.prototype.forEach.call(sw.querySelectorAll("button"),function(btn){ btn.classList.toggle("on", btn.getAttribute("data-lang")===badgeLang); }); }
+  renderBadges();
+}
+function badgeText(b){
+  if(badgeLang==="fr") return {t:b.t, d:b.d};
+  var tr=BADGE_I18N[b.id]&&BADGE_I18N[b.id][badgeLang];
+  return tr?{t:tr.t, d:tr.d}:{t:b.t, d:b.d};
+}
 /* Évalue les badges : débloque les nouveaux (toast), sauvegarde, et rafraîchit
    l'écran s'il est visible. */
 function refreshBadges(){
@@ -2872,18 +2923,19 @@ function refreshBadges(){
   if($("badgesScreen") && $("badgesScreen").classList.contains("active")) renderBadges();
 }
 function renderBadges(){
-  var defs=badgeDefs();
+  var defs=badgeDefs(), ui=BADGE_UI[badgeLang]||BADGE_UI.fr;
   var earned=defs.filter(function(b){return store.badges[b.id];}).length;
-  $("badgesCount").innerHTML="🏅 Badges débloqués : <b>"+earned+" / "+defs.length+"</b>";
+  $("badgesCount").innerHTML=ui.count+"<b>"+earned+" / "+defs.length+"</b>";
+  if($("badgesSub")) $("badgesSub").textContent=ui.sub;
   var grid=$("badgesGrid"); grid.innerHTML="";
   defs.forEach(function(b){
-    var got=!!store.badges[b.id];
+    var got=!!store.badges[b.id], tx=badgeText(b);
     var el=document.createElement("div"); el.className="badge-card"+(got?" got":"");
     var pct=Math.max(0, Math.min(100, Math.round(b.v/b.g*100)));
-    var prog=got ? "Débloqué ✓" : (b.g>1 ? Math.min(b.v,b.g)+" / "+b.g : "À débloquer");
+    var prog=got ? ui.got : (b.g>1 ? Math.min(b.v,b.g)+" / "+b.g : ui.todo);
     el.innerHTML =
       "<div class='bic'>"+b.ic+"</div>"+
-      "<div class='btx'><div class='bt'>"+b.t+"</div><div class='bd'>"+b.d+"</div>"+
+      "<div class='btx'><div class='bt'>"+escapeHtml(tx.t)+"</div><div class='bd'>"+escapeHtml(tx.d)+"</div>"+
       "<div class='bbar'><i style='width:"+pct+"%'></i></div>"+
       "<div class='bp'>"+prog+"</div></div>";
     grid.appendChild(el);
@@ -2892,7 +2944,9 @@ function renderBadges(){
 var _toastT=null;
 function showBadgeToast(b){
   var t=$("badgeToast"); if(!t) return;
-  t.innerHTML="<span class='tic'>"+b.ic+"</span><span>Badge débloqué : <b>"+b.t+"</b></span>";
+  var tx=badgeText(b);
+  var lbl={fr:"Badge débloqué : ", en:"Badge unlocked: ", zh:"徽章解锁："}[badgeLang]||"Badge débloqué : ";
+  t.innerHTML="<span class='tic'>"+b.ic+"</span><span>"+lbl+"<b>"+escapeHtml(tx.t)+"</b></span>";
   t.classList.add("show");
   try{ Sound.badge(); }catch(e){}
   if(_toastT) clearTimeout(_toastT);
@@ -2935,6 +2989,14 @@ function init(){
 
   $("soundBtn").onclick=toggleSound;
   $("abandonBtn").onclick=abandonGame;
+
+  // Sélecteur de langue des badges (FR / EN / 中文), choix mémorisé
+  badgeLang = (store.badgeLang==="en"||store.badgeLang==="zh") ? store.badgeLang : "fr";
+  var _bsw=$("badgeLangSw");
+  if(_bsw){ Array.prototype.forEach.call(_bsw.querySelectorAll("button"), function(btn){
+    btn.onclick=function(){ try{ Sound.click(); }catch(e){} setBadgeLang(btn.getAttribute("data-lang")); };
+    btn.classList.toggle("on", btn.getAttribute("data-lang")===badgeLang);
+  }); }
 
   $("startBtn").onclick=function(){ Sound.click(); if(!selectedAnimal) return;
     if(setup.game==="empire") launchEmpire(selectedAnimal); else startGame(selectedAnimal); };
