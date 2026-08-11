@@ -533,6 +533,13 @@
     return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 };
   }
 
+  // Tournures d'impératif : base (trou en tête, majuscule) ou amorce neutre (minuscule).
+  var IMPER_FRAMES=[
+    {pre:"", cap:true},
+    {pre:"Allez, ", cap:false},
+    {pre:"Vite, ", cap:false},
+    {pre:"Maintenant, ", cap:false}
+  ];
   function genImper(v,diff,cat,sub,comp){
     var who=pick(diff<=2?["tu"]:["tu","tu","vous","nous"]);
     var correct=v.imper[who];
@@ -549,8 +556,10 @@
       pool.push(v.pres[ who==="vous"?4:3 ]);    // forme du présent (avec pronom sous-entendu)
     }
     var whoLabel = who==="tu"?"(tu)":(who==="vous"?"(vous)":"(nous)");
-    var phrase = "___ "+(comp?comp+" ":"")+"!";   // le trou ouvre la phrase → réponse en majuscule
-    var opts = build(cap(correct), pool.map(cap));
+    // plusieurs tournures : soit le trou ouvre la phrase (majuscule), soit une amorce le précède (minuscule)
+    var f = pick(IMPER_FRAMES);
+    var phrase = f.pre + "___ " + (comp?comp+" ":"") + "!";
+    var opts = f.cap ? build(cap(correct), pool.map(cap)) : build(correct, pool.slice());
     return { cat:cat, sub:sub, tense:"imper", phrase:phrase,
       hint:"Conjugue « "+v.inf+" » à l'impératif "+whoLabel, options:opts, answer:0 };
   }
@@ -882,7 +891,11 @@
     {ph:"J'ai vu ___ {N}.",k:"indef"},
     {ph:"Regarde ___ {N} !",k:"dem"},
     {ph:"C'est ___ {N}.",k:"poss"},
-    {ph:"Je cherche ___ {N}.",k:"def"}
+    {ph:"Je cherche ___ {N}.",k:"def"},
+    {ph:"Il possède ___ {N}.",k:"indef"},
+    {ph:"Prends ___ {N} là-bas.",k:"dem"},
+    {ph:"Voici ___ {N}.",k:"poss"},
+    {ph:"Où est ___ {N} ?",k:"def"}
   ];
   function detOptions(kind,n){
     var good, pool;
@@ -933,7 +946,11 @@
     "Dans une phrase, « {W} » est {A} ___.",
     "Le mot « {W} » est {A} ___.",
     "Grammaticalement, « {W} » est {A} ___.",
-    "Nature de « {W} » : c'est {A} ___."
+    "Nature de « {W} » : c'est {A} ___.",
+    "Quelle est la nature de « {W} » ? C'est {A} ___.",
+    "« {W} » appartient à la classe : {A} ___.",
+    "En grammaire, « {W} » est {A} ___.",
+    "Identifie la nature de « {W} » : {A} ___."
   ];
   function genNature(diff,cat,sub){
     var pool=NATURE_WORDS.filter(function(x){return x.d===diff;});
@@ -1027,7 +1044,8 @@
     {s:"la relique",g:"f",n:"s",pp:"vénéré",inf:"vénérer",ag:"les fidèles",d:6},{s:"le complot",g:"m",n:"s",pp:"déjoué",inf:"déjouer",ag:"les gardes",d:6},
     {s:"les privilèges",g:"m",n:"p",pp:"aboli",inf:"abolir",ag:"la révolution",d:6},{s:"la province",g:"f",n:"s",pp:"colonisé",inf:"coloniser",ag:"l'empire",d:6},{s:"le souverain",g:"m",n:"s",pp:"couronné",inf:"couronner",ag:"l'archevêque",d:6}
   ];
-  var PASS_FRAMES=[{s:"est",p:"sont"},{s:"a été",p:"ont été"},{s:"sera",p:"seront"},{s:"était",p:"étaient"}];
+  var PASS_FRAMES=[{s:"est",p:"sont"},{s:"a été",p:"ont été"},{s:"sera",p:"seront"},{s:"était",p:"étaient"},
+    {s:"avait été",p:"avaient été"},{s:"serait",p:"seraient"},{s:"aura été",p:"auront été"},{s:"fut",p:"furent"}];
   function genVoixPassive(diff,cat,sub){
     var it=pick(bandFilter(PASSIVE_ITEMS,diff,"d")), F=ppForms(it.pp);
     var good=ppAgree(it.pp,it.g,it.n), fr=pick(PASS_FRAMES), aux=(it.n==="s"?fr.s:fr.p);
@@ -1082,8 +1100,10 @@
     {k:"a",s:"l'assemblée",n:"s",pp:"promulgué",inf:"promulguer",cod:"la loi",d:6},{k:"a",s:"les érudits",n:"p",pp:"traduit",inf:"traduire",cod:"le traité",d:6},
     {k:"a",s:"le régime",n:"s",pp:"instauré",inf:"instaurer",cod:"le couvre-feu",d:6},{k:"a",s:"les bâtisseurs",n:"p",pp:"érigé",inf:"ériger",cod:"la cathédrale",d:6}
   ];
-  var PPA_ETRE_FR=["{S} {X} ___.","Hier, {S} {X} ___.","{S} {X} déjà ___.","Ce matin, {S} {X} ___."];
-  var PPA_AVOIR_FR=["{S} {X} ___ {C}.","Hier, {S} {X} ___ {C}.","{S} {X} bien ___ {C}.","Ce matin, {S} {X} ___ {C}."];
+  var PPA_ETRE_FR=["{S} {X} ___.","Hier, {S} {X} ___.","{S} {X} déjà ___.","Ce matin, {S} {X} ___.",
+    "Aujourd'hui, {S} {X} ___.","{S} {X} enfin ___.","Tout à l'heure, {S} {X} ___.","{S} {X} vite ___."];
+  var PPA_AVOIR_FR=["{S} {X} ___ {C}.","Hier, {S} {X} ___ {C}.","{S} {X} bien ___ {C}.","Ce matin, {S} {X} ___ {C}.",
+    "Aujourd'hui, {S} {X} ___ {C}.","{S} {X} enfin ___ {C}.","Tout à l'heure, {S} {X} ___ {C}.","{S} {X} déjà ___ {C}."];
   function genAccordPP(diff,cat,sub){
     var it=pick(bandFilter(PPA_ITEMS,diff,"d")), F=ppForms(it.pp);
     if(it.k==="e"){
@@ -1130,7 +1150,8 @@
     {ex:"Pourquoi faudrait-il céder à la panique ?",t:"interrogative",d:6},{ex:"Quelle prouesse admirable il a accomplie !",t:"exclamative",d:6},{ex:"Méditez cette maxime attentivement.",t:"impérative",d:6},{ex:"La civilisation prospère grâce au savoir.",t:"déclarative",d:6}
   ];
   var TYPE_ALL=["déclarative","interrogative","exclamative","impérative"];
-  var TYPE_FRAMES=["« {EX} » est une phrase ___.","La phrase « {EX} » est ___.","« {EX} » — c'est une phrase ___.","Quel type ? « {EX} » → phrase ___."];
+  var TYPE_FRAMES=["« {EX} » est une phrase ___.","La phrase « {EX} » est ___.","« {EX} » — c'est une phrase ___.","Quel type ? « {EX} » → phrase ___.",
+    "Type de phrase : « {EX} » → ___.","« {EX} » : c'est une phrase de type ___.","Identifie : « {EX} » est ___.","« {EX} ». Cette phrase est ___."];
   function genTypes(diff,cat,sub){
     var it=pick(bandFilter(TYPE_ITEMS,diff,"d"));
     return { cat:cat, sub:sub, phrase:pick(TYPE_FRAMES).replace("{EX}",it.ex), hint:"Quel type de phrase ?",
@@ -1160,7 +1181,8 @@
     {place:"réfectoire",prep:"au",d:6},{place:"dispensaire",prep:"au",d:6},{place:"l'apothicaire",prep:"chez",d:6},{place:"vigie",prep:"à la",d:6},{place:"préau",prep:"au",d:6}
   ];
   var PREP_POOL=["à","à la","à l'","au","aux","en","chez","dans"];
-  var PREP_FRAMES=["Je vais ___ {P}.","Nous allons ___ {P}.","Elle se rend ___ {P}.","On part ___ {P}."];
+  var PREP_FRAMES=["Je vais ___ {P}.","Nous allons ___ {P}.","Elle se rend ___ {P}.","On part ___ {P}.",
+    "Ils se dirigent ___ {P}.","Tu arrives ___ {P}.","Le groupe voyage ___ {P}.","Demain, je pars ___ {P}."];
   function genPrep(diff,cat,sub){
     var it=pick(bandFilter(PREP_PLACES,diff,"d"));
     var bad=shuffle(PREP_POOL.filter(function(x){return x!==it.prep;})).slice(0,3);
@@ -1209,7 +1231,8 @@
     {ant:"le fondement",good:"sur lequel",rest:"repose la théorie",bad:["duquel","lequel","auquel"],d:6},{ant:"l'objectif",good:"en vue duquel",rest:"il œuvre",bad:["dont","duquel","auquel"],d:6},{ant:"les gens",good:"parmi lesquels",rest:"je vis",bad:["dont","lesquels","auxquels"],d:6}
   ];
   var PRON_POOL=["qui","que","qu'","où","dont"];
-  var PRON_FRAMES=["Voici {ANT} ___ {R}.","C'est {ANT} ___ {R}.","Je te montre {ANT} ___ {R}.","Connais-tu {ANT} ___ {R} ?"];
+  var PRON_FRAMES=["Voici {ANT} ___ {R}.","C'est {ANT} ___ {R}.","Je te montre {ANT} ___ {R}.","Connais-tu {ANT} ___ {R} ?",
+    "Regarde {ANT} ___ {R}.","Voilà {ANT} ___ {R}.","Il y a {ANT} ___ {R}.","J'aperçois {ANT} ___ {R}."];
   function genPronoms(diff,cat,sub){
     var it=pick(bandFilter(PRON_ITEMS,diff,"d"));
     var bad=it.bad?it.bad.slice():shuffle(PRON_POOL.filter(function(x){return x!==it.good;})).slice(0,3);
@@ -1258,7 +1281,8 @@
     {c1:"Il fut épargné",good:"moyennant qu'",c2:"il livrât ses complices",bad:["bien qu'","afin qu'","dès qu'"],d:6},{c1:"Il resta ferme",good:"encore que",c2:"la tentation fût grande",bad:["parce que","dès que","afin que"],d:6},
     {c1:"Il conclut la paix",good:"à seule fin de",c2:"préserver son peuple",bad:["faute de","en dépit de","malgré"],d:6},{c1:"Il gouverna sagement",good:"en sorte que",c2:"le royaume prospérât",bad:["parce que","car","donc"],d:6},{c1:"Il fut réhabilité",good:"d'autant qu'",c2:"son innocence éclatait",bad:["bien qu'","afin qu'","dès qu'"],d:6}
   ];
-  var CONN_FRAMES=["{C1} ___ {C2}.","Complète : {C1} ___ {C2}.","Choisis le connecteur : {C1} ___ {C2}.","Quel lien logique ? {C1} ___ {C2}."];
+  var CONN_FRAMES=["{C1} ___ {C2}.","Complète : {C1} ___ {C2}.","Choisis le connecteur : {C1} ___ {C2}.","Quel lien logique ? {C1} ___ {C2}.",
+    "Relie les idées : {C1} ___ {C2}.","Quel mot de liaison ? {C1} ___ {C2}.","{C1} … ___ … {C2}.","Le bon connecteur : {C1} ___ {C2}."];
   function genConnecteurs(diff,cat,sub){
     var it=pick(bandFilter(CONN_ITEMS,diff,"d"));
     return { cat:cat, sub:sub, phrase:pick(CONN_FRAMES).replace("{C1}",it.c1).replace("{C2}",it.c2),
@@ -1400,7 +1424,8 @@
     {ph:"Le vinaigre a un goût ___ (relatif à l'acide du vinaigre).",good:"acétique",bad:["ascétique","acétiques","assétique"],d:6},
     {ph:"Le moine mène une vie ___ (austère, faite de privations).",good:"ascétique",bad:["acétique","ascétiques","assétique"],d:6}
   ];
-  var HOMO_FRAMES=["{PH}","Le bon homonyme — {PH}","Complète avec le bon homonyme : {PH}","Choisis le mot juste : {PH}"];
+  var HOMO_FRAMES=["{PH}","Le bon homonyme — {PH}","Complète avec le bon homonyme : {PH}","Choisis le mot juste : {PH}",
+    "Quelle orthographe convient ? {PH}","À toi de compléter — {PH}","Lis bien puis complète : {PH}","Attention au sens — {PH}"];
   var FAMILLE = [
     {d:2,ph:"Un petit jardin est un ___.",good:"jardinet",bad:["jardinier","jardinage","jardiner"]},
     {d:3,ph:"Celui qui s'occupe du jardin est le ___.",good:"jardinier",bad:["jardinet","jardinage","jardin"]},
@@ -1531,7 +1556,8 @@
     {ph:"Prendre des vessies pour des ___ (se tromper grossièrement).",good:"lanternes",bad:["lampions","bougies","flambeaux"],note:"« Prendre des vessies pour des lanternes » = se méprendre lourdement.",d:6},
     {ph:"Faire contre mauvaise fortune bon ___ (accepter l'adversité).",good:"cœur",bad:["gré","sort","vent"],note:"« Faire contre mauvaise fortune bon cœur » = accepter l'adversité de bonne grâce.",d:6}
   ];
-  var IDIOM_FRAMES=["{PH}","Complète l'expression imagée : {PH}","Expression française — {PH}","Trouve le mot qui manque : {PH}"];
+  var IDIOM_FRAMES=["{PH}","Complète l'expression imagée : {PH}","Expression française — {PH}","Trouve le mot qui manque : {PH}",
+    "Quel mot complète l'expression ? {PH}","Expression à connaître — {PH}","Devine le mot manquant : {PH}","À toi de compléter — {PH}"];
   /* --- Registres de langue : générateur PARTITIONNÉ (familier/courant/soutenu) --- */
   var REG_ITEMS = [
     {ph:"En registre familier, « une voiture » se dit ___.",good:"une bagnole",bad:["un véhicule","une automobile","une berline"],note:"« bagnole » = familier ; « véhicule / automobile » = courant ou soutenu.",d:1},
@@ -1613,7 +1639,8 @@
     {ph:"En registre soutenu, « un mensonge » se dit ___.",good:"une affabulation",bad:["un bobard","un baratin","une salade"],note:"« affabulation » = soutenu ; « bobard / salade » = familier.",d:6},
     {ph:"En registre soutenu, « abondant » se dit ___.",good:"pléthorique",bad:["à gogo","à la pelle","en pagaille"],note:"« pléthorique » = soutenu ; « à gogo / à la pelle » = familier.",d:6}
   ];
-  var REG_FRAMES=["{PH}","Question de registre — {PH}","Niveau de langue : {PH}","Trouve le bon niveau de langue — {PH}"];
+  var REG_FRAMES=["{PH}","Question de registre — {PH}","Niveau de langue : {PH}","Trouve le bon niveau de langue — {PH}",
+    "Choisis le bon mot — {PH}","Registre attendu : {PH}","À toi de trouver — {PH}","Quel mot correspond ? {PH}"];
   /* --- Paronymes : générateur PARTITIONNÉ (mots proches souvent confondus) --- */
   var PARO_ITEMS = [
     {ph:"Je fais une ___ dans le parc (promenade).",good:"balade",bad:["ballade","balaide","ballarde"],note:"« balade » = promenade ; « ballade » = poème chanté.",d:1},
@@ -1695,7 +1722,8 @@
     {ph:"Voici les ___ du printemps (les tout premiers signes, les débuts).",good:"prémices",bad:["prémisses","prémice","prémisce"],note:"« prémices » = premiers signes ; « prémisses » = propositions de départ d'un raisonnement.",d:6},
     {ph:"Le raisonnement part de fausses ___ (propositions de départ d'un raisonnement).",good:"prémisses",bad:["prémices","prémisse","prémice"],note:"« prémisses » = propositions initiales ; « prémices » = premiers signes.",d:6}
   ];
-  var PARO_FRAMES=["{PH}","Le bon paronyme — {PH}","Ne confonds pas — {PH}","Choisis le mot exact : {PH}"];
+  var PARO_FRAMES=["{PH}","Le bon paronyme — {PH}","Ne confonds pas — {PH}","Choisis le mot exact : {PH}",
+    "Quel mot convient ? {PH}","Attention au piège — {PH}","Le terme juste : {PH}","À toi de compléter — {PH}"];
   /* --- Synonymes & Contraires : générateurs PARTITIONNÉS par difficulté --- */
   var SYN_SETS=[
     // d1
@@ -1744,7 +1772,8 @@
     {d:6,a:"licite",b:"illicite"},{d:6,a:"vénérer",b:"mépriser"},{d:6,a:"abonder",b:"manquer"},{d:6,a:"limpide",b:"opaque"}
   ];
   var SYN_FRAMES=["Un synonyme de « {W} » est ___.","« {W} » veut dire à peu près ___.","Trouve un mot proche de « {W} » : ___.","Quel mot ressemble le plus à « {W} » ? ___."];
-  var CONTR_FRAMES=["Le contraire de « {W} » est ___.","« {W} », c'est l'inverse de ___.","Trouve le contraire de « {W} » : ___.","L'opposé de « {W} » est ___."];
+  var CONTR_FRAMES=["Le contraire de « {W} » est ___.","« {W} », c'est l'inverse de ___.","Trouve le contraire de « {W} » : ___.","L'opposé de « {W} » est ___.",
+    "Quel mot s'oppose à « {W} » ? ___.","« {W} » ↔ ___.","Le mot de sens contraire à « {W} » : ___.","À l'inverse de « {W} », on dit ___."];
   var _synAll=null, _contrAll=null;
   function synAll(){ if(!_synAll){ _synAll=[]; SYN_SETS.forEach(function(s){ s.w.forEach(function(x){ _synAll.push(x); }); }); } return _synAll; }
   function contrAll(){ if(!_contrAll){ _contrAll=[]; CONTR_PAIRS.forEach(function(p){ _contrAll.push(p.a,p.b); }); } return _contrAll; }
@@ -1810,7 +1839,8 @@
     {c:"Recueil de plantes séchées",good:"herbier",bad:["atlas","bestiaire","album"],d:6},{c:"Artisan qui travaille les métaux précieux",good:"orfèvre",bad:["ferronnier","fondeur","tôlier"],d:6},
     {c:"Personne qui restaure les tableaux",good:"restaurateur",bad:["conservateur","antiquaire","brocanteur"],d:6},{c:"Personne qui grave la pierre",good:"graveur",bad:["sculpteur","tailleur","potier"],d:6},{c:"Médecin des yeux",good:"ophtalmologue",bad:["dermatologue","cardiologue","dentiste"],d:6}
   ];
-  var QUO_FRAMES=["{C} → ___.","{C} : quel mot ? ___.","Devinette — {C} : ___.","Trouve le mot juste : {C} → ___."];
+  var QUO_FRAMES=["{C} → ___.","{C} : quel mot ? ___.","Devinette — {C} : ___.","Trouve le mot juste : {C} → ___.",
+    "De quoi s'agit-il ? {C} → ___.","{C}. C'est… ___.","Quel objet ? {C} → ___.","Complète : {C} → ___."];
   function genQuotidien(diff,cat,sub){
     var it=pick(bandFilter(QUO_ITEMS,diff,"d"));
     return { cat:cat, sub:sub, phrase:pick(QUO_FRAMES).replace("{C}",it.c), hint:"Mot du quotidien",
@@ -1857,7 +1887,8 @@
     {ph:"L'étude des sons d'une langue est la ___.",good:"phonétique",bad:["phonographe","phonème","symphonie"],d:6},{ph:"Rendre éternel, c'est ___.",good:"immortaliser",bad:["mortaliser","mortel","immortel"],d:6},
     {ph:"Celui qui collectionne les timbres est le ___.",good:"philatéliste",bad:["numismate","bibliophile","philanthrope"],d:6},{ph:"Celui qui collectionne les pièces de monnaie est le ___.",good:"numismate",bad:["philatéliste","antiquaire","bibliophile"],d:6},{ph:"L'étude des tremblements de terre est la ___.",good:"sismologie",bad:["volcanologie","météorologie","minéralogie"],d:6}
   ];
-  var FAM_FRAMES=["{PH}","Complète : {PH}","Même famille de mots — {PH}","Trouve le mot dérivé : {PH}"];
+  var FAM_FRAMES=["{PH}","Complète : {PH}","Même famille de mots — {PH}","Trouve le mot dérivé : {PH}",
+    "Quel mot de la famille ? {PH}","À partir du radical — {PH}","Le mot juste : {PH}","Devine le dérivé : {PH}"];
   function genFamilles(diff,cat,sub){
     var it=pick(bandFilter(FAM_ITEMS,diff,"d"));
     return { cat:cat, sub:sub, phrase:pick(FAM_FRAMES).replace("{PH}",it.ph), hint:"Même famille de mots",
@@ -1986,7 +2017,8 @@
     {ph:"Après le sport, j'ai une grande ___ (envie de manger).",good:"faim",bad:["fin","feint","fain"],note:"« faim » (envie de manger) ≠ « fin » (le bout).",d:6},
     {ph:"Devant cette promesse, il reste ___ (dubitatif, méfiant).",good:"sceptique",bad:["septique","sceptic","septic"],note:"« sceptique » (méfiant) ≠ « septique » (fosse septique).",d:6}
   ];
-  var HP_FRAMES=["{PH}","Le bon homophone — {PH}","Complète correctement — {PH}","Choisis la bonne graphie : {PH}"];
+  var HP_FRAMES=["{PH}","Le bon homophone — {PH}","Complète correctement — {PH}","Choisis la bonne graphie : {PH}",
+    "Quelle graphie convient ? {PH}","Attention à l'homophone — {PH}","À toi de compléter — {PH}","Lis bien puis complète : {PH}"];
   var ER_E = [
     {d:3,ph:"Je vais ___ une pomme.",good:"manger",bad:["mangé","mangez","mangeais"],note:"infinitif après « vais »"},
     {d:3,ph:"Il a ___ son travail.",good:"terminé",bad:["terminer","terminez","terminés"],note:"participe après « a »"},
@@ -2089,7 +2121,8 @@
     {ph:"Les gardes veillent à la ___ du palais (la sécurité).",good:"sûreté",bad:["sureté","sûrété","seureté"],note:"circonflexe sur u puis accent aigu",d:6},
     {ph:"J'aimerais mieux te ___ (savoir qui tu es).",good:"connaître",bad:["connaitre","connaîttre","conaître"],note:"accent circonflexe sur i",d:6}
   ];
-  var ACCENT_FRAMES=["{PH}","Orthographe des accents — {PH}","Écris le mot avec les bons accents : {PH}","Attention aux accents — {PH}"];
+  var ACCENT_FRAMES=["{PH}","Orthographe des accents — {PH}","Écris le mot avec les bons accents : {PH}","Attention aux accents — {PH}",
+    "Quelle est la bonne graphie ? {PH}","Les accents comptent — {PH}","À toi de compléter — {PH}","Complète correctement : {PH}"];
   var PLUR = [
     {d:3,ph:"J'ai vu trois ___.",good:"chevaux",bad:["chevals","chevaus","chevaual"],note:"pluriel de cheval"},
     {d:3,ph:"Les ___ sont fermés.",good:"journaux",bad:["journals","journeaux","journaus"],note:"pluriel en -aux"},
@@ -2194,7 +2227,8 @@
     {ph:"À la sortie du concert, l'___ des rues est total.",good:"encombrement",bad:["enconbrement","encombremant","encumbrement"],note:"m devant b",d:6},
     {ph:"Sa décision reste ___ (qui ne change jamais).",good:"immuable",bad:["inmuable","imuable","immuabe"],note:"m devant m",d:6}
   ];
-  var MBP_FRAMES=["{PH}","Orthographe — {PH}","Écris correctement le mot : {PH}","Attention à la règle m/n : {PH}"];
+  var MBP_FRAMES=["{PH}","Orthographe — {PH}","Écris correctement le mot : {PH}","Attention à la règle m/n : {PH}",
+    "m ou n ? {PH}","Quelle est la bonne graphie ? {PH}","À toi de compléter — {PH}","Rappelle-toi la règle — {PH}"];
   /* ---- Orthographe de niveau avancé (vers le C1) ---- */
   /* --- Homophones grammaticaux : générateur PARTITIONNÉ (le choix dépend de la nature du mot) --- */
   var HOMOG_ITEMS = [
@@ -2278,7 +2312,8 @@
     {ph:"___ faire, autant le faire correctement (puisqu'il faut le faire).",good:"Tant qu'à",bad:["Quant à","Tant qu'a","Temps qu'à"],note:"« tant qu'à faire » = puisqu'il faut le faire ; ne pas confondre avec « quant à ».",d:6},
     {ph:"Je n'y vois pas ___ à en tirer (de + avantage).",good:"d'avantage",bad:["davantage","d'avantages","daventage"],note:"« d'avantage » = de + avantage (un profit) ; « davantage » = plus.",d:6}
   ];
-  var HG_FRAMES=["{PH}","Homophone grammatical — {PH}","Quelle est la bonne graphie ? {PH}","Attention à la nature du mot — {PH}"];
+  var HG_FRAMES=["{PH}","Homophone grammatical — {PH}","Quelle est la bonne graphie ? {PH}","Attention à la nature du mot — {PH}",
+    "Choisis la bonne forme — {PH}","Complète correctement : {PH}","À toi de trancher — {PH}","Lis bien puis complète : {PH}"];
   var ADVMENT = [ // formation des adverbes en -ment
     {d:3,ph:"lent → il avance ___.",good:"lentement",bad:["lentment","lenteument","lengtement"],note:"Adjectif au féminin (lente) + -ment."},
     {d:3,ph:"rapide → il court ___.",good:"rapidement",bad:["rapidment","rapidemant","rapiddement"],note:"Adjectif terminé par -e : on ajoute simplement -ment."},
@@ -2325,7 +2360,8 @@
     {s:"récital",p:"récitals",d:6,bad:["récitaux","récitales","récitaus"]},{s:"nez",p:"nez",d:6,bad:["nezs","nés","néz"]},
     {s:"prix",p:"prix",d:6,bad:["prixs","pris","prixes"]},{s:"croix",p:"croix",d:6,bad:["croixs","crois","croies"]},{s:"gaz",p:"gaz",d:6,bad:["gazs","gazes","gas"]}
   ];
-  var PLUR_FRAMES=["Le pluriel de « {S} » est ___.","Au pluriel, « {S} » devient ___.","Plusieurs « {S} » → des ___.","Écris « {S} » au pluriel : ___."];
+  var PLUR_FRAMES=["Le pluriel de « {S} » est ___.","Au pluriel, « {S} » devient ___.","Plusieurs « {S} » → des ___.","Écris « {S} » au pluriel : ___.",
+    "Deux « {S} », ce sont deux ___.","« {S} » au pluriel s'écrit ___.","Comment écrire « {S} » au pluriel ? ___.","Des « {S} » ? On écrit des ___."];
   function plurBad(sing, plur){
     var c=[sing, sing+"s", sing+"x", sing+"es",
       sing.replace(/al$/,"als"), sing.replace(/al$/,"aux"),
@@ -2381,7 +2417,8 @@
     {a:"innocent",v:"innocemment",d:6},{a:"excellent",v:"excellemment",d:6},{a:"pertinent",v:"pertinemment",d:6},
     {a:"différent",v:"différemment",d:6},{a:"insolent",v:"insolemment",d:6},{a:"ardent",v:"ardemment",d:6},{a:"impertinent",v:"impertinemment",d:6}
   ];
-  var ADV_FRAMES=["« {A} » → il agit ___.","L'adverbe formé sur « {A} » est ___.","« {A} » donne l'adverbe ___.","Il le fait ___ (adjectif : {A})."];
+  var ADV_FRAMES=["« {A} » → il agit ___.","L'adverbe formé sur « {A} » est ___.","« {A} » donne l'adverbe ___.","Il le fait ___ (adjectif : {A}).",
+    "À partir de « {A} », l'adverbe est ___.","« {A} » → elle répond ___.","Forme l'adverbe de « {A} » : ___.","« {A} » devient, en adverbe, ___."];
   function advBad(a, v){
     var c=[a+"ment", a+"ement", v.replace(/emment$/,"ament"), v.replace(/amment$/,"emment"),
       v.replace(/ément$/,"ement"), v.replace(/ment$/,"mment"), v.replace(/é/g,"e")];
