@@ -963,33 +963,50 @@ var Sound=(function(){
 
    Anti-répétition « mémoire longue » (RG10) : chaque question déjà posée est
    mémorisée durablement (localStorage) avec un numéro d'ordre. À chaque tirage,
-   on génère plusieurs candidats et on retient EN PRIORITÉ une question jamais
-   vue. Si tout le réservoir accessible (matière · thème · difficulté) a déjà été
-   joué, on ressort alors la question vue le plus ANCIENNEMENT (ordre LRU) : une
-   même question ne revient donc qu'après que toutes les autres soient repassées.
+   on retient EN PRIORITÉ une question jamais vue à la difficulté choisie. Si le
+   réservoir de cette difficulté est ÉPUISÉ, on va d'abord chercher une question
+   inédite dans les NIVEAUX INFÉRIEURS du même thème (difficulté − 1, − 2, …),
+   AVANT de reboucler. Quand la difficulté cible ET tous les niveaux inférieurs
+   sont épuisés, on ressort la question vue le plus ANCIENNEMENT (ordre LRU) à la
+   difficulté cible : une même question ne revient donc qu'en tout dernier recours.
    Résultat : les répétitions sont drastiquement réduites et le contenu tourne. */
 function pickQuestion(){
   var cat=G.setup.cat, sub=G.setup.sub, target=G.setup.diffVal;
   var seen = store.seen || (store.seen={});
+  var TRIES=140;   // > taille d'un réservoir (~104) : trouve une inédite s'il en reste
+
+  function commit(q, k){
+    store.seenN=(store.seenN||0)+1;
+    seen[k]=store.seenN;
+    var keys=Object.keys(seen);
+    if(keys.length>1500){ keys.sort(function(a,b){ return seen[a]-seen[b]; }); for(var i=0;i<500;i++) delete seen[keys[i]]; }
+    persist();
+    return {q:q, cat:q.cat};
+  }
+
+  // 1) Question JAMAIS VUE, en descendant de la difficulté cible vers 1 :
+  //    si le réservoir de la difficulté visée est épuisé, on va puiser dans le
+  //    niveau INFÉRIEUR (même thème) AVANT de reboucler.
+  for(var d=target; d>=1; d--){
+    for(var t=0;t<TRIES;t++){
+      var q=Questions.generate(cat, sub, d);
+      var k=q.phrase+"§"+q.options[q.answer];
+      if(seen[k]===undefined) return commit(q, k);
+    }
+  }
+
+  // 2) Tout est épuisé (difficulté cible ET niveaux inférieurs) → on reboucle :
+  //    on ressort la question vue le plus ANCIENNEMENT (ordre LRU) à la difficulté cible.
   var best=null, bestKey=null, bestSeenAt=Infinity;
-  for(var t=0;t<50;t++){
-    var q=Questions.generate(cat, sub, target);
-    var k=q.phrase+"§"+q.options[q.answer];
-    var when=seen[k];
-    if(when===undefined){ best=q; bestKey=k; break; }   // jamais vue → on prend tout de suite
-    if(when<bestSeenAt){ bestSeenAt=when; best=q; bestKey=k; } // sinon : la plus ancienne
+  for(var t2=0;t2<TRIES;t2++){
+    var q2=Questions.generate(cat, sub, target);
+    var k2=q2.phrase+"§"+q2.options[q2.answer];
+    var when=seen[k2];
+    if(when===undefined) return commit(q2, k2);          // (sécurité : une inédite réapparue)
+    if(when<bestSeenAt){ bestSeenAt=when; best=q2; bestKey=k2; }
   }
   if(!best){ best=Questions.generate(cat, sub, target); bestKey=best.phrase+"§"+best.options[best.answer]; }
-  store.seenN=(store.seenN||0)+1;
-  seen[bestKey]=store.seenN;
-  // plafond mémoire : au-delà de 1500 clés, on oublie les 500 plus anciennes
-  var keys=Object.keys(seen);
-  if(keys.length>1500){
-    keys.sort(function(a,b){ return seen[a]-seen[b]; });
-    for(var i=0;i<500;i++) delete seen[keys[i]];
-  }
-  persist();
-  return {q:best, cat:best.cat};
+  return commit(best, bestKey);
 }
 
 /* Clé de mission : un animal libéré pour une combinaison matière/thème/difficulté donnée. */
