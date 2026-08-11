@@ -79,6 +79,119 @@
   .screen.active{display:flex;}
   .scroll{overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px; flex:1;}
 
+  /* ===================== Module Vocabulaire 百词斩 ===================== */
+  .vk-scroll{overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px; flex:1; display:flex; flex-direction:column; gap:10px;}
+  .vk-head{display:flex; align-items:center; gap:8px;}
+  .vk-level{flex:1; text-align:left; border:1px solid var(--line); background:var(--panel); color:var(--ink);
+    font-family:var(--font); font-size:14px; padding:8px 12px; border-radius:12px; cursor:pointer;}
+  .vk-streak{font-size:13px; font-weight:800; color:#e0472f; background:rgba(224,71,47,.1); padding:8px 10px; border-radius:12px;}
+  .vk-gear{border:1px solid var(--line); background:var(--panel); font-size:16px; padding:8px 10px; border-radius:12px; cursor:pointer;}
+  .vk-card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px;}
+  .vk-progtop{display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:var(--ink); margin-bottom:6px;}
+  .vk-bar{height:10px; border-radius:6px; background:rgba(0,0,0,.1); overflow:hidden;}
+  .vk-bar > i{display:block; height:100%; background:linear-gradient(90deg,#3b82f6,#22c55e);}
+  .vk-dist{display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:8px; font-size:11.5px; color:var(--ink-soft);}
+  .vk-start{border:0; border-radius:16px; padding:16px; font-family:var(--font); font-weight:900; font-size:18px; color:#fff;
+    background:linear-gradient(90deg,#3b82f6,#6366f1); cursor:pointer; display:flex; flex-direction:column; gap:3px; box-shadow:0 3px 10px rgba(59,130,246,.35);}
+  .vk-start .vk-sub{font-size:12px; font-weight:600; opacity:.92;}
+  .vk-check{font-size:13px; text-align:center; color:var(--ink-soft); background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:9px;}
+  .vk-ctitle{font-size:13px; font-weight:800; color:var(--ink); margin-bottom:8px;}
+  .vk-ctitle2{font-size:14px; font-weight:800; color:var(--ink); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;}
+  .vk-cal{display:grid; grid-template-columns:repeat(7,1fr); gap:3px;}
+  .vk-cah{font-size:10px; text-align:center; color:var(--ink-soft); padding:2px 0;}
+  .vk-cad{aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:11px; border-radius:7px; color:var(--ink-soft); background:rgba(0,0,0,.04);}
+  .vk-cad.on{background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; font-weight:800;}
+  .vk-cad.today{box-shadow:inset 0 0 0 2px var(--accent2);}
+  .vk-curve{display:flex; align-items:flex-end; gap:2px; height:48px;}
+  .vk-cb{flex:1; background:linear-gradient(180deg,#6366f1,#3b82f6); border-radius:2px 2px 0 0; min-height:4px;}
+  /* Session */
+  .vk-sessbar{height:6px; border-radius:4px; background:rgba(0,0,0,.1); overflow:hidden;}
+  .vk-sessbar > i{display:block; height:100%; background:linear-gradient(90deg,#3b82f6,#22c55e);}
+  .vk-sessmeta{font-size:12px; color:var(--ink-soft); text-align:center;}
+  .vk-fiche{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px;}
+  .vk-fhead{display:flex; align-items:center; gap:12px;}
+  .vk-emoji{font-size:52px; line-height:1;}
+  .vk-word{font-size:24px; font-weight:900; color:var(--accent2);}
+  .vk-ipa{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+  .vk-pos{font-weight:700; color:var(--ink-soft);}
+  .vk-play{width:100%; margin-top:10px; border:0; border-radius:12px; padding:11px; font-family:var(--font); font-weight:800; font-size:15px;
+    background:rgba(59,130,246,.14); color:#3b5bd0; cursor:pointer;}
+  .vk-zh{font-size:18px; font-weight:800; color:var(--ink); margin-top:10px;}
+  .vk-ex{margin-top:10px; background:rgba(0,0,0,.03); border-radius:10px; padding:8px 10px;}
+  .vk-exfr{font-size:15px; color:var(--ink);}
+  .vk-exaudio{border:0; background:transparent; cursor:pointer; font-size:14px;}
+  .vk-exzh{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+  .vk-coll{margin-top:10px;} .vk-colt{font-size:12px; font-weight:800; color:var(--ink-soft); margin-bottom:3px;}
+  .vk-colr{font-size:13px; color:var(--ink);}
+  .vk-notes{margin-top:10px; font-size:12.5px; color:#8a6d1e; background:rgba(242,193,78,.16); border-radius:10px; padding:8px 10px;}
+  .vk-actions{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .vk-abtn{flex:1; min-width:90px; border:1px solid var(--line); background:var(--panel); color:var(--ink); font-family:var(--font);
+    font-weight:800; font-size:14px; padding:11px; border-radius:12px; cursor:pointer;}
+  .vk-abtn.on{background:rgba(242,193,78,.2); border-color:transparent; color:#8a6d1e;}
+  .vk-abtn.primary{background:linear-gradient(90deg,#3b82f6,#6366f1); color:#fff; border-color:transparent;}
+  .vk-next{width:100%; margin-top:10px; border:0; border-radius:14px; padding:14px; font-family:var(--font); font-weight:900; font-size:16px;
+    background:var(--accent2); color:#fff; cursor:pointer;}
+  /* Quiz */
+  .vk-quiz{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px;}
+  .vk-qprompt{font-size:13px; color:var(--ink-soft); text-align:center;}
+  .vk-qword{font-size:24px; font-weight:900; color:var(--ink); text-align:center; margin:10px 0 14px;}
+  .vk-mini{border:0; background:transparent; cursor:pointer; font-size:18px;}
+  .vk-bigplay{border:0; border-radius:14px; padding:14px 20px; font-family:var(--font); font-weight:800; font-size:18px; background:rgba(59,130,246,.14); color:#3b5bd0; cursor:pointer;}
+  .vk-imgs{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .vk-imgopt{aspect-ratio:1.4; border:2px solid var(--line); background:var(--bg2); font-size:44px; border-radius:14px; cursor:pointer;}
+  .vk-opts{display:flex; flex-direction:column; gap:8px;}
+  .vk-opt{border:2px solid var(--line); background:var(--bg2); color:var(--ink); font-family:var(--font); font-weight:700; font-size:17px; padding:13px; border-radius:12px; cursor:pointer; text-align:center;}
+  .vk-imgopt.ok,.vk-opt.ok{border-color:#22c55e; background:rgba(34,197,94,.16);}
+  .vk-imgopt.ko,.vk-opt.ko{border-color:#ef4444; background:rgba(239,68,68,.14);}
+  .vk-input{width:100%; margin-top:6px; border:2px solid var(--line); border-radius:12px; padding:13px; font-family:var(--font); font-size:18px; text-align:center; background:var(--bg2); color:var(--ink);}
+  .vk-input.ok{border-color:#22c55e;} .vk-input.ko{border-color:#ef4444;}
+  .vk-spellmsg{margin-top:8px; font-size:14px; text-align:center;}
+  .vk-spellmsg.ok{color:#1f8a4c;} .vk-spellmsg.ko{color:#c0392b;}
+  .vk-fb{margin-top:12px; text-align:center; font-size:17px; font-weight:900;}
+  .vk-fb.ok{color:#1f8a4c;} .vk-fb.ko{color:#c0392b;}
+  .vk-recall{margin-top:6px; text-align:center; font-size:15px; color:var(--ink-soft);}
+  /* Recap */
+  .vk-recap{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; text-align:center;}
+  .vk-rtitle{font-size:20px; font-weight:900; color:var(--accent2); margin-bottom:12px;}
+  .vk-rrow{font-size:15px; color:var(--ink); margin:5px 0;}
+  .vk-checkin{margin-top:12px; font-size:15px; font-weight:800; color:#1f8a4c; background:rgba(34,197,94,.12); border-radius:12px; padding:10px;}
+  .vk-checkin.off{color:var(--ink-soft); background:rgba(0,0,0,.05);}
+  /* Feuilles modales */
+  .vk-sheetov{position:fixed; inset:0; z-index:130; background:rgba(0,0,0,.45); display:none; align-items:flex-end; justify-content:center;}
+  .vk-sheetov.show{display:flex;}
+  .vk-sheet{width:100%; max-width:520px; max-height:88vh; overflow-y:auto; background:var(--bg); border-radius:20px 20px 0 0; padding:16px;
+    box-shadow:0 -8px 30px rgba(0,0,0,.3);}
+  .vk-sheeth{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .vk-sheettitle{font-size:16px; font-weight:900; color:var(--ink);}
+  .vk-sheetx{border:0; background:transparent; font-size:20px; cursor:pointer; color:var(--ink-soft);}
+  .vk-lvopt{width:100%; text-align:left; border:1px solid var(--line); background:var(--panel); color:var(--ink); font-family:var(--font);
+    font-size:15px; padding:13px; border-radius:12px; cursor:pointer; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+  .vk-lvopt.on{border-color:transparent; background:linear-gradient(90deg,#3b82f6,#6366f1); color:#fff;}
+  .vk-lvsub{font-size:12px; opacity:.85;}
+  .vk-setlab{font-size:13px; font-weight:800; color:var(--ink); margin:12px 0 6px;}
+  .vk-chiprow{display:flex; gap:6px; flex-wrap:wrap;}
+  .vk-chip{border:1px solid var(--line); background:var(--panel); color:var(--ink-soft); font-family:var(--font); font-weight:800; font-size:13px; padding:8px 13px; border-radius:20px; cursor:pointer;}
+  .vk-chip.on{background:linear-gradient(90deg,#3b82f6,#6366f1); color:#fff; border-color:transparent;}
+  .vk-hchip{border:1px solid var(--line); background:var(--panel); color:var(--ink); font-family:var(--font); font-size:13px; padding:6px 11px; border-radius:16px; cursor:pointer;}
+  /* Dictionnaire */
+  .vk-dicttitle{font-size:18px; font-weight:900; color:var(--ink);}
+  .vk-searchbar{position:sticky; top:0;}
+  .vk-search{width:100%; border:2px solid var(--line); border-radius:14px; padding:12px 14px; font-family:var(--font); font-size:15px; background:var(--panel); color:var(--ink);}
+  .vk-results{display:flex; flex-direction:column; gap:8px;}
+  .vk-revbtn{width:100%; border:0; border-radius:12px; padding:11px; font-family:var(--font); font-weight:800; font-size:14px; background:linear-gradient(90deg,#3b82f6,#6366f1); color:#fff; cursor:pointer; margin-bottom:8px;}
+  .vk-clr{border:0; background:transparent; color:var(--accent2); font-family:var(--font); font-weight:700; font-size:12px; cursor:pointer;}
+  .vk-empty{font-size:13px; color:var(--ink-soft); text-align:center; padding:8px;}
+  .vk-sugt{font-size:12px; color:var(--ink-soft); margin:8px 0 4px;}
+  .vk-row{width:100%; display:flex; align-items:center; gap:10px; border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:10px; cursor:pointer; text-align:left;}
+  .vk-remoji{font-size:28px;}
+  .vk-rmid{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .vk-rword{font-size:16px; font-weight:800; color:var(--ink);}
+  .vk-rzh{font-size:12.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .vk-badges{display:flex; flex-direction:column; gap:3px; align-items:flex-end;}
+  .vk-lvb{font-size:10px; font-weight:800; color:#fff; background:#6366f1; padding:2px 7px; border-radius:10px;}
+  .vk-stb{font-size:10px; color:var(--ink-soft);}
+  .vk-dstatus{font-size:13px; color:var(--ink-soft); margin-top:10px;}
+
   /* ============================== Boutons ============================== */
   .btn{
     font-family:var(--font); font-weight:700; letter-spacing:.5px;
@@ -814,6 +927,11 @@
       </div>
     </section>
 
+    <!-- ============ Écran : Vocabulaire 词汇 (module 百词斩) ============ -->
+    <section id="vocabScreen" class="screen"></section>
+    <!-- ============ Écran : Dictionnaire 词典 ============ -->
+    <section id="dictScreen" class="screen"></section>
+
     <!-- =================== Superposition : Question ================ -->
     <div id="questionOverlay" class="overlay">
       <div class="card">
@@ -939,6 +1057,8 @@
     <button id="tabGame" class="active"><span class="ic">🎲</span>Jeu</button>
     <button id="tabHist"><span class="ic">📜</span>Historique</button>
     <button id="tabBadges"><span class="ic">🏅</span>Badges</button>
+    <button id="tabVocab"><span class="ic">🇫🇷</span>词汇</button>
+    <button id="tabDict"><span class="ic">📚</span>词典</button>
   </nav>
   <div id="badgeToast"></div>
 </div>
@@ -947,6 +1067,8 @@
 <script src="animaux.js"></script>
 <script src="sprites.js"></script>
 <script src="empire.js"></script>
+<script src="vocabdata.js"></script>
+<script src="vocab.js"></script>
 <script>
 "use strict";
 /* ====================================================================
@@ -1037,6 +1159,7 @@ function loadSave(){
       store.stats = o.stats||store.stats; store.badges = o.badges||{};
       store.empires = o.empires||{}; store.empireGame = o.empireGame||null;
       store.badgeLang = o.badgeLang || "fr";
+      store.vocab = o.vocab || null;
       // complète les champs de stats manquants (compat. anciennes sauvegardes)
       var d={bestStreak:0,curStreak:0,duelWins:0,flawless:0,errViewed:0,errSigs:{}};
       for(var k in d){ if(store.stats[k]===undefined) store.stats[k]=d[k]; } }
@@ -2744,12 +2867,14 @@ function escapeHtml(s){ return String(s).replace(/[&<>"]/g,function(c){return {"
 /*                        NAVIGATION / ONGLETS                          */
 /* ==================================================================== */
 function showScreen(name){
-  ["selectScreen","gameScreen","histScreen","badgesScreen","empireScreen"].forEach(function(id){ var e=$(id); if(e) e.classList.remove("active"); });
+  ["selectScreen","gameScreen","histScreen","badgesScreen","empireScreen","vocabScreen","dictScreen"].forEach(function(id){ var e=$(id); if(e) e.classList.remove("active"); });
   if(name==="select") $("selectScreen").classList.add("active");
   else if(name==="game") $("gameScreen").classList.add("active");
   else if(name==="hist") $("histScreen").classList.add("active");
   else if(name==="badges") $("badgesScreen").classList.add("active");
   else if(name==="empire") $("empireScreen").classList.add("active");
+  else if(name==="vocab") $("vocabScreen").classList.add("active");
+  else if(name==="dict") $("dictScreen").classList.add("active");
 }
 /* Question en cours (aventure ou Empire) : masquée quand on quitte l'onglet
    « Jeu », restaurée en y revenant. Le chrono éventuel est mis en pause pour ne
@@ -2769,6 +2894,8 @@ function setTab(which){
   $("tabGame").classList.toggle("active", which==="game");
   $("tabHist").classList.toggle("active", which==="hist");
   if($("tabBadges")) $("tabBadges").classList.toggle("active", which==="badges");
+  if($("tabVocab")) $("tabVocab").classList.toggle("active", which==="vocab");
+  if($("tabDict")) $("tabDict").classList.toggle("active", which==="dict");
   // Onglet « Jeu » → on réaffiche la question en cours ; ailleurs → on la masque.
   if(which==="game") restoreQuestionForTab(); else hideQuestionForTab();
 }
@@ -3010,6 +3137,8 @@ function init(){
   Empire.init({ Sound:Sound, store:store, persist:persist, ANIMAUX:ANIMAUX, EMOJI:EMOJI,
     animalById:animalById, presentQuestion:presentQuestion, freedCount:freedCount, toast:toast,
     showEmpireEnd:showEmpireEnd, exitEmpire:exitEmpire });
+  // Module de vocabulaire (百词斩)
+  if(window.Vocab) Vocab.init({ store:store, persist:persist, Sound:Sound });
 
   $("soundBtn").onclick=toggleSound;
   $("abandonBtn").onclick=abandonGame;
@@ -3047,6 +3176,10 @@ function init(){
   };
   $("tabHist").onclick=function(){ Sound.click(); setTab("hist"); showScreen("hist"); renderHistory(); };
   $("tabBadges").onclick=function(){ Sound.click(); setTab("badges"); showScreen("badges"); renderBadges(); };
+  if($("tabVocab")) $("tabVocab").onclick=function(){ Sound.click(); setTab("vocab"); showScreen("vocab"); if(window.Vocab) Vocab.renderVocab(); };
+  if($("tabDict")) $("tabDict").onclick=function(){ Sound.click(); setTab("dict"); showScreen("dict"); if(window.Vocab) Vocab.renderDict(); };
+  // Permet au dictionnaire de basculer vers l'onglet Vocabulaire (ex. « réviser mon carnet »).
+  window.__gotoVocab=function(){ setTab("vocab"); showScreen("vocab"); };
 
   $("clearHist").onclick=function(){
     Sound.click();
