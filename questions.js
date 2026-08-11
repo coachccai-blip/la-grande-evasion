@@ -1102,13 +1102,80 @@
       options:build(g2,bad2), answer:0 };
   }
 
+  /* --- Types de phrases : générateur PARTITIONNÉ (exemple = contenu unique) --- */
+  var TYPE_ITEMS=[
+    {ex:"Le chat dort.",t:"déclarative",d:1},{ex:"Où vas-tu ?",t:"interrogative",d:1},{ex:"Quelle belle journée !",t:"exclamative",d:1},
+    {ex:"Ferme la porte.",t:"impérative",d:1},{ex:"J'aime les glaces.",t:"déclarative",d:1},{ex:"Tu viens avec nous ?",t:"interrogative",d:1},
+    {ex:"Comme c'est beau !",t:"exclamative",d:1},{ex:"Range ta chambre.",t:"impérative",d:1},{ex:"Il fait beau aujourd'hui.",t:"déclarative",d:1},
+    {ex:"Est-ce que tu joues ?",t:"interrogative",d:1},{ex:"Quel dommage !",t:"exclamative",d:1},{ex:"Écoute-moi bien.",t:"impérative",d:1},{ex:"Nous jouons dehors.",t:"déclarative",d:1},
+    {ex:"Nous partons en vacances.",t:"déclarative",d:2},{ex:"As-tu fini tes devoirs ?",t:"interrogative",d:2},{ex:"Quelle chance nous avons !",t:"exclamative",d:2},
+    {ex:"Prends ton manteau.",t:"impérative",d:2},{ex:"Le train arrive à huit heures.",t:"déclarative",d:2},{ex:"Veux-tu jouer avec moi ?",t:"interrogative",d:2},
+    {ex:"Comme il court vite !",t:"exclamative",d:2},{ex:"Ferme la fenêtre, s'il te plaît.",t:"impérative",d:2},{ex:"Les oiseaux chantent le matin.",t:"déclarative",d:2},
+    {ex:"Où as-tu rangé mes clés ?",t:"interrogative",d:2},{ex:"Quel beau spectacle !",t:"exclamative",d:2},{ex:"Range tes affaires.",t:"impérative",d:2},{ex:"Ma sœur adore lire.",t:"déclarative",d:2},
+    {ex:"Le soleil se couche à l'horizon.",t:"déclarative",d:3},{ex:"Pourquoi es-tu en retard ?",t:"interrogative",d:3},{ex:"Que cette musique est douce !",t:"exclamative",d:3},
+    {ex:"N'oublie pas ton parapluie.",t:"impérative",d:3},{ex:"Les enfants bâtissent un château de sable.",t:"déclarative",d:3},{ex:"Combien coûte ce livre ?",t:"interrogative",d:3},
+    {ex:"Comme la mer est calme aujourd'hui !",t:"exclamative",d:3},{ex:"Réfléchis avant de répondre.",t:"impérative",d:3},{ex:"Le film commence dans dix minutes.",t:"déclarative",d:3},
+    {ex:"Connais-tu la réponse ?",t:"interrogative",d:3},{ex:"Quelle histoire incroyable !",t:"exclamative",d:3},{ex:"Choisis une carte au hasard.",t:"impérative",d:3},{ex:"Mon voisin répare sa voiture.",t:"déclarative",d:3},
+    {ex:"La bibliothèque ouvre à neuf heures.",t:"déclarative",d:4},{ex:"Sais-tu à quelle heure il arrive ?",t:"interrogative",d:4},{ex:"Quel courage tu as montré !",t:"exclamative",d:4},
+    {ex:"Veuillez patienter un instant.",t:"impérative",d:4},{ex:"Les scientifiques étudient les océans.",t:"déclarative",d:4},{ex:"Depuis quand habites-tu ici ?",t:"interrogative",d:4},
+    {ex:"Comme ce paysage est majestueux !",t:"exclamative",d:4},{ex:"Souviens-toi de fermer à clé.",t:"impérative",d:4},{ex:"Le musée expose des tableaux anciens.",t:"déclarative",d:4},
+    {ex:"Qu'as-tu répondu à sa question ?",t:"interrogative",d:4},{ex:"Quelle aventure extraordinaire !",t:"exclamative",d:4},{ex:"Complétez le formulaire lisiblement.",t:"impérative",d:4},{ex:"La rivière serpente dans la vallée.",t:"déclarative",d:4},
+    {ex:"Les hirondelles migrent vers le sud.",t:"déclarative",d:5},{ex:"Ne penses-tu pas qu'il faudrait partir ?",t:"interrogative",d:5},{ex:"Combien cette nouvelle me réjouit !",t:"exclamative",d:5},
+    {ex:"Veuillez éteindre vos téléphones.",t:"impérative",d:5},{ex:"Le conseil se réunit chaque mardi.",t:"déclarative",d:5},{ex:"En quoi puis-je vous être utile ?",t:"interrogative",d:5},
+    {ex:"Que de chemin parcouru depuis hier !",t:"exclamative",d:5},{ex:"Prenez garde à la marche.",t:"impérative",d:5},{ex:"La lumière traverse le vitrail coloré.",t:"déclarative",d:5},
+    {ex:"N'est-il pas trop tard pour agir ?",t:"interrogative",d:5},{ex:"Quelle surprise vous nous faites !",t:"exclamative",d:5},{ex:"Songez aux conséquences de vos actes.",t:"impérative",d:5},{ex:"Le philosophe médite en silence.",t:"déclarative",d:5},
+    {ex:"La sagesse s'acquiert avec le temps.",t:"déclarative",d:6},{ex:"Ne serait-il pas plus sage de renoncer ?",t:"interrogative",d:6},{ex:"Ô combien cette victoire est méritée !",t:"exclamative",d:6},
+    {ex:"Gardez-vous de tout jugement hâtif.",t:"impérative",d:6},{ex:"L'orateur captive l'auditoire par son éloquence.",t:"déclarative",d:6},{ex:"Qu'adviendrait-il si nous échouions ?",t:"interrogative",d:6},
+    {ex:"Comme les étoiles scintillent ce soir !",t:"exclamative",d:6},{ex:"Veuillez agréer mes salutations distinguées.",t:"impérative",d:6},{ex:"Le manuscrit révèle des secrets oubliés.",t:"déclarative",d:6},
+    {ex:"Pourquoi faudrait-il céder à la panique ?",t:"interrogative",d:6},{ex:"Quelle prouesse admirable il a accomplie !",t:"exclamative",d:6},{ex:"Méditez cette maxime attentivement.",t:"impérative",d:6},{ex:"La civilisation prospère grâce au savoir.",t:"déclarative",d:6}
+  ];
+  var TYPE_ALL=["déclarative","interrogative","exclamative","impérative"];
+  var TYPE_FRAMES=["« {EX} » est une phrase ___.","La phrase « {EX} » est ___.","« {EX} » — c'est une phrase ___.","Quel type ? « {EX} » → phrase ___."];
+  function genTypes(diff,cat,sub){
+    var it=pick(bandFilter(TYPE_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(TYPE_FRAMES).replace("{EX}",it.ex), hint:"Quel type de phrase ?",
+      note:"Types : déclarative (elle affirme .), interrogative (elle questionne ?), exclamative (elle s'exclame !), impérative (elle ordonne).",
+      options:build(it.t, TYPE_ALL.filter(function(x){return x!==it.t;})), answer:0 };
+  }
+
+  /* --- Prépositions (de lieu) : générateur PARTITIONNÉ --- */
+  var PREP_PLACES=[
+    {place:"Paris",prep:"à",d:1},{place:"Lyon",prep:"à",d:1},{place:"Rome",prep:"à",d:1},{place:"cinéma",prep:"au",d:1},
+    {place:"parc",prep:"au",d:1},{place:"marché",prep:"au",d:1},{place:"jardin",prep:"au",d:1},{place:"piscine",prep:"à la",d:1},
+    {place:"maison",prep:"à la",d:1},{place:"plage",prep:"à la",d:1},{place:"gare",prep:"à la",d:1},{place:"école",prep:"à l'",d:1},{place:"hôpital",prep:"à l'",d:1},
+    {place:"France",prep:"en",d:2},{place:"Italie",prep:"en",d:2},{place:"Espagne",prep:"en",d:2},{place:"Belgique",prep:"en",d:2},
+    {place:"Portugal",prep:"au",d:2},{place:"Canada",prep:"au",d:2},{place:"Japon",prep:"au",d:2},{place:"bureau",prep:"au",d:2},
+    {place:"théâtre",prep:"au",d:2},{place:"boulangerie",prep:"à la",d:2},{place:"montagne",prep:"à la",d:2},{place:"aéroport",prep:"à l'",d:2},{place:"université",prep:"à l'",d:2},
+    {place:"restaurant",prep:"au",d:3},{place:"stade",prep:"au",d:3},{place:"zoo",prep:"au",d:3},{place:"musée",prep:"au",d:3},
+    {place:"pharmacie",prep:"à la",d:3},{place:"bibliothèque",prep:"à la",d:3},{place:"banque",prep:"à la",d:3},{place:"caserne",prep:"à la",d:3},
+    {place:"opéra",prep:"à l'",d:3},{place:"hôtel",prep:"à l'",d:3},{place:"le médecin",prep:"chez",d:3},{place:"le coiffeur",prep:"chez",d:3},{place:"mes grands-parents",prep:"chez",d:3},
+    {place:"Allemagne",prep:"en",d:4},{place:"Suisse",prep:"en",d:4},{place:"Grèce",prep:"en",d:4},{place:"Maroc",prep:"au",d:4},
+    {place:"Brésil",prep:"au",d:4},{place:"Mexique",prep:"au",d:4},{place:"États-Unis",prep:"aux",d:4},{place:"Pays-Bas",prep:"aux",d:4},
+    {place:"commissariat",prep:"au",d:4},{place:"préfecture",prep:"à la",d:4},{place:"le dentiste",prep:"chez",d:4},{place:"atelier",prep:"à l'",d:4},{place:"chantier",prep:"au",d:4},
+    {place:"planétarium",prep:"au",d:5},{place:"observatoire",prep:"à l'",d:5},{place:"ambassade",prep:"à l'",d:5},{place:"le notaire",prep:"chez",d:5},
+    {place:"clinique",prep:"à la",d:5},{place:"tribunal",prep:"au",d:5},{place:"usine",prep:"à l'",d:5},{place:"monastère",prep:"au",d:5},
+    {place:"cathédrale",prep:"à la",d:5},{place:"sanctuaire",prep:"au",d:5},{place:"aquarium",prep:"à l'",d:5},{place:"médiathèque",prep:"à la",d:5},{place:"conservatoire",prep:"au",d:5},
+    {place:"amphithéâtre",prep:"à l'",d:6},{place:"hémicycle",prep:"à l'",d:6},{place:"chancellerie",prep:"à la",d:6},{place:"échoppe",prep:"à l'",d:6},
+    {place:"belvédère",prep:"au",d:6},{place:"manufacture",prep:"à la",d:6},{place:"promontoire",prep:"au",d:6},{place:"auditorium",prep:"à l'",d:6},
+    {place:"réfectoire",prep:"au",d:6},{place:"dispensaire",prep:"au",d:6},{place:"l'apothicaire",prep:"chez",d:6},{place:"vigie",prep:"à la",d:6},{place:"préau",prep:"au",d:6}
+  ];
+  var PREP_POOL=["à","à la","à l'","au","aux","en","chez","dans"];
+  var PREP_FRAMES=["Je vais ___ {P}.","Nous allons ___ {P}.","Elle se rend ___ {P}.","On part ___ {P}."];
+  function genPrep(diff,cat,sub){
+    var it=pick(bandFilter(PREP_PLACES,diff,"d"));
+    var bad=shuffle(PREP_POOL.filter(function(x){return x!==it.prep;})).slice(0,3);
+    return { cat:cat, sub:sub, phrase:cap(pick(PREP_FRAMES).replace("{P}",it.place)), hint:"Choisis la bonne préposition (lieu)",
+      note:"Lieu : ville → à (à Paris) ; pays féminin → en (en France) ; pays masculin → au (au Portugal) ; pays pluriel → aux (aux États-Unis) ; personne → chez ; sinon à la / à l' / au selon le nom.",
+      options:build(it.prep,bad), answer:0 };
+  }
+
   function genGram(sub, diff, cat){
     if(sub==="Nature des mots") return genNature(diff,cat,sub);
     if(sub==="Déterminants") return genDeterminants(diff,cat,sub);
     if(sub==="Pronoms") return fromGood(pickByDiff(PRON,diff),"Choisis le bon pronom",cat,sub);
-    if(sub==="Prépositions") return fromGood(pickByDiff(PREP,diff),"Choisis la bonne préposition",cat,sub);
+    if(sub==="Prépositions") return genPrep(diff,cat,sub);
     if(sub==="Accords") return genAccords(diff,cat,sub);
-    if(sub==="Types de phrases") return fromGood(pickByDiff(TYPES,diff),"Quel type de phrase ?",cat,sub);
+    if(sub==="Types de phrases") return genTypes(diff,cat,sub);
     if(sub==="Accord du participe passé") return genAccordPP(diff,cat,sub);
     if(sub==="Connecteurs logiques") return fromGood(pickByDiff(CONNECT,diff),"Choisis le bon connecteur logique",cat,sub);
     if(sub==="Voix passive") return genVoixPassive(diff,cat,sub);
