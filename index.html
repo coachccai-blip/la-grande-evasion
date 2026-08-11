@@ -558,7 +558,7 @@
     <div id="duelChoose" class="overlay">
       <div class="card">
         <div style="font-size:20px;font-weight:800;letter-spacing:1px;text-align:center;margin-bottom:4px;">⚔️ Défier en duel</div>
-        <div style="font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:12px;">Choisis ton adversaire pour un duel de rapidité (1 min). Le gagnant avance de 6, le perdant recule de 6.</div>
+        <div style="font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:12px;">Choisis ton adversaire pour un duel de rapidité (20 s). Le gagnant avance de 6, le perdant recule de 6.</div>
         <div id="duelOpponents"></div>
         <button id="duelCancel" class="btn secondary wide" style="margin-top:6px;">Annuler</button>
       </div>
@@ -575,7 +575,7 @@
           </div>
           <div class="vs-mid">
             <div class="vs-badge">VS</div>
-            <div id="vsTimeNum" class="vs-time">60</div>
+            <div id="vsTimeNum" class="vs-time">20</div>
           </div>
           <div class="vs-side foe">
             <div id="vsFoeEmoji" class="vs-emoji"></div>
@@ -1614,7 +1614,7 @@ function openDuelChooser(){
   $("duelChoose").classList.add("show");
 }
 
-// Le duel de rapidité (1 min) : renvoie {you, foe}.
+// Le duel de rapidité (20 s) : renvoie {you, foe}.
 function runDuel(botIndex){
   return new Promise(function(resolve){
     var foe=G.players[botIndex], foeA=animalById(foe.animalId), ds=$("duelScreen");

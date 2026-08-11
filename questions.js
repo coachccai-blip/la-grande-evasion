@@ -530,7 +530,7 @@
       phrase = tm ? (tm+sep+body) : cap(body);
     }
     phrase=cap(phrase);
-    return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint, options:build(correct,pool), answer:0 };
+    return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 };
   }
 
   function genImper(v,diff,cat,sub,comp){
@@ -581,7 +581,7 @@
     }
     var tm=pick(TIME.passe), pcc=pcComp(v);
     var phrase=cap(tm+", "+subjBlank(S,correct)+(pcc?" "+pcc:"")+".");
-    return { cat:cat, sub:sub, tense:"passe", phrase:phrase, hint:hint, options:build(correct,pool), answer:0 };
+    return { cat:cat, sub:sub, tense:"passe", phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 };
   }
 
   // Temps composés « avancés » (C1) : plus-que-parfait, conditionnel passé,
@@ -616,7 +616,7 @@
       phrase = head+" "+subjBlank(S,correct)+(comp?" "+comp:"")+".";
     }
     phrase=cap(phrase);
-    return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint, options:build(correct,pool), answer:0 };
+    return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 };
   }
 
   // Choisit un item d'une banque en visant la difficulté. On élargit la bande
@@ -2215,7 +2215,7 @@
     {ph:"___ sont tes films préférés ? (masculin pluriel)",good:"Quels",bad:["Quelles","Quel","Qu'elles"],note:"« quels » = déterminant interrogatif masculin pluriel.",d:2},
     {ph:"___ sont tes couleurs préférées ? (féminin pluriel)",good:"Quelles",bad:["Quels","Quelle","Qu'elles"],note:"« quelles » = déterminant interrogatif féminin pluriel.",d:2},
     {ph:"Alors, ___ penses-tu, toi ? (que + en)",good:"qu'en",bad:["quand","quant","camp"],note:"« qu'en » = que + en.",d:2},
-    {ph:"Il ___ a pris sans permission (l' + a, avoir).",good:"l'a",bad:["la","là","las"],note:"« l'a » = le/la + a (avoir) ; « la » = déterminant.",d:2},
+    {ph:"Il ___ pris sans permission (l' + a, avoir).",good:"l'a",bad:["la","là","las"],note:"« l'a » = le/la + a (avoir) ; « la » = déterminant.",d:2},
     {ph:"Pose le livre ___, sur l'étagère (le lieu).",good:"là",bad:["la","l'a","las"],note:"« là » = le lieu ; « la » = déterminant.",d:2},
     {ph:"Tu ___ vu partir ce matin (l' + as, tu).",good:"l'as",bad:["la","là","las"],note:"« l'as » = le/la + as (tu) ; « la » = déterminant.",d:2},
     {ph:"___ ne me dérange pas du tout (cela).",good:"Ça",bad:["Sa","Çà","Sà"],note:"« ça » = cela ; « sa » = déterminant possessif.",d:2},
