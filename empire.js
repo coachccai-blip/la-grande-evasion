@@ -117,11 +117,14 @@
     p.cash-=amount;
     return true;
   }
-  function credit(pi, amount){ E.players[pi].cash+=amount; }
+  // Enregistre une variation de solde pour l'animation flottante (+/−) au-dessus du total.
+  function noteDelta(pi, amt){ if(pi<0||!amt) return; (E._deltas=E._deltas||[]).push({pi:pi, amt:amt}); }
+  function credit(pi, amount){ E.players[pi].cash+=amount; noteDelta(pi, amount); }
   function transfer(from, to, amount){ // from paie to
-    E.players[from].cash-=amount;
-    if(to>=0) E.players[to].cash+=amount;
+    E.players[from].cash-=amount; noteDelta(from, -amount);
+    if(to>=0){ E.players[to].cash+=amount; noteDelta(to, amount); }
   }
+  function pName(pi){ return EB.animalById(E.players[pi].animalId).name; }
   function netWorth(p){
     var w=p.cash;
     E.board.forEach(function(c){ if(isProp(c)&&c.owner===E.players.indexOf(p)){
@@ -162,18 +165,62 @@
   function houseSVG(){ return '<svg viewBox="0 0 22 20" class="emp-bld"><polygon points="11,2 21,10 1,10" fill="#2e9e6f"/><rect x="3.5" y="10" width="15" height="9" rx="1" fill="#fff8ec" stroke="#a9793f" stroke-width="1"/><rect x="9" y="13" width="4" height="6" fill="#8b5a24"/></svg>'; }
   function palaceSVG(){ return '<svg viewBox="0 0 30 22" class="emp-bld emp-pal"><polygon points="15,1 8,8 22,8" fill="#e0a824"/><polygon points="5,8 1,8 3,4" fill="#e0a824"/><polygon points="25,8 29,8 27,4" fill="#e0a824"/><rect x="2" y="8" width="26" height="12" rx="1.5" fill="#f4c657" stroke="#c99a2e"/><rect x="13" y="13" width="4" height="7" fill="#8b5a24"/><rect x="6" y="11" width="3" height="3" fill="#fff8ec"/><rect x="21" y="11" width="3" height="3" fill="#fff8ec"/></svg>'; }
   function buildingsHTML(level){ if(level<=0) return ""; if(level>=4) return palaceSVG(); var s=""; for(var i=0;i<Math.min(level,3);i++) s+=houseSVG(); return s; }
-  // Décor illustré du centre : ciel, soleil, collines de la Vallée Sauvage + le portail du zoo à l'horizon.
-  var SCENE_SVG='<svg class="emp-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
-    +'<defs><linearGradient id="empSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c3e8ff"/><stop offset="1" stop-color="#eaf7ff"/></linearGradient></defs>'
-    +'<rect width="100" height="100" fill="url(#empSky)"/>'
-    +'<circle cx="82" cy="16" r="8" fill="#ffe08a"/><circle cx="82" cy="16" r="12" fill="#ffe08a" opacity=".3"/>'
-    +'<ellipse cx="22" cy="20" rx="11" ry="5" fill="#ffffff" opacity=".85"/><ellipse cx="30" cy="18" rx="8" ry="5" fill="#ffffff" opacity=".85"/>'
-    +'<path d="M0,66 Q26,54 50,64 T100,60 L100,100 L0,100 Z" fill="#d7ecac"/>'
-    // acacias de la savane (silhouettes discrètes sur la colline)
-    +'<g opacity=".65" fill="#6a9a48"><g><rect x="17.4" y="58" width="1.1" height="6" fill="#8a6a3a"/><ellipse cx="18" cy="57.4" rx="5" ry="1.7"/></g>'
-    +'<g><rect x="77" y="60" width="1" height="5" fill="#8a6a3a"/><ellipse cx="77.5" cy="59.6" rx="4" ry="1.4"/></g></g>'
-    +'<path d="M0,80 Q30,68 60,78 T100,76 L100,100 L0,100 Z" fill="#a9d47a"/>'
-    +'</svg>';
+  // Face de dé dessinée (SVG à points) — reflète la vraie valeur obtenue.
+  function diceFaceSVG(n){
+    var box='<rect x="6" y="6" width="88" height="88" rx="18" fill="#fff" stroke="#c9ced6" stroke-width="3"/>';
+    if(!n){ return '<svg viewBox="0 0 100 100" class="emp-diesvg">'+box+'<text x="50" y="70" text-anchor="middle" font-size="52" font-weight="900" fill="#c2c8d2">?</text></svg>'; }
+    var P={1:[[50,50]],2:[[30,30],[70,70]],3:[[30,30],[50,50],[70,70]],
+      4:[[30,30],[70,30],[30,70],[70,70]],5:[[30,30],[70,30],[50,50],[30,70],[70,70]],
+      6:[[30,28],[70,28],[30,50],[70,50],[30,72],[70,72]]};
+    var pips=(P[n]||[]).map(function(p){ return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="9" fill="#26324b"/>'; }).join("");
+    return '<svg viewBox="0 0 100 100" class="emp-diesvg">'+box+pips+'</svg>';
+  }
+  // Décor du centre : skyline corporate animée (gratte-ciels, fenêtres allumées,
+  // dirigeable, trafic de rue) — ambiance grande métropole des affaires.
+  function buildScene(){
+    var towers=[{x:2,w:14,h:40},{x:18,w:11,h:56},{x:31,w:15,h:31},{x:48,w:12,h:63},
+      {x:62,w:13,h:46},{x:77,w:15,h:52},{x:90,w:9,h:36}];
+    var baseY=92, s='';
+    towers.forEach(function(t,ti){
+      var top=baseY-t.h;
+      s+='<rect x="'+t.x+'" y="'+top+'" width="'+t.w+'" height="'+t.h+'" fill="url(#empTower)" rx="1"/>';
+      // antenne + balise clignotante sur une tour sur deux
+      if(ti%2===0){ var ax=(t.x+t.w/2);
+        s+='<rect x="'+(ax-0.35).toFixed(2)+'" y="'+(top-4)+'" width="0.7" height="4" fill="#61729a"/>'
+          +'<circle cx="'+ax.toFixed(2)+'" cy="'+(top-4)+'" r="0.9" fill="#ff6b6b"><animate attributeName="opacity" values="1;.15;1" dur="1.6s" repeatCount="indefinite"/></circle>'; }
+      // grille de fenêtres
+      var pad=1.6, gw=2.1, gh=2.5, gap=1.1;
+      var cols=Math.max(1,Math.floor((t.w-pad*2+gap)/(gw+gap)));
+      var rows=Math.max(1,Math.floor((t.h-pad*2+gap)/(gh+gap)));
+      for(var r=0;r<rows;r++){ for(var cc=0;cc<cols;cc++){
+        var wx=(t.x+pad+cc*(gw+gap)), wy=(top+pad+r*(gh+gap));
+        var lit=((r*7+cc*3+ti*5)%4===0);
+        var win='<rect x="'+wx.toFixed(2)+'" y="'+wy.toFixed(2)+'" width="'+gw+'" height="'+gh+'" rx="0.4" fill="'+(lit?'#ffe08a':'#3a4a72')+'" opacity="'+(lit?0.95:0.55)+'"';
+        if(((r+cc+ti)%9)===0){ win+='><animate attributeName="fill" values="#3a4a72;#ffe08a;#3a4a72" dur="'+(3+((cc+r)%4))+'s" repeatCount="indefinite"/></rect>'; }
+        else win+='/>';
+        s+=win;
+      }}
+    });
+    return '<svg class="emp-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
+      +'<defs>'
+      +'<linearGradient id="empSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16233f"/><stop offset=".55" stop-color="#3b4d78"/><stop offset="1" stop-color="#c98a63"/></linearGradient>'
+      +'<linearGradient id="empTower" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f4069"/><stop offset="1" stop-color="#182339"/></linearGradient>'
+      +'</defs>'
+      +'<rect width="100" height="100" fill="url(#empSky)"/>'
+      +'<circle cx="80" cy="24" r="9" fill="#ffd9a0" opacity=".92"/><circle cx="80" cy="24" r="14" fill="#ffd9a0" opacity=".22"/>'
+      // dirigeable corporate qui traverse le ciel
+      +'<g><ellipse cx="0" cy="15" rx="7" ry="3" fill="#e9eef6"/><path d="M-6,15 h13" stroke="#b8c4da" stroke-width="0.6"/><rect x="-1.5" y="17.6" width="3" height="1.8" rx="0.6" fill="#9fb0cc"/>'
+      +'<animateTransform attributeName="transform" type="translate" from="-16 0" to="122 7" dur="20s" repeatCount="indefinite"/></g>'
+      +s
+      // rue + trafic (phares blancs à l'aller, feux rouges au retour)
+      +'<rect x="0" y="92" width="100" height="8" fill="#101828"/>'
+      +'<rect x="0" y="91.4" width="100" height="0.5" fill="#f4c14e" opacity=".5"/>'
+      +'<g fill="#fff3b0"><rect x="0" y="95" width="5" height="1.8" rx="0.9"><animate attributeName="x" values="-8;108" dur="6s" repeatCount="indefinite"/></rect>'
+      +'<rect x="0" y="97.6" width="4" height="1.6" rx="0.8"><animate attributeName="x" values="-30;108" dur="8s" repeatCount="indefinite"/></rect></g>'
+      +'<g fill="#ff6b6b"><rect x="0" y="93.4" width="4" height="1.6" rx="0.8"><animate attributeName="x" values="108;-8" dur="7.5s" repeatCount="indefinite"/></rect></g>'
+      +'</svg>';
+  }
+  var SCENE_SVG=buildScene();
 
   function mount(){
     var root=$("empireScreen"); root.innerHTML="";
@@ -237,27 +284,54 @@
       if(c.type==="prop"){ var blds=host.querySelector(".emp-blds"); if(blds) blds.innerHTML=buildingsHTML(c.level); }
     });
   }
+  function propCount(pi){ var n=0; E.board.forEach(function(c){ if(isProp(c)&&c.owner===pi) n++; }); return n; }
+  function leaderIndex(){ var best=-1,bw=-1; E.players.forEach(function(p,pi){ if(p.bankrupt) return; var w=netWorth(p); if(w>bw){ bw=w; best=pi; } }); return best; }
   function renderCenter(){
     var c=$("empCenter"); if(!c) return; c.innerHTML=SCENE_SVG;
     var cover=el("div","emp-cover");
     cover.appendChild(el("div","emp-title","👑 L'Empire des Évadés"));
+    // Récapitulatif « qui mène » : chaque animal, son nombre de propriétés, son solde.
+    var lead=leaderIndex();
     var hud=el("div","emp-hud");
     E.players.forEach(function(p,pi){
-      var row=el("div","emp-p"+(pi===0?" me":"")+(p.bankrupt?" ko":""));
+      var row=el("div","emp-p"+(pi===0?" me":"")+(p.bankrupt?" ko":"")+(pi===lead&&!p.bankrupt?" lead":"")); row.id="empRow"+pi;
       row.style.setProperty("--pcol",tokenColor(pi));
       var em=el("span","emp-pe",EB.EMOJI[p.animalId]);
-      var nm=el("span","emp-pn",EB.animalById(p.animalId).name+(p.jail>0?" 🔒":""));
-      var cash=el("span","emp-pc", p.bankrupt?"✖ ruiné":("₵"+p.cash));
-      row.appendChild(em); row.appendChild(nm); row.appendChild(cash);
+      var nm=el("span","emp-pn",(pi===lead&&!p.bankrupt?"👑 ":"")+EB.animalById(p.animalId).name+(p.jail>0?" 🔒":""));
+      var props=el("span","emp-pk","🏠"+propCount(pi));
+      var cash=el("span","emp-pc"); cash.id="empPC"+pi; cash.textContent=p.bankrupt?"✖ ruiné":("₵"+p.cash);
+      row.appendChild(em); row.appendChild(nm); row.appendChild(props); row.appendChild(cash);
       hud.appendChild(row);
     });
     cover.appendChild(hud);
-    var dice=el("div","emp-dice"); dice.id="empDice"; dice.innerHTML="<span id='empD1'>🎲</span><span id='empD2'>🎲</span>";
+    var dice=el("div","emp-dice"); dice.id="empDice";
+    dice.innerHTML="<span id='empD1' class='emp-die'>"+diceFaceSVG(E.d1)+"</span><span id='empD2' class='emp-die'>"+diceFaceSVG(E.d2)+"</span>";
     cover.appendChild(dice);
-    var msg=el("div","emp-msg"); msg.id="empMsg"; cover.appendChild(msg);
+    // Journal d'événements : dernières lignes (« Lion a payé ₵30 de loyer à Éléphant. »)
+    var log=el("div","emp-log"); log.id="empMsg";
+    (E._log||[]).slice(-3).forEach(function(line){ log.appendChild(el("div","emp-logline",line)); });
+    cover.appendChild(log);
     c.appendChild(cover);
+    flushDeltas();
   }
-  function say(t){ var m=$("empMsg"); if(m) m.textContent=t; }
+  // Journal : say() empile la ligne et réaffiche les 3 dernières.
+  function say(t){
+    if(!t) return;
+    E._log=E._log||[]; E._log.push(t); if(E._log.length>8) E._log.shift();
+    var m=$("empMsg"); if(m){ m.innerHTML=""; E._log.slice(-3).forEach(function(line){ m.appendChild(el("div","emp-logline",line)); }); m.scrollTop=m.scrollHeight; }
+  }
+  // Animations flottantes +₵ (vert) / −₵ (rouge) au-dessus du total de chaque animal.
+  function flushDeltas(){
+    var ds=E._deltas; E._deltas=[]; if(!ds||!ds.length) return;
+    var byPi={}; ds.forEach(function(d){ byPi[d.pi]=(byPi[d.pi]||0)+d.amt; });
+    Object.keys(byPi).forEach(function(k){
+      var amt=byPi[k]; if(!amt) return;
+      var host=$("empPC"+k); if(!host) return;
+      var f=el("div","emp-delta "+(amt>0?"up":"down"), (amt>0?"+₵":"−₵")+Math.abs(amt));
+      host.appendChild(f);
+      setTimeout(function(){ if(f&&f.parentNode) f.parentNode.removeChild(f); }, 1300);
+    });
+  }
   function renderPanel(){
     var pn=$("empPanel"); if(!pn) return; pn.innerHTML="";
     if(E.over){ return; }
@@ -329,13 +403,17 @@
   }
 
   async function animDice(d1,d2){
-    var F=["⚀","⚁","⚂","⚃","⚄","⚅"];
     EB.Sound.diceSpin&&EB.Sound.diceSpin();
-    for(var n=0;n<8;n++){ var a=$("empD1"),b=$("empD2"); if(a)a.textContent=F[rint(6)]; if(b)b.textContent=F[rint(6)]; await sleep(70); }
-    var e1=$("empD1"),e2=$("empD2"); if(e1)e1.textContent=F[d1-1]; if(e2)e2.textContent=F[d2-1];
+    var a=$("empD1"),b=$("empD2");
+    if(a)a.classList.add("rolling"); if(b)b.classList.add("rolling");
+    for(var n=0;n<8;n++){ if(a)a.innerHTML=diceFaceSVG(1+rint(6)); if(b)b.innerHTML=diceFaceSVG(1+rint(6)); await sleep(70); }
+    // mémorise la vraie valeur : renderCenter la réaffichera à l'identique.
+    E.d1=d1; E.d2=d2;
+    if(a){ a.innerHTML=diceFaceSVG(d1); a.classList.remove("rolling"); a.classList.add("pop"); }
+    if(b){ b.innerHTML=diceFaceSVG(d2); b.classList.remove("rolling"); b.classList.add("pop"); }
     EB.Sound.diceStop&&EB.Sound.diceStop();
     E.lastDice=d1+d2;
-    await sleep(250);
+    await sleep(320);
   }
 
   /* ------------------- CARTE ILLUSTRÉE DE LA CASE (jeu clair) -------------- */
@@ -419,7 +497,7 @@
     var yes=await confirmAction("« "+c.name+" » est libre (₵"+c.price+"). Répondre juste pour l'acheter ?", canAfford?"Acheter":"Acheter (fonds justes)", "Passer");
     if(!yes){ return; }
     var ok=await ask("Achat de « "+c.name+" » — ₵"+c.price);
-    if(ok && canAfford){ c.owner=pi; transfer(pi,-1,c.price); paintBuy(pi); say("Acheté ! "+c.name+" est à toi."); }
+    if(ok && canAfford){ c.owner=pi; transfer(pi,-1,c.price); paintBuy(pi); say(pName(pi)+" a acheté « "+c.name+" » (₵"+c.price+")."); }
     else if(ok && !canAfford){ say("Réponse juste, mais fonds insuffisants."); }
     else { say("Le vendeur doute… l'affaire part en enchère éclair !"); await sleep(700); await auctionFlow(pi); }
     renderTokens(); renderCenter(); await sleep(500);
@@ -444,12 +522,16 @@
   async function rentFlow(pi, diceTotal){
     var c=cell(E.players[pi].pos), rent=rentOf(c, diceTotal), owner=c.owner;
     var choice=await threeWay("« "+c.name+" » appartient à "+ownerName(c)+". Loyer à payer : ₵"+rent+".",
-      "Négocier (loyer ÷2 si juste)","OPA : racheter de force (3 bonnes réponses)","Payer ₵"+rent);
-    if(choice==="pay"){ transfer(pi,owner,rent); say("Loyer payé : −₵"+rent+"."); EB.Sound.bad&&EB.Sound.bad(); }
+      "Négocier ÷2 (3 bonnes réponses)","OPA : racheter de force (5 bonnes réponses)","Payer ₵"+rent);
+    if(choice==="pay"){ transfer(pi,owner,rent); say(pName(pi)+" a payé ₵"+rent+" de loyer à "+ownerName(c)+"."); EB.Sound.bad&&EB.Sound.bad(); }
     else if(choice==="negotiate"){
-      var ok=await ask("Négociation de loyer — loyer ÷2 si tu réussis");
+      // Loyer ÷2 seulement si les 3 réponses sont justes.
+      say("Négociation : réussis 3 questions pour diviser le loyer par 2.");
+      await sleep(200);
+      var ok=true;
+      for(var nn=0;nn<3;nn++){ if(!await ask("Négociation "+(nn+1)+"/3 — loyer ÷2 sur « "+c.name+" »")){ ok=false; break; } }
       var due=ok?Math.round(rent/2):rent;
-      transfer(pi,owner,due); say(ok?("Négocié ! Loyer réduit : −₵"+due+"."):("Négociation ratée : −₵"+due+"."));
+      transfer(pi,owner,due); say(ok?(pName(pi)+" négocie : loyer ÷2, il paie ₵"+due+" à "+ownerName(c)+"."):(pName(pi)+" rate la négociation : ₵"+due+" à "+ownerName(c)+"."));
     } else { // OPA
       await opaFlow(pi);
     }
@@ -458,10 +540,10 @@
   }
   async function opaFlow(pi){
     var c=cell(E.players[pi].pos), owner=c.owner, price150=Math.round(c.price*1.5), rent=rentOf(c,E.lastDice);
-    say("OPA sauvage (rachat forcé) sur « "+c.name+" » : réussis 3 questions d'affilée !");
+    say("OPA sauvage (rachat forcé) sur « "+c.name+" » : réussis 5 questions d'affilée !");
     EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(500);
-    for(var n=0;n<3;n++){
-      var ok=await ask("OPA "+(n+1)+"/3 — rachat forcé de « "+c.name+" »");
+    for(var n=0;n<5;n++){
+      var ok=await ask("OPA "+(n+1)+"/5 — rachat forcé de « "+c.name+" »");
       if(!ok){ // échec : loyer ×2
         transfer(pi,owner,rent*2); say("OPA ratée ! Loyer doublé : −₵"+(rent*2)+".");
         E.players[pi].opaUsed=true; return;
@@ -584,10 +666,97 @@
     renderTokens(); renderCenter(); await sleep(250);
   }
   async function botRent(pi, diceTotal){
-    var c=cell(E.players[pi].pos), rent=rentOf(c,diceTotal);
-    transfer(pi,c.owner,rent); botSay(pi,"a payé ₵"+rent+" de loyer à "+EB.animalById(E.players[c.owner].animalId).name+".");
+    var c=cell(E.players[pi].pos), rent=rentOf(c,diceTotal), owner=c.owner;
+    var price150=Math.round(c.price*1.5), name=EB.animalById(E.players[owner].animalId).name;
+    if(owner===0){
+      // Contre le JOUEUR : peut tenter une OPA (défense 5 questions) ou une
+      // négociation de loyer ÷2 (défense 3 questions). Sinon paie plein tarif.
+      var canOpa = c.type==="prop" && !c.mortgaged && (E.players[pi].cash-price150)>=100;
+      var r=Math.random();
+      if(canOpa && r<0.32){ await defenseFlow(pi, c); renderTokens(); renderCenter(); await sleep(300); await checkSolvency(pi); return; }
+      if(r<0.60){ await negotiateVsPlayer(pi, c, rent); renderTokens(); renderCenter(); await sleep(300); await checkSolvency(pi); return; }
+      transfer(pi,0,rent); botSay(pi,"a payé ₵"+rent+" de loyer à "+pName(0)+".");
+      renderTokens(); renderCenter(); await sleep(250); await checkSolvency(pi); return;
+    }
+    // Contre un autre BOT : peut tenter une OPA (résolution automatique, 5 réponses).
+    var canOpaBot = c.type==="prop" && !c.mortgaged && (E.players[pi].cash-price150)>=100 && Math.random()<0.32;
+    if(canOpaBot){ await botOpaVsBot(pi, c); renderTokens(); renderCenter(); await sleep(300); await checkSolvency(pi); return; }
+    transfer(pi,owner,rent); botSay(pi,"a payé ₵"+rent+" de loyer à "+name+".");
     renderTokens(); renderCenter(); await sleep(250);
     await checkSolvency(pi);
+  }
+  // OPA d'un bot contre un autre bot : 5 réponses simulées d'affilée.
+  async function botOpaVsBot(pi, c){
+    var owner=c.owner, price150=Math.round(c.price*1.5), rent=rentOf(c,E.lastDice);
+    botSay(pi,"tente une OPA sur « "+c.name+" » de "+EB.animalById(E.players[owner].animalId).name+" !");
+    EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(750);
+    var ok=true; for(var n=0;n<5;n++){ if(!botAnswers()){ ok=false; break; } }
+    if(ok){
+      transfer(pi,owner,price150); c.owner=pi; c.level=0;
+      botSay(pi,"réussit son OPA et rafle « "+c.name+" » !"); EB.Sound.win&&EB.Sound.win();
+    } else {
+      transfer(pi,owner,rent*2); botSay(pi,"rate son OPA : loyer doublé (−₵"+(rent*2)+")."); EB.Sound.bad&&EB.Sound.bad();
+    }
+    await sleep(600);
+  }
+  // OPA d'un bot contre le JOUEUR : animation + défense (5 bonnes réponses).
+  async function defenseFlow(attacker, c){
+    var rent=rentOf(c,E.lastDice), price150=Math.round(c.price*1.5), aname=EB.animalById(E.players[attacker].animalId).name;
+    await showChallenge(attacker, c, {
+      banner:"⚔️ OPA HOSTILE !",
+      html:"<b>"+aname+"</b> lance une <b>OPA hostile</b> pour t'arracher <b>« "+c.name+" »</b> !<br>Défends-toi : <b>5 bonnes réponses</b> et l'attaque échoue.",
+      btn:"🛡️ Me défendre" });
+    say("Défense OPA : réussis 5 questions pour conserver « "+c.name+" ».");
+    EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(300);
+    var defended=true;
+    for(var n=0;n<5;n++){
+      var ok=await ask("🛡️ Défense OPA "+(n+1)+"/5 — protège « "+c.name+" »");
+      if(!ok){ defended=false; break; }
+      EB.Sound.lock&&EB.Sound.lock();
+    }
+    if(defended){
+      transfer(attacker,0,rent*2);
+      say("OPA repoussée ! "+aname+" te verse ₵"+(rent*2)+" de dédommagement.");
+      EB.Sound.win&&EB.Sound.win();
+    } else {
+      transfer(attacker,0,price150); c.owner=attacker; c.level=0;
+      say(aname+" s'empare de « "+c.name+" » (+₵"+price150+" pour toi).");
+      EB.Sound.net&&EB.Sound.net();
+    }
+    await sleep(500);
+  }
+  // Négociation d'un bot contre le JOUEUR : il veut un loyer ÷2. Le joueur se
+  // défend avec 3 bonnes réponses ; s'il réussit, le bot paie plein tarif.
+  async function negotiateVsPlayer(attacker, c, rent){
+    var aname=EB.animalById(E.players[attacker].animalId).name, half=Math.round(rent/2);
+    await showChallenge(attacker, c, {
+      banner:"🤝 NÉGOCIATION",
+      html:"<b>"+aname+"</b> veut négocier un <b>loyer divisé par 2</b> sur <b>« "+c.name+" »</b>.<br>Refuse le rabais : <b>3 bonnes réponses</b> et il paie plein tarif.",
+      btn:"🛡️ Tenir bon" });
+    say("Négociation : réussis 3 questions pour lui faire payer le plein tarif.");
+    await sleep(300);
+    var held=true;
+    for(var n=0;n<3;n++){
+      var ok=await ask("🤝 Négociation "+(n+1)+"/3 — tiens ton loyer sur « "+c.name+" »");
+      if(!ok){ held=false; break; }
+    }
+    if(held){ transfer(attacker,0,rent); say("Négociation refusée ! "+aname+" paie le plein tarif : +₵"+rent+"."); EB.Sound.coin&&EB.Sound.coin(); }
+    else { transfer(attacker,0,half); say(aname+" négocie : loyer ÷2, tu ne touches que ₵"+half+"."); EB.Sound.bad&&EB.Sound.bad(); }
+    await sleep(400);
+  }
+  // Superposition de défi (OPA / négociation), animée ; résout au clic du bouton.
+  function showChallenge(attacker, c, opts){
+    return new Promise(function(resolve){
+      var ov=$("empOpaOv"); if(!ov){ resolve(); return; }
+      var em=EB.EMOJI[E.players[attacker].animalId]||"🦁";
+      var ban=$("empOpaBanner"), art=$("empOpaArt"), txt=$("empOpaText"), go=$("empOpaGo");
+      if(ban) ban.textContent=opts.banner;
+      if(art) art.textContent=em;
+      if(txt) txt.innerHTML=opts.html;
+      if(go) go.textContent=opts.btn;
+      ov.classList.add("show"); EB.Sound.siren&&EB.Sound.siren();
+      if(go) go.onclick=function(){ ov.classList.remove("show"); resolve(); };
+    });
   }
   async function botBuild(pi){
     var opts=buildableQuartiers(pi), p=E.players[pi];
@@ -717,12 +886,12 @@
     EB.persist();
   }
   function serialize(){
-    return { cat:E.cat, sub:E.sub, diffVal:E.diffVal, botSuccess:E.botSuccess, lastDice:E.lastDice,
+    return { cat:E.cat, sub:E.sub, diffVal:E.diffVal, botSuccess:E.botSuccess, lastDice:E.lastDice, d1:E.d1||null, d2:E.d2||null,
       players:E.players.map(function(p){ return {animalId:p.animalId,pos:p.pos,cash:p.cash,jail:p.jail,bot:p.bot,bankrupt:p.bankrupt,dbl:p.dbl||0}; }),
       board:E.board.map(function(c){ return isProp(c)?{owner:c.owner,level:c.level||0,mortgaged:!!c.mortgaged}:null; }) };
   }
   function deserialize(s){
-    E={ cat:s.cat, sub:s.sub, diffVal:s.diffVal, botSuccess:s.botSuccess, lastDice:s.lastDice||7, over:false,
+    E={ cat:s.cat, sub:s.sub, diffVal:s.diffVal, botSuccess:s.botSuccess, lastDice:s.lastDice||7, d1:s.d1||null, d2:s.d2||null, over:false, _log:[], _deltas:[],
       board:buildBoard(),
       players:s.players.map(function(p){ return {animalId:p.animalId,pos:p.pos,cash:p.cash,jail:p.jail||0,bot:p.bot,bankrupt:!!p.bankrupt,dbl:p.dbl||0,opaUsed:false}; }) };
     s.board.forEach(function(sc,i){ if(sc&&isProp(E.board[i])){ E.board[i].owner=sc.owner; E.board[i].level=sc.level; E.board[i].mortgaged=sc.mortgaged; } });
@@ -735,7 +904,7 @@
     for(var i=others.length-1;i>0;i--){ var j=rint(i+1); var t=others[i]; others[i]=others[j]; others[j]=t; }
     var bots=others.slice(0,3);
     E={ cat:setup.cat, sub:setup.sub||"Tout", diffVal:setup.diffVal, botSuccess:setup.botSuccess||0.55,
-      lastDice:7, over:false, board:buildBoard(),
+      lastDice:7, d1:null, d2:null, over:false, _log:[], _deltas:[], board:buildBoard(),
       players:[{animalId:meId,pos:0,cash:1500,jail:0,bot:false,bankrupt:false,dbl:0,opaUsed:false}]
         .concat(bots.map(function(b){ return {animalId:b,pos:0,cash:1500,jail:0,bot:true,bankrupt:false,dbl:0,opaUsed:false}; })) };
   }
@@ -745,6 +914,10 @@
     start:function(setup){ newGame(setup); mount(); attachManage(); saveState(); },
     resume:function(){ var s=EB.store.empireGame; if(!s) return false; deserialize(s); mount(); attachManage(); return true; },
     hasSave:function(){ return !!EB.store.empireGame; },
-    _dbg:{ state:function(){ return E; }, refresh:function(){ renderTokens(); renderCenter(); } }
+    _dbg:{ state:function(){ return E; }, refresh:function(){ renderTokens(); renderCenter(); },
+      // Déclenche un défi (OPA/négociation) d'un bot contre le joueur, pour tests.
+      challenge:function(kind){ var c=cell(1); c.owner=0; E.players[0].pos=1;
+        if(kind==="nego") return negotiateVsPlayer(1,c,rentOf(c,7));
+        return defenseFlow(1,c); } }
   };
 })();
