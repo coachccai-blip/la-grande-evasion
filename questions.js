@@ -1957,7 +1957,78 @@
       note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
   }
 
+  /* ============ Exercices issus de la banque VOCAB_DATA (phrases d'exemples) ============ */
+  /* La banque de vocabulaire (vocabdata.js) fournit ~2000 mots, chacun avec 2
+     phrases d'exemples bilingues (fr / 中 / en). On s'en sert pour générer des
+     exercices : compléter une phrase, retrouver un mot par son sens, donner le
+     sens d'un mot. Chaque (sous-thème · difficulté) produit des centaines de
+     variantes → bien plus de 150 questions par niveau. */
+  function vocData(){ return (typeof global.VOCAB_DATA==="object" && global.VOCAB_DATA && global.VOCAB_DATA.words) ? global.VOCAB_DATA : null; }
+  function vocLevels(diff){
+    if(diff<=2) return ["DELF_B1"];
+    if(diff===3) return ["DELF_B1","DELF_B2"];
+    if(diff===4) return ["DELF_B2","DALF_C1"];
+    if(diff===5) return ["DALF_C1"];
+    return ["DALF_C2"];
+  }
+  function vocPool(diff){
+    var D=vocData(); if(!D) return [];
+    var lv=vocLevels(diff);
+    var p=D.words.filter(function(w){ return lv.indexOf(w.level)>=0; });
+    return p.length>=4 ? p : D.words.slice();
+  }
+  function reEsc(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+  function zh0(w){ return (w.zh&&w.zh.length)? w.zh[0] : ""; }
+  function en0(w){ return (w.en&&w.en.length)? w.en[0] : ""; }
+  function fourFrom(pool, wd, keyFn){
+    var same=pool.filter(function(x){ return x.pos===wd.pos && keyFn(x)!==keyFn(wd) && keyFn(x); });
+    if(same.length<3) same=pool.filter(function(x){ return keyFn(x)!==keyFn(wd) && keyFn(x); });
+    shuffle(same);
+    var opts=[keyFn(wd)], seen={}; seen[norm(keyFn(wd))]=1;
+    for(var k=0;k<same.length && opts.length<4;k++){ var v=keyFn(same[k]); if(!seen[norm(v)]){ seen[norm(v)]=1; opts.push(v); } }
+    return opts.length>=4 ? opts : null;
+  }
+  // A) Compléter la phrase — phrase d'exemple avec le mot-cible masqué (réponse française)
+  function genVocComplete(diff,cat,sub){
+    var pool=vocPool(diff); if(pool.length<4) return null;
+    for(var t=0;t<60;t++){
+      var wd=pick(pool);
+      var exs=[]; if(wd.ex_fr) exs.push({fr:wd.ex_fr,zh:wd.ex_zh}); if(wd.ex2_fr) exs.push({fr:wd.ex2_fr,zh:wd.ex2_zh});
+      shuffle(exs);
+      for(var e=0;e<exs.length;e++){
+        var re=new RegExp("(^|[^0-9A-Za-zÀ-ÿ])("+reEsc(wd.word)+")([^0-9A-Za-zÀ-ÿ]|$)","i");
+        if(!re.exec(exs[e].fr)) continue;
+        var opts=fourFrom(pool, wd, function(x){return x.word;}); if(!opts) continue;
+        var phrase=exs[e].fr.replace(re, function(all,a,b,c){ return a+"___"+c; });
+        var sens=zh0(wd)+(en0(wd)?(" · "+en0(wd)):"");
+        return { cat:cat, sub:sub, phrase:phrase, hint:"Complète avec le bon mot",
+                 options:opts, answer:0, note:"« "+wd.word+" » : "+sens+".", tense:null };
+      }
+    }
+    return null;
+  }
+  // B) Le mot juste — sens (中 / EN) donné, choisir le mot français
+  function genVocWord(diff,cat,sub){
+    var pool=vocPool(diff); if(pool.length<4) return null;
+    var wd=pick(pool);
+    var opts=fourFrom(pool, wd, function(x){return x.word;}); if(!opts) return null;
+    var sens=zh0(wd)+(en0(wd)?(" / "+en0(wd)):"");
+    return { cat:cat, sub:sub, phrase:"Quel mot signifie « "+sens+" » ?", hint:"Choisis le mot juste",
+             options:opts, answer:0, note:"« "+wd.word+" » = "+sens+".", tense:null };
+  }
+  // C) Sens du mot — mot français donné, choisir la traduction chinoise
+  function genVocSens(diff,cat,sub){
+    var pool=vocPool(diff).filter(function(w){ return zh0(w); }); if(pool.length<4) return null;
+    var wd=pick(pool);
+    var opts=fourFrom(pool, wd, function(x){return zh0(x);}); if(!opts) return null;
+    return { cat:cat, sub:sub, phrase:"Que signifie « "+wd.word+" » ?", hint:"Sens du mot",
+             options:opts, answer:0, note:"« "+wd.word+" » : "+zh0(wd)+(en0(wd)?(" · "+en0(wd)):"")+".", tense:null };
+  }
+
   function genVoc(sub, diff, cat){
+    if(sub==="Compléter la phrase") return genVocComplete(diff,cat,sub) || genVocWord(diff,cat,sub) || genQuotidien(diff,cat,sub);
+    if(sub==="Le mot juste") return genVocWord(diff,cat,sub) || genQuotidien(diff,cat,sub);
+    if(sub==="Sens des mots") return genVocSens(diff,cat,sub) || genVocWord(diff,cat,sub) || genQuotidien(diff,cat,sub);
     if(sub==="Synonymes") return genSynonymes(diff,cat,sub);
     if(sub==="Contraires") return genContraires(diff,cat,sub);
     if(sub==="Homonymes") return genHomonymes(diff,cat,sub);
@@ -2562,7 +2633,8 @@
     conjugaison:CONJ_SUBS,
     grammaire:["Nature des mots","Déterminants","Pronoms","Prépositions","Accords","Types de phrases",
       "Accord du participe passé","Connecteurs logiques","Voix passive"],
-    vocabulaire:["Synonymes","Contraires","Homonymes","Familles de mots","Mots du quotidien",
+    vocabulaire:["Compléter la phrase","Le mot juste","Sens des mots",
+      "Synonymes","Contraires","Homonymes","Familles de mots","Mots du quotidien",
       "Expressions idiomatiques","Registres de langue","Paronymes"],
     orthographe:["Homophones","é ou er","Accents","Pluriels","m devant m, b, p",
       "Homophones grammaticaux","Adverbes en -ment"]
@@ -2594,6 +2666,9 @@
     "Accord du participe passé":"Avec « être » → accord avec le sujet. Avec « avoir » → accord avec le COD placé AVANT le verbe, sinon invariable.",
     "Connecteurs logiques":"Les connecteurs relient les idées : cause (car, parce que), conséquence (donc, par conséquent), opposition (mais, cependant), but (afin que), concession (bien que)…",
     "Voix passive":"Voix passive : « être » (au temps voulu) + participe passé accordé avec le sujet (Le chat mange la souris → La souris est mangée par le chat).",
+    "Compléter la phrase":"Choisis le mot qui complète correctement la phrase, d'après le sens et le contexte (banque DELF/DALF).",
+    "Le mot juste":"À partir d'une définition ou d'une traduction (中/EN), retrouve le mot français exact.",
+    "Sens des mots":"Choisis la bonne traduction (sens) du mot français proposé.",
     "Synonymes":"Un synonyme est un mot de sens PROCHE.",
     "Contraires":"Un antonyme (contraire) a le sens OPPOSÉ.",
     "Homonymes":"Les homonymes se prononcent pareil mais s'écrivent différemment ; le sens dépend du contexte.",
