@@ -1498,10 +1498,53 @@
       options:build(it.v, bad), answer:0 };
   }
 
+  /* --- « é ou er » : générateur PARTITIONNÉ (verbe + complément par difficulté) --- */
+  var ER_ITEMS=[
+    {inf:"manger",o:"une pomme",d:1},{inf:"chanter",o:"une chanson",d:1},{inf:"dessiner",o:"un soleil",d:1},
+    {inf:"jouer",o:"du piano",d:1},{inf:"écouter",o:"la radio",d:1},{inf:"fermer",o:"la fenêtre",d:1},
+    {inf:"laver",o:"les mains",d:1},{inf:"donner",o:"un cadeau",d:1},{inf:"montrer",o:"le dessin",d:1},
+    {inf:"arroser",o:"les plantes",d:1},{inf:"coller",o:"une image",d:1},{inf:"ranger",o:"les jouets",d:1},{inf:"porter",o:"un sac",d:1},
+    {inf:"préparer",o:"le dîner",d:2},{inf:"décorer",o:"la salle",d:2},{inf:"raconter",o:"une blague",d:2},
+    {inf:"attraper",o:"le ballon",d:2},{inf:"chercher",o:"la clé",d:2},{inf:"gagner",o:"la partie",d:2},
+    {inf:"garder",o:"le secret",d:2},{inf:"réparer",o:"le vélo",d:2},{inf:"planter",o:"un arbre",d:2},
+    {inf:"saluer",o:"le voisin",d:2},{inf:"inviter",o:"un ami",d:2},{inf:"terminer",o:"le travail",d:2},{inf:"pousser",o:"la brouette",d:2},
+    {inf:"expliquer",o:"la règle",d:3},{inf:"oublier",o:"le rendez-vous",d:3},{inf:"comparer",o:"les prix",d:3},
+    {inf:"imaginer",o:"une suite",d:3},{inf:"mélanger",o:"les couleurs",d:3},{inf:"calculer",o:"la somme",d:3},
+    {inf:"séparer",o:"les équipes",d:3},{inf:"photographier",o:"le paysage",d:3},{inf:"organiser",o:"la fête",d:3},
+    {inf:"transporter",o:"les caisses",d:3},{inf:"observer",o:"les étoiles",d:3},{inf:"deviner",o:"la réponse",d:3},{inf:"recopier",o:"le texte",d:3},
+    {inf:"bricoler",o:"une étagère",d:4},{inf:"envelopper",o:"le colis",d:4},{inf:"gaspiller",o:"l'eau",d:4},
+    {inf:"esquisser",o:"un plan",d:4},{inf:"naviguer",o:"sur le lac",d:4},{inf:"respirer",o:"l'air pur",d:4},
+    {inf:"épingler",o:"la note",d:4},{inf:"feuilleter",o:"le livre",d:4},{inf:"griffonner",o:"un mot",d:4},
+    {inf:"savourer",o:"le repas",d:4},{inf:"contempler",o:"l'horizon",d:4},{inf:"dévorer",o:"le gâteau",d:4},{inf:"effleurer",o:"la surface",d:4},
+    {inf:"accélérer",o:"l'allure",d:5},{inf:"apprécier",o:"le geste",d:5},{inf:"chuchoter",o:"un secret",d:5},
+    {inf:"éparpiller",o:"les feuilles",d:5},{inf:"gesticuler",o:"sans cesse",d:5},{inf:"gribouiller",o:"un croquis",d:5},
+    {inf:"trébucher",o:"sur la marche",d:5},{inf:"virevolter",o:"dans l'air",d:5},{inf:"ricaner",o:"bêtement",d:5},
+    {inf:"scruter",o:"le lointain",d:5},{inf:"esquiver",o:"le coup",d:5},{inf:"consoler",o:"un camarade",d:5},{inf:"colporter",o:"une rumeur",d:5},
+    {inf:"amadouer",o:"le gardien",d:6},{inf:"déambuler",o:"dans la rue",d:6},{inf:"enjôler",o:"l'auditoire",d:6},
+    {inf:"fanfaronner",o:"devant tous",d:6},{inf:"jubiler",o:"en secret",d:6},{inf:"magnifier",o:"l'instant",d:6},
+    {inf:"pérorer",o:"à la tribune",d:6},{inf:"saccager",o:"le jardin",d:6},{inf:"tergiverser",o:"sans fin",d:6},
+    {inf:"vociférer",o:"des injures",d:6},{inf:"gambader",o:"dans le pré",d:6},{inf:"louvoyer",o:"habilement",d:6},{inf:"préconiser",o:"la prudence",d:6}
+  ];
+  var ERE_PART=["{S} a ___ {O}.","Hier, {S} a ___ {O}.","{S} a bien ___ {O}."];
+  var ERE_INF=["{S} va ___ {O}.","{S} doit ___ {O}.","{S} veut ___ {O}."];
+  var ERE_SUBJ=["il","elle","on","Léa","Paul","Tom"];
+  function genErE(diff,cat,sub){
+    var it=pick(bandFilter(ER_ITEMS,diff,"d")), base=it.inf.slice(0,-2);
+    var forms={er:it.inf, part:base+"é", ez:base+"ez", ait:base+"ait"};
+    var infMode=(rint(2)===0), S=pick(ERE_SUBJ);
+    var frame=pick(infMode?ERE_INF:ERE_PART).replace("{S}",S).replace("{O}",it.o);
+    var good=infMode?forms.er:forms.part;
+    var bad=[forms.er,forms.part,forms.ez,forms.ait].filter(function(x){return x!==good;});
+    return { cat:cat, sub:sub, phrase:cap(frame), hint:"« -er » (infinitif) ou « -é » (participe) ?",
+      note:"Après un auxiliaire (a, est…) → participe en -é ; après un autre verbe (va, doit, veut) → infinitif en -er. Test : remplace par « vendu » (-é) ou « vendre » (-er).",
+      options:build(good,bad), answer:0 };
+  }
+
   function genOrt(sub, diff, cat){
     var it, hint;
     if(sub==="Pluriels") return genPluriels(diff,cat,sub);
     if(sub==="Adverbes en -ment") return genAdverbes(diff,cat,sub);
+    if(sub==="é ou er") return genErE(diff,cat,sub);
     if(sub==="Homophones"){ it=pickByDiff(HOMOPH,diff); hint="Homophones ("+it.note+")"; }
     else if(sub==="é ou er"){ it=pickByDiff(ER_E,diff); hint="é (participe) ou er (infinitif) ?"; }
     else if(sub==="Accents"){ it=pickByDiff(ACCENTS,diff); hint="Orthographe : "+it.note; }
