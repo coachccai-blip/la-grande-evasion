@@ -136,7 +136,7 @@
     reg1("rester",["à la maison","dehors","au lit","à l'intérieur"], true),
     reg1("arriver",["en retard","au portail","à l'heure","enfin"], true),
     reg1("tomber",["par terre","de vélo","dans le piège","dans l'eau"], true),
-    reg1("monter",["sur le toboggan","à l'échelle","les escaliers","dans le bus"], true),
+    reg1("monter",["sur le toboggan","à l'échelle","dans le bus","sur scène"], true),
     /* -------- 2e groupe (-ir) -------- */
     reg2("finir",["le repas","la course","le travail","à temps"]),
     reg2("choisir",["un animal","une carte","la bonne réponse","un livre"]),
@@ -370,7 +370,7 @@
   var COMPOSED = { passe:"pres", pqp:"imp", condp:"cond", futa:"fut", subjp:"subj" };
   // Amorces propres à chaque temps composé (phrases complètes et naturelles).
   var HEAD_PQP  = ["La veille,","Ce jour-là,","Quelques heures plus tôt,","Avant notre arrivée,","La semaine d'avant,","Peu avant,"];
-  var HEAD_CONDP= ["Avec un peu de chance,","À ta place,","Sans cette erreur,","Dans d'autres circonstances,","Autrement,","Avec plus de temps,"];
+  var HEAD_CONDP= ["À ta place,","Sans cette erreur,","Dans d'autres circonstances,","Autrement,","Avec plus de temps,","Sans cet imprévu,"];
   var HEAD_FUTA = ["Demain à midi,","D'ici ce soir,","Dans une heure,","Bientôt,","Avant la fin du mois,","D'ici là,"];
   var TRIG_SUBJP= ["Il est possible que","Je doute que","Il se peut que","J'ai peur que","Je ne crois pas que","Il est dommage que","Je regrette que"];
 
@@ -390,8 +390,11 @@
     return trig+" "+disp;
   }
   // Amorces de conditionnel valables avec N'IMPORTE QUEL sujet.
-  var COND_HEAD = ["Si c'était possible,","Si on le pouvait,","Dans ce cas,","Un jour peut-être,",
-    "Avec un peu de chance,","En rêve,","Si tout allait bien,","Idéalement,"];
+  // Amorces CONTREFACTUELLES uniquement → forcent le conditionnel (le futur/imparfait
+  // deviennent de vrais pièges, jamais des réponses également correctes).
+  var COND_HEAD = ["Si c'était possible,","Si on le pouvait,","Si tout allait bien,",
+    "Dans un monde idéal,","Avec une baguette magique,","Si la chance tournait,",
+    "Si c'était à refaire,","Si les rêves se réalisaient,"];
 
   // Adverbes qui, au passé composé, se placent ENTRE l'auxiliaire et le participe
   // (« a beaucoup mangé »). Comme la réponse doit tenir en un seul trou, on ne les
@@ -606,7 +609,9 @@
     var correct = aux[ak][pi]+" "+pp;
     var pool=[];
     // autres temps composés (même personne, même auxiliaire, participe correct)
-    ["pres","imp","fut","cond","subj"].forEach(function(x){ if(x!==ak) pool.push(aux[x][pi]+" "+pp); });
+    // NB : pour le plus-que-parfait (ak==="imp"), on N'ajoute PAS le passé composé
+    // (aux. présent), qui reste correct sous une amorce au passé isolée.
+    ["pres","imp","fut","cond","subj"].forEach(function(x){ if(x!==ak && !(ak==="imp" && x==="pres")) pool.push(aux[x][pi]+" "+pp); });
     if(v.etre){
       // mauvais auxiliaire (avoir au lieu d'être) + défauts d'accord classiques
       pool.push(AUX.avoir[ak][pi]+" "+pp);
@@ -890,11 +895,11 @@
     {ph:"___ {N} est ici.",k:"def"},
     {ph:"J'ai vu ___ {N}.",k:"indef"},
     {ph:"Regarde ___ {N} !",k:"dem"},
-    {ph:"C'est ___ {N}.",k:"poss"},
+    {ph:"Le garçon cherche ___ {N}.",k:"poss3"},
     {ph:"Je cherche ___ {N}.",k:"def"},
     {ph:"Il possède ___ {N}.",k:"indef"},
     {ph:"Prends ___ {N} là-bas.",k:"dem"},
-    {ph:"Voici ___ {N}.",k:"poss"},
+    {ph:"La fille a perdu ___ {N}.",k:"poss3"},
     {ph:"Où est ___ {N} ?",k:"def"}
   ];
   function detOptions(kind,n){
@@ -902,7 +907,10 @@
     if(kind==="def"){ good=n.v?"l'":(n.g==="m"?"le":"la"); pool=["le","la","l'","les"]; }
     else if(kind==="indef"){ good=n.g==="m"?"un":"une"; pool=["un","une","des","de"]; }
     else if(kind==="dem"){ good=n.v?(n.g==="m"?"cet":"cette"):(n.g==="m"?"ce":"cette"); pool=["ce","cet","cette","ces"]; }
-    else { good=n.v?"mon":(n.g==="m"?"mon":"ma"); pool=["mon","ma","mes","ton"]; }
+    // possessif 3e personne du singulier : le possesseur est nommé → une seule forme correcte
+    // (son/sa selon le genre de l'objet ; « son » aussi devant voyelle). « ses » (pluriel) et
+    // « leur » (plusieurs possesseurs) sont donc faux.
+    else { good=n.v?"son":(n.g==="m"?"son":"sa"); pool=["son","sa","ses","leur"]; }
     return { good:good, bad:pool.filter(function(x){return x!==good;}) };
   }
   function genDeterminants(diff,cat,sub){
@@ -918,28 +926,28 @@
   var NATURE_WORDS=[
     // d1
     {w:"chien",n:"nom",d:1},{w:"chat",n:"nom",d:1},{w:"manger",n:"verbe",d:1},{w:"sauter",n:"verbe",d:1},
-    {w:"rouge",n:"adjectif",d:1},{w:"petit",n:"adjectif",d:1},{w:"vite",n:"adverbe",d:1},{w:"le",n:"déterminant",d:1},
+    {w:"content",n:"adjectif",d:1},{w:"facile",n:"adjectif",d:1},{w:"vite",n:"adverbe",d:1},{w:"ma",n:"déterminant",d:1},
     {w:"il",n:"pronom",d:1},{w:"et",n:"conjonction",d:1},{w:"dans",n:"préposition",d:1},{w:"sur",n:"préposition",d:1},
     // d2
     {w:"maison",n:"nom",d:2},{w:"chanter",n:"verbe",d:2},{w:"courir",n:"verbe",d:2},{w:"joli",n:"adjectif",d:2},
-    {w:"grand",n:"adjectif",d:2},{w:"souvent",n:"adverbe",d:2},{w:"un",n:"déterminant",d:2},{w:"elle",n:"pronom",d:2},
+    {w:"grand",n:"adjectif",d:2},{w:"souvent",n:"adverbe",d:2},{w:"tes",n:"déterminant",d:2},{w:"elle",n:"pronom",d:2},
     {w:"nous",n:"pronom",d:2},{w:"mais",n:"conjonction",d:2},{w:"avec",n:"préposition",d:2},{w:"sous",n:"préposition",d:2},
     // d3
     {w:"montagne",n:"nom",d:3},{w:"grandir",n:"verbe",d:3},{w:"finir",n:"verbe",d:3},{w:"rapide",n:"adjectif",d:3},
-    {w:"joyeux",n:"adjectif",d:3},{w:"lentement",n:"adverbe",d:3},{w:"bien",n:"adverbe",d:3},{w:"mon",n:"déterminant",d:3},
+    {w:"joyeux",n:"adjectif",d:3},{w:"lentement",n:"adverbe",d:3},{w:"hier",n:"adverbe",d:3},{w:"mon",n:"déterminant",d:3},
     {w:"ces",n:"déterminant",d:3},{w:"qui",n:"pronom",d:3},{w:"ou",n:"conjonction",d:3},{w:"pour",n:"préposition",d:3},
     // d4
     {w:"courage",n:"nom",d:4},{w:"obéir",n:"verbe",d:4},{w:"réfléchir",n:"verbe",d:4},{w:"curieux",n:"adjectif",d:4},
     {w:"aimable",n:"adjectif",d:4},{w:"prudemment",n:"adverbe",d:4},{w:"déjà",n:"adverbe",d:4},{w:"cette",n:"déterminant",d:4},
-    {w:"dont",n:"pronom",d:4},{w:"toi",n:"pronom",d:4},{w:"donc",n:"conjonction",d:4},{w:"pendant",n:"préposition",d:4},
+    {w:"dont",n:"pronom",d:4},{w:"toi",n:"pronom",d:4},{w:"donc",n:"conjonction",d:4},{w:"parmi",n:"préposition",d:4},
     // d5
     {w:"liberté",n:"nom",d:5},{w:"éblouir",n:"verbe",d:5},{w:"franchir",n:"verbe",d:5},{w:"courageux",n:"adjectif",d:5},
     {w:"honnête",n:"adjectif",d:5},{w:"rarement",n:"adverbe",d:5},{w:"ailleurs",n:"adverbe",d:5},{w:"plusieurs",n:"déterminant",d:5},
-    {w:"lequel",n:"pronom",d:5},{w:"celui",n:"pronom",d:5},{w:"car",n:"conjonction",d:5},{w:"malgré",n:"préposition",d:5},
+    {w:"lequel",n:"pronom",d:5},{w:"celui",n:"pronom",d:5},{w:"lorsque",n:"conjonction",d:5},{w:"malgré",n:"préposition",d:5},
     // d6
     {w:"patience",n:"nom",d:6},{w:"accomplir",n:"verbe",d:6},{w:"resplendir",n:"verbe",d:6},{w:"audacieux",n:"adjectif",d:6},
     {w:"généreux",n:"adjectif",d:6},{w:"habilement",n:"adverbe",d:6},{w:"chaque",n:"déterminant",d:6},{w:"quelque",n:"déterminant",d:6},
-    {w:"quiconque",n:"pronom",d:6},{w:"auquel",n:"pronom",d:6},{w:"or",n:"conjonction",d:6},{w:"dès",n:"préposition",d:6}
+    {w:"quiconque",n:"pronom",d:6},{w:"auquel",n:"pronom",d:6},{w:"quoique",n:"conjonction",d:6},{w:"dès",n:"préposition",d:6}
   ];
   var NAT_FRAMES=[
     "« {W} » est {A} ___.",
@@ -978,23 +986,31 @@
     {w:"l'hippopotame",g:"m",nb:"s",d:6},{w:"l'orchidée",g:"f",nb:"s",d:6},{w:"les hélicoptères",g:"m",nb:"p",d:6},{w:"l'enclume",g:"f",nb:"s",d:6},
     {w:"le lampadaire",g:"m",nb:"s",d:6},{w:"les obstacles",g:"m",nb:"p",d:6},{w:"le candélabre",g:"m",nb:"s",d:6},{w:"la mappemonde",g:"f",nb:"s",d:6},{w:"les engrenages",g:"m",nb:"p",d:6}
   ];
+  /* Adjectifs à 4 formes DISTINCTES (ms/fs/mp/fp) : indispensable pour avoir
+     toujours 3 distracteurs distincts (on évite gros/doux/vieux dont ms=mp). */
   var ADJ_ACC=[
     {ms:"grand",fs:"grande",mp:"grands",fp:"grandes"},{ms:"petit",fs:"petite",mp:"petits",fp:"petites"},
-    {ms:"gros",fs:"grosse",mp:"gros",fp:"grosses"},{ms:"joli",fs:"jolie",mp:"jolis",fp:"jolies"},
+    {ms:"content",fs:"contente",mp:"contents",fp:"contentes"},{ms:"joli",fs:"jolie",mp:"jolis",fp:"jolies"},
     {ms:"beau",fs:"belle",mp:"beaux",fp:"belles"},{ms:"vert",fs:"verte",mp:"verts",fp:"vertes"},
     {ms:"noir",fs:"noire",mp:"noirs",fp:"noires"},{ms:"blanc",fs:"blanche",mp:"blancs",fp:"blanches"},
     {ms:"rond",fs:"ronde",mp:"ronds",fp:"rondes"},{ms:"lourd",fs:"lourde",mp:"lourds",fp:"lourdes"},
     {ms:"léger",fs:"légère",mp:"légers",fp:"légères"},{ms:"neuf",fs:"neuve",mp:"neufs",fp:"neuves"},
-    {ms:"vieux",fs:"vieille",mp:"vieux",fp:"vieilles"},{ms:"doux",fs:"douce",mp:"doux",fp:"douces"},
+    {ms:"poli",fs:"polie",mp:"polis",fp:"polies"},{ms:"fort",fs:"forte",mp:"forts",fp:"fortes"},
     {ms:"brillant",fs:"brillante",mp:"brillants",fp:"brillantes"}
   ];
   var ACC_FRAMES=["{W} {V} ___.","{W} {V} très ___.","On dirait que {W} {V} ___.","{W} {V} vraiment ___."];
   function genAccords(diff,cat,sub){
     var pool=ACC_NOUNS.filter(function(x){return x.d===diff;});
     if(pool.length<3){ for(var w=1;w<=5 && pool.length<3;w++) pool=ACC_NOUNS.filter(function(x){return Math.abs(x.d-diff)<=w;}); }
-    var nn=pick(pool), adj=pick(ADJ_ACC), V=(nn.nb==="s")?"est":"sont";
-    var good=(nn.nb==="s")?(nn.g==="m"?adj.ms:adj.fs):(nn.g==="m"?adj.mp:adj.fp);
-    var bad=[adj.ms,adj.fs,adj.mp,adj.fp].filter(function(x){return x!==good;});
+    var nn=pick(pool), V=(nn.nb==="s")?"est":"sont", adj, good, bad;
+    // garantit 3 distracteurs DISTINCTS (jamais de remplissage numérique)
+    for(var tries=0; tries<12; tries++){
+      adj=pick(ADJ_ACC);
+      good=(nn.nb==="s")?(nn.g==="m"?adj.ms:adj.fs):(nn.g==="m"?adj.mp:adj.fp);
+      var seen={}; seen[norm(good)]=1; bad=[];
+      [adj.ms,adj.fs,adj.mp,adj.fp].forEach(function(f){ if(!seen[norm(f)]){ seen[norm(f)]=1; bad.push(f); } });
+      if(bad.length>=3) break;
+    }
     var phrase=cap(pick(ACC_FRAMES).replace("{W}",nn.w).replace("{V}",V));
     return { cat:cat, sub:sub, phrase:phrase, hint:"Accorde l'adjectif (genre et nombre)",
       note:"L'adjectif s'accorde en genre (masculin/féminin) et en nombre (singulier/pluriel) avec le nom.",
@@ -1254,12 +1270,12 @@
     {c1:"Fais tes devoirs",good:"alors",c2:"tu pourras jouer",bad:["car","pourtant","ou"],d:2},{c1:"Il est absent",good:"car",c2:"il est malade",bad:["donc","pourtant","puis"],d:2},
     {c1:"Elle chante",good:"pendant que",c2:"il joue",bad:["car","donc","mais"],d:2},{c1:"Nous partirons",good:"dès que",c2:"tu seras prêt",bad:["car","mais","donc"],d:2},
     {c1:"Il travaille",good:"tandis que",c2:"son frère se repose",bad:["car","donc","puis"],d:2},{c1:"Je t'aiderai",good:"si",c2:"tu me le demandes",bad:["car","donc","mais"],d:2},
-    {c1:"Range ta chambre",good:"avant de",c2:"sortir",bad:["car","donc","mais"],d:2},{c1:"Les étoiles brillent",good:"quand",c2:"il fait nuit",bad:["car","donc","mais"],d:2},
+    {c1:"Range ta chambre",good:"avant de",c2:"sortir",bad:["car","donc","mais"],d:2},{c1:"Les étoiles brillent",good:"quand",c2:"il fait nuit",bad:["donc","mais","puis"],d:2},
     {c1:"Prends une veste",good:"au cas où",c2:"il ferait froid",bad:["car","donc","mais"],d:2},{c1:"Il sourit",good:"parce qu'",c2:"il est heureux",bad:["donc","pourtant","puis"],d:2},{c1:"Il lit",good:"puis",c2:"il écrit",bad:["mais","car","pourtant"],d:2},
     {c1:"Il a beaucoup travaillé",good:"par conséquent",c2:"il a réussi",bad:["cependant","car","ou"],d:3},{c1:"J'aime l'été",good:"en revanche",c2:"je déteste l'hiver",bad:["donc","car","puis"],d:3},
     {c1:"Il pleuvait",good:"cependant",c2:"nous sommes sortis",bad:["donc","car","ainsi"],d:3},{c1:"Il est absent",good:"en effet",c2:"il est souffrant",bad:["pourtant","mais","ou"],d:3},
     {c1:"Il pleut",good:"c'est pourquoi",c2:"je reste chez moi",bad:["cependant","car","ou"],d:3},{c1:"Il est riche",good:"néanmoins",c2:"il reste modeste",bad:["donc","car","ainsi"],d:3},
-    {c1:"Il a menti",good:"or",c2:"personne ne le croit plus",bad:["car","donc","puis"],d:3},{c1:"Chauffe le beurre",good:"puis",c2:"ajoute la farine",bad:["car","mais","or"],d:3},
+    {c1:"Il a menti",good:"donc",c2:"personne ne le croit plus",bad:["car","pourtant","puis"],d:3},{c1:"Chauffe le beurre",good:"puis",c2:"ajoute la farine",bad:["car","mais","or"],d:3},
     {c1:"Il s'entraîne dur",good:"afin de",c2:"gagner",bad:["car","donc","mais"],d:3},{c1:"Il réussit",good:"grâce à",c2:"ses efforts",bad:["malgré","car","donc"],d:3},
     {c1:"Il sort",good:"malgré",c2:"la pluie",bad:["grâce à","car","donc"],d:3},{c1:"Reste ici",good:"jusqu'à ce que",c2:"je revienne",bad:["car","donc","mais"],d:3},{c1:"Il agit vite",good:"de peur de",c2:"perdre",bad:["afin de","car","donc"],d:3},
     {c1:"Il a tout révisé",good:"si bien qu'",c2:"il a eu la meilleure note",bad:["bien qu'","car","ou"],d:4},{c1:"Il est riche",good:"bien qu'",c2:"il vive simplement",bad:["parce qu'","donc","car"],d:4},
@@ -1368,7 +1384,7 @@
     {ph:"On dort sous la ___ pendant le camping (abri de toile).",good:"tente",bad:["tante","tentes","temps"],d:2},
     {ph:"Le renard se cache dans le ___ (grand terrain cultivé).",good:"champ",bad:["chant","champs","chants"],d:2},
     {ph:"J'aime écouter le ___ des oiseaux (mélodie).",good:"chant",bad:["champ","chants","chan"],d:2},
-    {ph:"Je porte une ___ en or au cou (suite d'anneaux).",good:"chaîne",bad:["chêne","chaînes","chaine"],d:2},
+    {ph:"Je porte une ___ en or au cou (suite d'anneaux).",good:"chaîne",bad:["chêne","chaînes","chai"],d:2},
     {ph:"Le vieux ___ perd ses feuilles en automne (grand arbre).",good:"chêne",bad:["chaîne","chênes","chaine"],d:2},
     {ph:"Les élèves jouent dans la ___ de l'école (espace extérieur).",good:"cour",bad:["cours","court","courre"],d:3},
     {ph:"Le professeur donne un ___ de grammaire (leçon).",good:"cours",bad:["cour","court","courre"],d:3},
@@ -1487,11 +1503,11 @@
     {ph:"Être doux comme un ___ (très gentil).",good:"agneau",bad:["chaton","mouton","lapin"],note:"« Doux comme un agneau » = très doux, docile.",d:1},
     {ph:"Être rusé comme un ___ (très malin).",good:"renard",bad:["loup","singe","chat"],note:"« Rusé comme un renard » = très astucieux.",d:1},
     {ph:"Sauter du coq à l'___ (changer brusquement de sujet).",good:"âne",bad:["oie","poule","cheval"],note:"« Passer du coq à l'âne » = changer soudainement de sujet.",d:1},
-    {ph:"Être muet comme une ___ (ne rien dire).",good:"carpe",bad:["tombe","truite","pierre"],note:"« Muet comme une carpe » = totalement silencieux.",d:1},
+    {ph:"Être muet comme une ___ (ne rien dire).",good:"carpe",bad:["truite","sardine","grenouille"],note:"« Muet comme une carpe » = totalement silencieux.",d:1},
     {ph:"Verser des larmes de ___ (des larmes fausses).",good:"crocodile",bad:["serpent","requin","loup"],note:"« Des larmes de crocodile » = un chagrin feint.",d:1},
     {ph:"Monter sur ses grands ___ (s'emporter).",good:"chevaux",bad:["poneys","ânes","bœufs"],note:"« Monter sur ses grands chevaux » = s'emporter, se fâcher.",d:1},
     {ph:"Tomber dans les ___ (s'évanouir).",good:"pommes",bad:["choux","poires","fraises"],note:"« Tomber dans les pommes » = s'évanouir.",d:2},
-    {ph:"Avoir le ___ (être déprimé).",good:"cafard",bad:["moral","bourdon","spleen"],note:"« Avoir le cafard » = être déprimé, triste.",d:2},
+    {ph:"Avoir le ___ (être déprimé).",good:"cafard",bad:["moral","scarabée","moustique"],note:"« Avoir le cafard » = être déprimé, triste.",d:2},
     {ph:"Avoir la ___ verte (être doué pour le jardinage).",good:"main",bad:["patte","paume","poigne"],note:"« Avoir la main verte » = savoir s'occuper des plantes.",d:2},
     {ph:"Mettre la ___ à l'oreille (éveiller les soupçons).",good:"puce",bad:["mouche","abeille","fourmi"],note:"« Mettre la puce à l'oreille » = éveiller les soupçons.",d:2},
     {ph:"Prendre ses ___ à son cou (s'enfuir vite).",good:"jambes",bad:["pieds","bras","talons"],note:"« Prendre ses jambes à son cou » = s'enfuir en courant.",d:2},
@@ -1521,7 +1537,7 @@
     {ph:"Mener quelqu'un en ___ (le tromper).",good:"bateau",bad:["barque","radeau","voiture"],note:"« Mener en bateau » = duper, faire croire n'importe quoi.",d:4},
     {ph:"Prendre la ___ (s'esquiver discrètement).",good:"tangente",bad:["poudre","clé","fuite"],note:"« Prendre la tangente » = s'éclipser habilement.",d:4},
     {ph:"Se mettre en ___ pour quelqu'un (tout faire pour l'aider).",good:"quatre",bad:["deux","huit","ligne"],note:"« Se mettre en quatre » = se donner beaucoup de mal pour autrui.",d:4},
-    {ph:"Mener une vie de ___ (une vie luxueuse et oisive).",good:"château",bad:["palais","pacha","roi"],note:"« Mener une vie de château » = vivre dans le luxe et l'oisiveté.",d:4},
+    {ph:"Mener une vie de ___ (une vie luxueuse et oisive).",good:"château",bad:["palais","manoir","cabane"],note:"« Mener une vie de château » = vivre dans le luxe et l'oisiveté.",d:4},
     {ph:"Être au bout du ___ (à bout de forces).",good:"rouleau",bad:["fil","chemin","tunnel"],note:"« Être au bout du rouleau » = être épuisé, à bout.",d:4},
     {ph:"Faire d'une pierre deux ___ (obtenir deux résultats à la fois).",good:"coups",bad:["pas","fois","buts"],note:"« Faire d'une pierre deux coups » = régler deux affaires en une seule action.",d:4},
     {ph:"Avoir du ___ sur la planche (beaucoup de travail).",good:"pain",bad:["gâteau","plat","blé"],note:"« Avoir du pain sur la planche » = avoir beaucoup de travail devant soi.",d:4},
@@ -1534,7 +1550,7 @@
     {ph:"Battre la ___ (délirer, dire n'importe quoi).",good:"campagne",bad:["mesure","plaine","ville"],note:"« Battre la campagne » = divaguer, déraisonner.",d:5},
     {ph:"Prêcher le ___ pour savoir le vrai (ruser pour obtenir un aveu).",good:"faux",bad:["vrai","doute","bien"],note:"« Prêcher le faux pour savoir le vrai » = feindre pour faire avouer.",d:5},
     {ph:"Rompre une ___ en faveur de quelqu'un (le défendre).",good:"lance",bad:["épée","flèche","arme"],note:"« Rompre une lance » = prendre la défense de quelqu'un.",d:5},
-    {ph:"Jeter des perles aux ___ (gaspiller pour des ingrats).",good:"pourceaux",bad:["cochons","ânes","chiens"],note:"« Jeter des perles aux pourceaux » = offrir de belles choses à qui n'en a que faire.",d:5},
+    {ph:"Jeter des perles aux ___ (gaspiller pour des ingrats).",good:"pourceaux",bad:["ânes","chiens","poules"],note:"« Jeter des perles aux pourceaux » = offrir de belles choses à qui n'en a que faire.",d:5},
     {ph:"Ménager la ___ et le chou (ne pas choisir entre deux partis).",good:"chèvre",bad:["brebis","vache","poule"],note:"« Ménager la chèvre et le chou » = tenter de satisfaire deux camps opposés.",d:5},
     {ph:"C'est son ___ d'Achille (son point faible).",good:"talon",bad:["pied","tendon","os"],note:"« Le talon d'Achille » = le point vulnérable de quelqu'un.",d:5},
     {ph:"S'attirer les ___ de quelqu'un (sa colère).",good:"foudres",bad:["éclairs","orages","colères"],note:"« S'attirer les foudres » = provoquer la vive colère de quelqu'un.",d:5},
@@ -1543,7 +1559,7 @@
     {ph:"Rentrer dans sa ___ (se replier sur soi).",good:"coquille",bad:["tanière","carapace","niche"],note:"« Rentrer dans sa coquille » = se refermer, s'isoler.",d:5},
     {ph:"Avoir maille à ___ avec quelqu'un (avoir un différend).",good:"partir",bad:["perdre","payer","partager"],note:"« Avoir maille à partir » = avoir un démêlé, une querelle.",d:5},
     {ph:"Cette coutume est tombée en ___ (elle n'est plus pratiquée).",good:"désuétude",bad:["décadence","déchéance","désarroi"],note:"« Tomber en désuétude » = cesser d'être en usage.",d:6},
-    {ph:"Un travail de ___ (long, minutieux et patient).",good:"bénédictin",bad:["fourmi","titan","forçat"],note:"« Un travail de bénédictin » = un travail long et méticuleux.",d:6},
+    {ph:"Un travail de ___ (long, minutieux et patient).",good:"bénédictin",bad:["maçon","facteur","jardinier"],note:"« Un travail de bénédictin » = un travail long et méticuleux.",d:6},
     {ph:"Ce n'est qu'un vœu ___ (un souhait sans espoir de réalisation).",good:"pieux",bad:["vain","creux","pur"],note:"« Un vœu pieux » = un souhait qui a peu de chances d'aboutir.",d:6},
     {ph:"L'affaire s'en est allée en eau de ___ (elle n'a rien donné).",good:"boudin",bad:["roche","pluie","source"],note:"« S'en aller en eau de boudin » = échouer progressivement.",d:6},
     {ph:"Être tout feu tout ___ (plein d'ardeur).",good:"flamme",bad:["cendre","fumée","braise"],note:"« Tout feu tout flamme » = plein d'enthousiasme.",d:6},
@@ -1625,7 +1641,7 @@
     {ph:"En registre soutenu, « s'ennuyer (attendre) » se dit ___.",good:"languir",bad:["se raser","poireauter","moisir"],note:"« languir » = soutenu ; « poireauter » = familier.",d:5},
     {ph:"En registre soutenu, « l'expression du visage » se dit ___.",good:"la physionomie",bad:["la trombine","la bouille","la binette"],note:"« physionomie » = soutenu ; « trombine / binette » = familier.",d:5},
     {ph:"En registre soutenu, « riche » se dit ___.",good:"fortuné",bad:["plein aux as","friqué","blindé"],note:"« fortuné » = soutenu ; « friqué / blindé » = familier.",d:5},
-    {ph:"En registre soutenu, « la faim » se dit ___.",good:"l'inanition",bad:["la fringale","la dalle","le petit creux"],note:"« inanition » = soutenu ; « fringale / dalle » = familier.",d:6},
+    {ph:"En registre soutenu, « le travail » se dit ___.",good:"le labeur",bad:["le boulot","le taf","le turbin"],note:"« labeur » = soutenu ; « boulot / taf » = familier.",d:6},
     {ph:"En registre soutenu, « flatter » se dit ___.",good:"aduler",bad:["cirer les pompes","lécher les bottes","passer de la pommade"],note:"« aduler » = soutenu ; « cirer les pompes » = familier.",d:6},
     {ph:"En registre soutenu, « bavard » se dit ___.",good:"prolixe",bad:["pipelette","moulin à paroles","bavasseur"],note:"« prolixe » = soutenu ; « pipelette » = familier.",d:6},
     {ph:"En registre soutenu, « paresseux » se dit ___.",good:"indolent",bad:["flemmard","cossard","tire-au-flanc"],note:"« indolent » = soutenu ; « flemmard » = familier.",d:6},
@@ -1634,7 +1650,7 @@
     {ph:"En registre soutenu, « renvoyer (congédier) » se dit ___.",good:"congédier",bad:["virer","sacquer","lourder"],note:"« congédier » = soutenu ; « virer / lourder » = familier.",d:6},
     {ph:"En registre soutenu, « un miséreux » se dit ___.",good:"un indigent",bad:["un clodo","un traîne-misère","un va-nu-pieds"],note:"« indigent » = soutenu ; « clodo » = familier.",d:6},
     {ph:"En registre soutenu, « colérique » se dit ___.",good:"irascible",bad:["soupe au lait","à cran","chatouilleux"],note:"« irascible » = soutenu ; « soupe au lait » = familier.",d:6},
-    {ph:"En registre soutenu, « avare » se dit ___.",good:"pingre",bad:["radin","rapiat","près de ses sous"],note:"« pingre » = soutenu ; « radin » = familier.",d:6},
+    {ph:"En registre soutenu, « avare » se dit ___.",good:"avaricieux",bad:["radin","rapiat","près de ses sous"],note:"« avaricieux » = soutenu ; « radin / rapiat » = familier.",d:6},
     {ph:"En registre soutenu, « ivre » se dit ___.",good:"aviné",bad:["bourré","beurré","rond"],note:"« aviné » = soutenu ; « bourré / rond » = familier.",d:6},
     {ph:"En registre soutenu, « un mensonge » se dit ___.",good:"une affabulation",bad:["un bobard","un baratin","une salade"],note:"« affabulation » = soutenu ; « bobard / salade » = familier.",d:6},
     {ph:"En registre soutenu, « abondant » se dit ___.",good:"pléthorique",bad:["à gogo","à la pelle","en pagaille"],note:"« pléthorique » = soutenu ; « à gogo / à la pelle » = familier.",d:6}
@@ -1665,14 +1681,14 @@
     {ph:"Il y a une grande ___ au marché ce matin (foule, affluence).",good:"affluence",bad:["influence","affluent","afluence"],note:"« affluence » = foule ; « influence » = ascendant.",d:2},
     {ph:"Elle a une bonne ___ sur ses camarades (ascendant, pouvoir).",good:"influence",bad:["affluence","influenza","inffluence"],note:"« influence » = ascendant ; « affluence » = foule.",d:2},
     {ph:"L'ours va ___ tout l'hiver (passer l'hiver endormi).",good:"hiberner",bad:["hiverner","hibernir","hyberner"],note:"« hiberner » = dormir tout l'hiver ; « hiverner » = passer l'hiver à l'abri.",d:2},
-    {ph:"La vipère est un serpent ___ (qui injecte du venin).",good:"venimeux",bad:["vénéneux","vénimeux","venimeux"],note:"« venimeux » = qui a du venin ; « vénéneux » = toxique à manger.",d:2},
+    {ph:"La vipère est un serpent ___ (qui injecte du venin).",good:"venimeux",bad:["vénéneux","vénimeux","venineux"],note:"« venimeux » = qui a du venin ; « vénéneux » = toxique à manger.",d:2},
     {ph:"Ce champignon est ___ (toxique si on le mange).",good:"vénéneux",bad:["venimeux","vénimeux","véneneux"],note:"« vénéneux » = toxique par ingestion ; « venimeux » = qui injecte du venin.",d:2},
     {ph:"Ce texte est aisément ___ (que l'on comprend bien).",good:"compréhensible",bad:["compréhensif","compréhensable","comprennsible"],note:"« compréhensible » = clair ; « compréhensif » = indulgent.",d:2},
     {ph:"Mon père est ___ quand je me trompe (indulgent).",good:"compréhensif",bad:["compréhensible","comprennsif","compréensif"],note:"« compréhensif » = indulgent ; « compréhensible » = clair.",d:2},
     {ph:"Un danger ___ nous menace (tout proche, sur le point d'arriver).",good:"imminent",bad:["éminent","immanent","imminant"],note:"« imminent » = tout proche ; « éminent » = remarquable.",d:3},
     {ph:"C'est un ___ professeur (remarquable, illustre).",good:"éminent",bad:["imminent","immanent","éminant"],note:"« éminent » = remarquable ; « imminent » = tout proche.",d:3},
     {ph:"Le maire a prononcé une ___ (bref discours officiel).",good:"allocution",bad:["allocation","élocution","allitération"],note:"« allocution » = discours ; « allocation » = somme versée.",d:3},
-    {ph:"La famille touche une ___ familiale (aide financière).",good:"allocation",bad:["allocution","élocution","allocation"],note:"« allocation » = aide financière ; « allocution » = discours.",d:3},
+    {ph:"La famille touche une ___ familiale (aide financière).",good:"allocation",bad:["allocution","élocution","alocation"],note:"« allocation » = aide financière ; « allocution » = discours.",d:3},
     {ph:"Les cambrioleurs sont entrés par ___ (en forçant l'entrée).",good:"effraction",bad:["infraction","réfraction","effration"],note:"« effraction » = entrée forcée ; « infraction » = violation d'une règle.",d:3},
     {ph:"Il a commis une ___ au code de la route (violation d'une règle).",good:"infraction",bad:["effraction","réfraction","infration"],note:"« infraction » = violation d'une règle ; « effraction » = entrée forcée.",d:3},
     {ph:"L'___ du toit est très forte (angle, pente).",good:"inclinaison",bad:["inclination","inclinason","enclinaison"],note:"« inclinaison » = angle, pente ; « inclination » = penchant.",d:3},
@@ -1787,11 +1803,32 @@
     for(var w=1;w<=5 && pool.length<3;w++) pool=list.filter(function(x){return Math.abs(x[key]-diff)<=w;});
     return pool;
   }
+  // Regroupe TOUS les synonymes d'un mot (ensembles reliés par un mot commun
+  // + quelques ponts manuels entre ensembles de sens voisin), pour ne JAMAIS
+  // proposer comme distracteur un mot qui serait lui aussi un synonyme valable.
+  var _synClusterByWord=null;
+  function synClusterOf(word){
+    if(!_synClusterByWord){
+      var parent={};
+      function find(x){ if(parent[x]===undefined) parent[x]=x; return parent[x]===x?x:(parent[x]=find(parent[x])); }
+      function union(a,b){ parent[find(a)]=find(b); }
+      SYN_SETS.forEach(function(s){ for(var i=1;i<s.w.length;i++) union(s.w[0], s.w[i]); });
+      // ponts entre ensembles proches sans mot commun (sens quasi identique)
+      [["triste","sombre"],["triste","mélancolique"],["sombre","mélancolique"],
+       ["manger","assimiler"],["fatigué","mélancolique"]].forEach(function(p){
+        if(parent[p[0]]!==undefined && parent[p[1]]!==undefined) union(p[0],p[1]); });
+      _synClusterByWord={};
+      synAll().forEach(function(w){ var r=find(w); (_synClusterByWord[r]=_synClusterByWord[r]||[]); if(_synClusterByWord[r].indexOf(w)<0) _synClusterByWord[r].push(w); });
+      var byWord={}; synAll().forEach(function(w){ byWord[w]=_synClusterByWord[find(w)]; }); _synClusterByWord=byWord;
+    }
+    return _synClusterByWord[word]||[word];
+  }
   function genSynonymes(diff,cat,sub){
     var g=pick(bandFilter(SYN_SETS,diff,"d")), word=g.w[0], good=pick(g.w.slice(1));
+    var exclude=synClusterOf(word).concat(g.w);   // exclut tous les synonymes réels du mot
     return { cat:cat, sub:sub, phrase:pick(SYN_FRAMES).replace("{W}",word), hint:"Trouve un mot de sens PROCHE",
       note:"Un synonyme est un mot de sens PROCHE : « "+g.w.slice(1).join(" », « ")+" » ≈ « "+word+" ».",
-      options:build(good, sampleAway(synAll(), g.w, 3)), answer:0 };
+      options:build(good, sampleAway(synAll(), exclude, 3)), answer:0 };
   }
   function genContraires(diff,cat,sub){
     var c=pick(bandFilter(CONTR_PAIRS,diff,"d")), fwd=rint(2), w=fwd?c.a:c.b, good=fwd?c.b:c.a;
@@ -1855,7 +1892,7 @@
     {ph:"Un petit livre est un ___.",good:"livret",bad:["libraire","librairie","livreur"],d:1},{ph:"Une petite maison est une ___.",good:"maisonnette",bad:["maisonnée","maçon","manoir"],d:1},
     {ph:"Un arbre qui donne des pommes est un ___.",good:"pommier",bad:["pomme","pommade","pommeau"],d:1},{ph:"Un petit garçon est un ___.",good:"garçonnet",bad:["garçonne","garagiste","gamin"],d:1},
     {ph:"Celui qui coiffe est le ___.",good:"coiffeur",bad:["coiffe","coiffure","coiffé"],d:1},{ph:"Un petit ours est un ___.",good:"ourson",bad:["oursin","oursonne","ourage"],d:1},
-    {ph:"L'action de laver s'appelle le ___.",good:"lavage",bad:["laveur","lavable","laver"],d:1},{ph:"Une petite fille est une ___.",good:"fillette",bad:["filleul","filière","filet"],d:1},{ph:"Un petit chien est un ___.",good:"chiot",bad:["chienne","chenil","chiotte"],d:1},
+    {ph:"L'action de laver s'appelle le ___.",good:"lavage",bad:["laveur","lavable","laver"],d:1},{ph:"Une petite fille est une ___.",good:"fillette",bad:["filleul","filière","filet"],d:1},{ph:"Un petit chien est un ___.",good:"chiot",bad:["chienne","chenil","niche"],d:1},
     {ph:"Celui qui chante est un ___.",good:"chanteur",bad:["chanson","chantier","chanteuse"],d:2},{ph:"Celui qui garde les buts est le ___.",good:"gardien",bad:["garderie","garage","gardienne"],d:2},
     {ph:"Celui qui joue du piano est un ___.",good:"pianiste",bad:["piano","pianotage","pianoter"],d:2},{ph:"Celui qui vend des fleurs est le ___.",good:"fleuriste",bad:["fleurette","floraison","fleurir"],d:2},
     {ph:"Celui qui conduit le camion est le ___.",good:"camionneur",bad:["camionnette","camionnage","camion"],d:2},{ph:"Avec « re- », « faire » devient ___.",good:"refaire",bad:["défaire","parfaire","forfait"],d:2},
@@ -1875,14 +1912,14 @@
     {ph:"Celui qui ment est un ___.",good:"menteur",bad:["mensonge","mentir","menterie"],d:4},{ph:"Rendre clair, c'est ___.",good:"clarifier",bad:["clarté","clairement","éclair"],d:4},
     {ph:"Ce que l'on mange (aliments) est la ___.",good:"nourriture",bad:["nourrisson","nourrice","nourrir"],d:4},{ph:"Rendre plus court, c'est ___.",good:"raccourcir",bad:["courtiser","courtaud","courtoisie"],d:4},{ph:"L'action de fabriquer est la ___.",good:"fabrication",bad:["fabricant","fabrique","fabriquer"],d:4},
     {ph:"L'étude des astres est l'___.",good:"astronomie",bad:["astrologie","astronaute","astéroïde"],d:5},{ph:"L'ensemble des mots d'une langue est le ___.",good:"vocabulaire",bad:["vocal","vociférer","vocatif"],d:5},
-    {ph:"Ce qui concerne la ville est ___.",good:"urbain",bad:["rural","urbanisme","urbaniste"],d:5},{ph:"Ce qui concerne la campagne est ___.",good:"rural",bad:["urbain","ruralité","rustique"],d:5},
+    {ph:"Ce qui concerne la ville est ___.",good:"urbain",bad:["rural","urbanisme","urbaniste"],d:5},{ph:"Ce qui concerne la campagne est ___.",good:"rural",bad:["urbain","ruralité","citadin"],d:5},
     {ph:"L'action de traduire est la ___.",good:"traduction",bad:["traducteur","traduire","traduisible"],d:5},{ph:"L'étude des roches est la ___.",good:"géologie",bad:["géographie","géométrie","géologue"],d:5},
     {ph:"Celui qui gouverne un pays est le ___.",good:"gouverneur",bad:["gouvernement","gouvernail","gouverner"],d:5},{ph:"Rendre national, c'est ___.",good:"nationaliser",bad:["nationalité","national","nation"],d:5},
     {ph:"L'art de bien parler est l'___.",good:"éloquence",bad:["élocution","allocution","éloquent"],d:5},{ph:"Ce qui ne peut être corrompu est ___.",good:"incorruptible",bad:["corruptible","corruption","corrupteur"],d:5},
     {ph:"L'action de multiplier est la ___.",good:"multiplication",bad:["multiple","multitude","multiplier"],d:5},{ph:"Celui qui pratique la médecine est le ___.",good:"médecin",bad:["médecine","médical","médicament"],d:5},{ph:"Rendre simple, c'est ___.",good:"simplifier",bad:["simplicité","simplement","simpliste"],d:5},
     {ph:"Celui qui aime les livres est un ___.",good:"bibliophile",bad:["bibliothécaire","bibliographe","bibliophobe"],d:6},{ph:"La peur des espaces clos est la ___.",good:"claustrophobie",bad:["agoraphobie","claustration","cloître"],d:6},
     {ph:"Celui qui mange de tout est ___.",good:"omnivore",bad:["herbivore","carnivore","frugivore"],d:6},{ph:"Celui qui parle plusieurs langues est ___.",good:"polyglotte",bad:["monoglotte","polygone","polygame"],d:6},
-    {ph:"L'étude des populations est la ___.",good:"démographie",bad:["géographie","biographie","cartographie"],d:6},{ph:"Le produit qui tue les microbes est l'___.",good:"antiseptique",bad:["aseptique","septicémie","antibiotique"],d:6},
+    {ph:"L'étude des populations est la ___.",good:"démographie",bad:["géographie","biographie","cartographie"],d:6},{ph:"Le produit qui désinfecte une plaie sur la peau est l'___.",good:"antiseptique",bad:["aseptique","septicémie","antibiotique"],d:6},
     {ph:"Celui qui déteste les hommes est un ___.",good:"misanthrope",bad:["philanthrope","anthropophage","misogyne"],d:6},{ph:"Celui qui aime l'humanité est un ___.",good:"philanthrope",bad:["misanthrope","philosophe","philatéliste"],d:6},
     {ph:"L'étude des sons d'une langue est la ___.",good:"phonétique",bad:["phonographe","phonème","symphonie"],d:6},{ph:"Rendre éternel, c'est ___.",good:"immortaliser",bad:["mortaliser","mortel","immortel"],d:6},
     {ph:"Celui qui collectionne les timbres est le ___.",good:"philatéliste",bad:["numismate","bibliophile","philanthrope"],d:6},{ph:"Celui qui collectionne les pièces de monnaie est le ___.",good:"numismate",bad:["philatéliste","antiquaire","bibliophile"],d:6},{ph:"L'étude des tremblements de terre est la ___.",good:"sismologie",bad:["volcanologie","météorologie","minéralogie"],d:6}
@@ -2297,13 +2334,13 @@
     {ph:"Tu ___ donné une excellente idée (m' + as, tu).",good:"m'as",bad:["ma","m'a","mas"],note:"« m'as » = m' + as (tu) ; « ma » = possessif ; « m'a » = m' + a (il).",d:5},
     {ph:"Depuis, je ___ comprends plus rien du tout (ne + y).",good:"n'y",bad:["ni","ny","n'i"],note:"« n'y » = ne + y ; « ni » = conjonction de négation.",d:5},
     {ph:"J'ai bien posé mes clés ___ (à un endroit indéterminé).",good:"quelque part",bad:["quelques parts","quelque parts","quel que part"],note:"« quelque part » (locution) = à un endroit ; « quelque » reste invariable ici.",d:5},
-    {ph:"Les élèves lèvent ___ main pour répondre (chacun la sienne).",good:"leur",bad:["leurs","l'heure","leures"],note:"« leur » déterminant reste au singulier : chacun n'a qu'une main.",d:5},
+    {ph:"Les gagnants brandissent ___ trophées (à eux, plusieurs trophées).",good:"leurs",bad:["leur","l'heure","leures"],note:"« leurs » déterminant pluriel : plusieurs trophées possédés.",d:5},
     {ph:"Il persévère, ___ la tâche soit ardue (bien que).",good:"quoique",bad:["quoi que","quoi-que","quoiqe"],note:"« quoique » (un mot) = bien que.",d:6},
     {ph:"___ l'on en dise, il n'en fait qu'à sa tête (peu importe ce que).",good:"Quoi que",bad:["Quoique","Quoi-que","Quoiqe"],note:"« quoi que » (deux mots) = quelle que soit la chose que.",d:6},
     {ph:"___ soit le temps, la course aura bien lieu (quel + que).",good:"Quel que",bad:["Quelque","Quelques","Quels que"],note:"« quel que » (deux mots) + être : s'accorde avec le sujet.",d:6},
     {ph:"Le document a été ___ signé par le maire (comme il se doit).",good:"dûment",bad:["dument","dûmment","dumment"],note:"« dûment » (adverbe) = selon les formes requises ; circonflexe sur le u.",d:6},
     {ph:"Il apprécie les fruits, ___ les fraises (en particulier).",good:"notamment",bad:["notament","notemment","notaument"],note:"« notamment » = en particulier ; deux m.",d:6},
-    {ph:"Le témoin a menti ___, en connaissance de cause (volontairement).",good:"sciemment",bad:["sciament","sciemant","siemment"],note:"« sciemment » = en connaissance de cause (adjectif « scient » → -emment).",d:6},
+    {ph:"Le témoin a menti ___, en connaissance de cause (volontairement).",good:"sciemment",bad:["sciament","sciemant","siemment"],note:"« sciemment » = en connaissance de cause ; orthographe exceptionnelle en -emment.",d:6},
     {ph:"Hélas, ___ est fini de nos belles vacances (ce + en).",good:"C'en",bad:["S'en","Sans","Cent"],note:"« c'en » = ce + en (c'en est fini).",d:6},
     {ph:"Il ne ___ souvient absolument plus (se + en).",good:"s'en",bad:["c'en","sans","cent"],note:"« s'en » = se + en ; « c'en » = ce + en.",d:6},
     {ph:"___ à vos remarques, j'en tiendrai compte (en ce qui concerne).",good:"Quant",bad:["Quand","Qu'en","Camp"],note:"« quant à » = en ce qui concerne ; « quand » = lorsque.",d:6},
@@ -2385,7 +2422,7 @@
   var ADV_WORDS=[
     // d1 : féminin + -ment (+ cas courants)
     {a:"lent",v:"lentement",d:1},{a:"rapide",v:"rapidement",d:1},{a:"doux",v:"doucement",d:1},
-    {a:"poli",v:"poliment",d:1,bad:["poliement","polîment","polimment"]},{a:"joli",v:"joliment",d:1,bad:["joliement","joliment","jolimment"]},
+    {a:"poli",v:"poliment",d:1,bad:["poliement","polîment","polimment"]},{a:"joli",v:"joliment",d:1,bad:["joliement","jolliment","jolimment"]},
     {a:"calme",v:"calmement",d:1},{a:"triste",v:"tristement",d:1},{a:"grand",v:"grandement",d:1},
     {a:"fort",v:"fortement",d:1},{a:"gentil",v:"gentiment",d:1,bad:["gentillement","gentimment","gentiement"]},
     {a:"sage",v:"sagement",d:1},{a:"timide",v:"timidement",d:1},{a:"vrai",v:"vraiment",d:1,bad:["vraiement","vraîment","vraimment"]},
@@ -2398,7 +2435,7 @@
     {a:"précis",v:"précisément",d:3},{a:"énorme",v:"énormément",d:3},{a:"profond",v:"profondément",d:3},
     {a:"commun",v:"communément",d:3},{a:"immense",v:"immensément",d:3},{a:"aveugle",v:"aveuglément",d:3},
     {a:"obscur",v:"obscurément",d:3},{a:"vif",v:"vivement",d:3,bad:["vifment","vivment","viveument"]},{a:"long",v:"longuement",d:3,bad:["longment","longuemment","longeument"]},
-    {a:"bref",v:"brièvement",d:3,bad:["brefment","brièfement","brievemment"]},{a:"gai",v:"gaiement",d:3,bad:["gaiment","gaîement","gaiemment"]},{a:"mou",v:"mollement",d:3,bad:["moument","molement","moument"]},{a:"fou",v:"follement",d:3,bad:["fouement","folement","foulement"]},
+    {a:"bref",v:"brièvement",d:3,bad:["brefment","brièfement","brievemment"]},{a:"gai",v:"gaiement",d:3,bad:["gaiment","gaîement","gaiemment"]},{a:"mou",v:"mollement",d:3,bad:["moument","molement","mollment"]},{a:"fou",v:"follement",d:3,bad:["fouement","folement","foulement"]},
     // d4 : -ant → -amment, -ent → -emment
     {a:"prudent",v:"prudemment",d:4},{a:"courant",v:"couramment",d:4},{a:"évident",v:"évidemment",d:4},
     {a:"suffisant",v:"suffisamment",d:4},{a:"patient",v:"patiemment",d:4},{a:"violent",v:"violemment",d:4},
@@ -2440,7 +2477,7 @@
   var ER_ITEMS=[
     {inf:"manger",o:"une pomme",d:1},{inf:"chanter",o:"une chanson",d:1},{inf:"dessiner",o:"un soleil",d:1},
     {inf:"jouer",o:"du piano",d:1},{inf:"écouter",o:"la radio",d:1},{inf:"fermer",o:"la fenêtre",d:1},
-    {inf:"laver",o:"les mains",d:1},{inf:"donner",o:"un cadeau",d:1},{inf:"montrer",o:"le dessin",d:1},
+    {inf:"laver",o:"la voiture",d:1},{inf:"donner",o:"un cadeau",d:1},{inf:"montrer",o:"le dessin",d:1},
     {inf:"arroser",o:"les plantes",d:1},{inf:"coller",o:"une image",d:1},{inf:"ranger",o:"les jouets",d:1},{inf:"porter",o:"un sac",d:1},
     {inf:"préparer",o:"le dîner",d:2},{inf:"décorer",o:"la salle",d:2},{inf:"raconter",o:"une blague",d:2},
     {inf:"attraper",o:"le ballon",d:2},{inf:"chercher",o:"la clé",d:2},{inf:"gagner",o:"la partie",d:2},
