@@ -1955,26 +1955,88 @@
     {d:5,ph:"Elle est ___ très tôt ce matin.",good:"arrivée",bad:["arriver","arrivé","arrivez"],note:"participe (être, accord au féminin)"},
     {d:4,ph:"J'ai ___ mon parapluie à la maison.",good:"oublié",bad:["oublier","oubliez","oubliée"],note:"participe après « ai »"}
   ];
-  var ACCENTS = [
-    {d:3,ph:"J'ai mangé un ___ au chocolat (dessert).",good:"gâteau",bad:["gateau","gâteaux","gatô"],note:"accent circonflexe"},
-    {d:3,ph:"L'___ écoute le maître en classe.",good:"élève",bad:["eleve","élêve","èleve"],note:"accents é/è"},
-    {d:4,ph:"La ___ est ouverte.",good:"fenêtre",bad:["fenetre","fenètre","fênetre"],note:"accent circonflexe"},
-    {d:2,ph:"On mange à la ___.",good:"cantine",bad:["cantîne","cäntine","cantiné"],note:"pas d'accent"},
-    {d:2,ph:"Le ___ brille.",good:"soleil",bad:["soléil","sôleil","soleïl"],note:"pas d'accent"},
-    {d:4,ph:"Il a de la ___.",good:"fièvre",bad:["fievre","fiêvre","fièvré"],note:"accent grave"},
-    {d:3,ph:"Le ___ est un félin rayé.",good:"tigre",bad:["tîgre","tigré","tigrè"],note:"pas d'accent"},
-    {d:4,ph:"Il fait ses devoirs le ___.",good:"mercredi",bad:["mércredi","mercrédi","mèrcredi"],note:"un seul accent"},
-    {d:5,ph:"La ___ tombe en hiver.",good:"neige",bad:["nêige","néige","nèige"],note:"pas d'accent sur e+i"},
-    {d:5,ph:"On boit une ___ chaude.",good:"crème",bad:["créme","crëme","creme"],note:"accent grave"},
-    {d:3,ph:"La ___ coule dans la vallée (cours d'eau).",good:"rivière",bad:["riviere","rivierre","riviére"],note:"accent grave"},
-    {d:2,ph:"Le ___ garde les moutons.",good:"berger",bad:["bérger","bergér","bèrger"],note:"un seul accent"},
-    {d:4,ph:"Il traverse la ___ pour aller à l'école.",good:"forêt",bad:["foret","forét","fôret"],note:"accent circonflexe"},
-    {d:3,ph:"Le ___ apporte le courrier.",good:"facteur",bad:["fàcteur","factèur","facteùr"],note:"pas d'accent"},
-    {d:4,ph:"Ma ___ prépare le dîner (maman de mon père).",good:"mère",bad:["mere","mére","mèrre"],note:"accent grave"},
-    {d:5,ph:"On écrit avec un ___ électronique aujourd'hui.",good:"écran",bad:["ecran","écrân","écrant"],note:"accent aigu au début"},
-    {d:2,ph:"Le ___ est très haut dans le ciel.",good:"nuage",bad:["nüage","nuagé","nuàge"],note:"pas d'accent"},
-    {d:3,ph:"J'aime beaucoup ce ___ salé (nourriture).",good:"repas",bad:["répas","repàs","repâs"],note:"pas d'accent"}
+  /* --- Accents : générateur PARTITIONNÉ (é/è/ê, circonflexe, tréma, sans accent) --- */
+  var ACC_ITEMS = [
+    {ph:"L'___ écoute le maître en classe.",good:"élève",bad:["eleve","élêve","èleve"],note:"accents é puis è",d:1},
+    {ph:"Ma ___ prépare le dîner (la maman).",good:"mère",bad:["mere","mére","mèrre"],note:"accent grave",d:1},
+    {ph:"Mon ___ rentre du travail (le papa).",good:"père",bad:["pere","pére","pèrre"],note:"accent grave",d:1},
+    {ph:"Mon grand ___ joue au football.",good:"frère",bad:["frere","frére","frèrre"],note:"accent grave",d:1},
+    {ph:"J'ai mal à la ___.",good:"tête",bad:["tete","téte","têtte"],note:"accent circonflexe",d:1},
+    {ph:"C'est la ___ de l'école aujourd'hui.",good:"fête",bad:["fete","féte","fêtte"],note:"accent circonflexe",d:1},
+    {ph:"Chaque matin, je vais à l'___.",good:"école",bad:["ecole","écôle","écolé"],note:"accent aigu au début",d:1},
+    {ph:"Je dessine une ___ au chocolat (crème dessert).",good:"crème",bad:["creme","créme","crèmme"],note:"accent grave",d:1},
+    {ph:"La ___ coule au fond de la vallée (cours d'eau).",good:"rivière",bad:["riviere","riviére","rivierre"],note:"accent grave",d:1},
+    {ph:"Je trace un trait avec ma ___.",good:"règle",bad:["regle","régle","rêgle"],note:"accent grave",d:1},
+    {ph:"La ___ du soleil entre par la fenêtre.",good:"lumière",bad:["lumiere","lumiére","lumierre"],note:"accent grave",d:1},
+    {ph:"Le ___ dort dans son berceau.",good:"bébé",bad:["bebe","bébè","bèbé"],note:"deux accents aigus",d:1},
+    {ph:"Papa boit un ___ le matin.",good:"café",bad:["cafe","cafè","câfé"],note:"accent aigu",d:1},
+    {ph:"À midi, on mange à la ___.",good:"cantine",bad:["cantîne","cäntine","cantiné"],note:"aucun accent",d:2},
+    {ph:"Le ___ brille dans le ciel bleu.",good:"soleil",bad:["soléil","sôleil","soleïl"],note:"aucun accent",d:2},
+    {ph:"Le ___ garde les moutons dans le pré.",good:"berger",bad:["bérger","bergér","bèrger"],note:"un seul accent (é final)",d:2},
+    {ph:"Un gros ___ blanc passe dans le ciel.",good:"nuage",bad:["nüage","nuagé","nuàge"],note:"aucun accent",d:2},
+    {ph:"J'aime beaucoup ce ___ bien salé (nourriture).",good:"repas",bad:["répas","repàs","repâs"],note:"aucun accent",d:2},
+    {ph:"Le ___ apporte le courrier chaque jour.",good:"facteur",bad:["fàcteur","factèur","facteùr"],note:"aucun accent",d:2},
+    {ph:"Le ___ est un félin rayé.",good:"tigre",bad:["tîgre","tigré","tigrè"],note:"aucun accent",d:2},
+    {ph:"L'___ vole très haut dans le ciel.",good:"avion",bad:["aviôn","âvion","aviont"],note:"aucun accent",d:2},
+    {ph:"Le chien est un ___ domestique.",good:"animal",bad:["animàl","ânimal","animâl"],note:"aucun accent",d:2},
+    {ph:"Je suis assis au fond de la ___.",good:"classe",bad:["clâsse","classé","clàsse"],note:"aucun accent",d:2},
+    {ph:"Le soir, je rentre à la ___.",good:"maison",bad:["maisôn","mâison","maisont"],note:"aucun accent",d:2},
+    {ph:"Les fleurs poussent dans le ___.",good:"jardin",bad:["jardîn","jârdin","jardint"],note:"aucun accent",d:2},
+    {ph:"Grand-mère remplit un ___ de fruits.",good:"panier",bad:["paniér","pânier","panièr"],note:"aucun accent",d:2},
+    {ph:"J'ai mangé un ___ au chocolat (dessert).",good:"gâteau",bad:["gateau","gâteo","gatô"],note:"accent circonflexe",d:3},
+    {ph:"Il traverse la ___ pour aller à l'école.",good:"forêt",bad:["foret","forét","fôret"],note:"accent circonflexe",d:3},
+    {ph:"La ___ de la chambre est grande ouverte.",good:"fenêtre",bad:["fenetre","fenètre","fênetre"],note:"accent circonflexe",d:3},
+    {ph:"Le loup est une ___ sauvage.",good:"bête",bad:["bete","béte","bêtte"],note:"accent circonflexe",d:3},
+    {ph:"Cette nuit, j'ai fait un très beau ___.",good:"rêve",bad:["reve","réve","rêvve"],note:"accent circonflexe",d:3},
+    {ph:"Le bus s'arrête à l'___ du village.",good:"arrêt",bad:["arret","arrét","arrêtt"],note:"accent circonflexe",d:3},
+    {ph:"Ce soir, on joue une pièce de ___.",good:"théâtre",bad:["theatre","théatre","théâttre"],note:"accents é et â",d:3},
+    {ph:"Le blessé est soigné à l'___.",good:"hôpital",bad:["hopital","hôpîtal","hopîtal"],note:"accent circonflexe",d:3},
+    {ph:"Robinson vit seul sur une ___ déserte.",good:"île",bad:["ile","îlle","ïle"],note:"accent circonflexe sur i",d:3},
+    {ph:"On étale la ___ pour faire une tarte.",good:"pâte",bad:["pate","pâtte","pàte"],note:"accent circonflexe sur a",d:3},
+    {ph:"L'___ porte les sacs sur son dos (animal têtu).",good:"âne",bad:["ane","ânne","àne"],note:"accent circonflexe sur a",d:3},
+    {ph:"À Noël, on partage une ___ pâtissière.",good:"bûche",bad:["buche","bûchhe","bùche"],note:"accent circonflexe sur u",d:3},
+    {ph:"Elle joue un air de ___ (instrument à vent).",good:"flûte",bad:["flute","flûtte","flùte"],note:"accent circonflexe sur u",d:3},
+    {ph:"L'enfant malade a de la ___.",good:"fièvre",bad:["fievre","fiêvre","fièvré"],note:"accent grave",d:4},
+    {ph:"Il révise ses leçons le ___.",good:"mercredi",bad:["mércredi","mercrédi","mèrcredi"],note:"un seul accent",d:4},
+    {ph:"Chacun respecte le ___ de l'école.",good:"règlement",bad:["reglement","réglement","règlemant"],note:"è puis e sans accent",d:4},
+    {ph:"L'eau est un ___ indispensable à la vie.",good:"élément",bad:["element","éléman","élémant"],note:"deux accents aigus",d:4},
+    {ph:"Le bleu est ma couleur ___.",good:"préférée",bad:["preferee","préferée","préférèe"],note:"trois accents aigus",d:4},
+    {ph:"C'est un chanteur très ___ dans le monde entier.",good:"célèbre",bad:["celebre","célébre","cèlèbre"],note:"é puis è",d:4},
+    {ph:"Le nouveau maître est un peu ___.",good:"sévère",bad:["severe","sévére","sèvère"],note:"é puis è",d:4},
+    {ph:"Dimanche, on va voir un film au ___.",good:"cinéma",bad:["cinema","cinémà","cînema"],note:"accent aigu",d:4},
+    {ph:"Quel est le ___ de ta maison ?",good:"numéro",bad:["numero","nùmero","numérô"],note:"accent aigu",d:4},
+    {ph:"Le Père Noël passe en ___.",good:"décembre",bad:["decembre","décèmbre","décembrè"],note:"accent aigu au début",d:4},
+    {ph:"Il a mangé la tarte ___ tout seul.",good:"entière",bad:["entiere","entiére","entièrre"],note:"accent grave",d:4},
+    {ph:"Le français est ma ___ préférée à l'école.",good:"matière",bad:["matiere","matiére","matierre"],note:"accent grave",d:4},
+    {ph:"Nous en sommes à la ___ page du livre.",good:"dernière",bad:["derniere","derniére","dernierre"],note:"accent grave",d:4},
+    {ph:"La ___ recouvre le paysage en hiver.",good:"neige",bad:["nêige","néige","nèige"],note:"aucun accent sur e+i",d:5},
+    {ph:"Toute la famille se réunit pour ___.",good:"Noël",bad:["Noel","Noèl","Nôel"],note:"tréma sur le e",d:5},
+    {ph:"La poule picore des grains de ___.",good:"maïs",bad:["mais","maîs","maïse"],note:"tréma sur le i",d:5},
+    {ph:"Ne sois pas si ___, réfléchis un peu (crédule).",good:"naïf",bad:["naif","naîf","naïve"],note:"tréma sur le i",d:5},
+    {ph:"Il ne faut ___ personne (détester).",good:"haïr",bad:["hair","haîr","haïre"],note:"tréma sur le i",d:5},
+    {ph:"Ne sois pas ___, partage tes bonbons (qui pense à soi).",good:"égoïste",bad:["egoiste","égoîste","égoïsté"],note:"tréma sur le i",d:5},
+    {ph:"Jeanne d'Arc est une grande ___ française.",good:"héroïne",bad:["heroine","héroîne","héroïnne"],note:"tréma sur le i",d:5},
+    {ph:"On descend la rivière en ___ (petite embarcation).",good:"canoë",bad:["canoe","canoé","canoè"],note:"tréma sur le e",d:5},
+    {ph:"Mon arrière-grand-père est mon ___ (ancêtre).",good:"aïeul",bad:["aieul","aîeul","aïeule"],note:"tréma sur le i",d:5},
+    {ph:"Le sol de l'église est une belle ___ colorée.",good:"mosaïque",bad:["mosaique","mosaîque","mosaïqe"],note:"tréma sur le i",d:5},
+    {ph:"On mange dans de la vaisselle en ___ (terre cuite émaillée).",good:"faïence",bad:["faience","faîence","faïance"],note:"tréma sur le i",d:5},
+    {ph:"Quelle drôle de ___ de se croiser ici !",good:"coïncidence",bad:["coincidence","coîncidence","coïncidance"],note:"tréma sur le i",d:5},
+    {ph:"Il reste ___ face à la douleur (impassible, imperturbable).",good:"stoïque",bad:["stoique","stoîque","stoïqe"],note:"tréma sur le i",d:5},
+    {ph:"Il a ___ partir très tôt ce matin (participe du verbe devoir).",good:"dû",bad:["du","dûe","dut"],note:"circonflexe : « dû » (devoir) ≠ « du » (article).",d:6},
+    {ph:"Je suis ___ de moi et de ma réponse (certain).",good:"sûr",bad:["sur","sûre","seur"],note:"circonflexe : « sûr » (certain) ≠ « sur » (dessus).",d:6},
+    {ph:"Ce fruit bien ___ est prêt à être mangé.",good:"mûr",bad:["mur","mûre","meur"],note:"circonflexe : « mûr » (fruit) ≠ « mur » (paroi).",d:6},
+    {ph:"Le ___ est une longue privation de nourriture.",good:"jeûne",bad:["jeune","jeûnne","jêune"],note:"circonflexe : « jeûne » (ne pas manger) ≠ « jeune » (âge).",d:6},
+    {ph:"La fatigue me fait ___ sans arrêt (ouvrir grand la bouche).",good:"bâiller",bad:["bailler","bâillér","baîller"],note:"accent circonflexe sur a",d:6},
+    {ph:"Le lâche ___ a livré le château à l'ennemi.",good:"traître",bad:["traitre","traîttre","trâitre"],note:"accent circonflexe sur i",d:6},
+    {ph:"Le ___ d'école corrige les copies (l'instituteur).",good:"maître",bad:["maitre","maîttre","mâitre"],note:"accent circonflexe sur i",d:6},
+    {ph:"Le nouveau roman va bientôt ___ en librairie.",good:"paraître",bad:["paraitre","paraîttre","parâitre"],note:"accent circonflexe sur i",d:6},
+    {ph:"Le coach va nous ___ tous les samedis.",good:"entraîner",bad:["entrainer","entraînér","entrâiner"],note:"accent circonflexe sur i",d:6},
+    {ph:"Le gouffre s'ouvre comme un ___ sans fond.",good:"abîme",bad:["abime","abîmme","abïme"],note:"accent circonflexe sur i",d:6},
+    {ph:"L'infirmière fait une ___ pour le vaccin (avec une aiguille).",good:"piqûre",bad:["piqure","piqûrre","piqûré"],note:"accent circonflexe sur u",d:6},
+    {ph:"Les gardes veillent à la ___ du palais (la sécurité).",good:"sûreté",bad:["sureté","sûrété","seureté"],note:"circonflexe sur u puis accent aigu",d:6},
+    {ph:"J'aimerais mieux te ___ (savoir qui tu es).",good:"connaître",bad:["connaitre","connaîttre","conaître"],note:"accent circonflexe sur i",d:6}
   ];
+  var ACCENT_FRAMES=["{PH}","Orthographe des accents — {PH}","Écris le mot avec les bons accents : {PH}","Attention aux accents — {PH}"];
   var PLUR = [
     {d:3,ph:"J'ai vu trois ___.",good:"chevaux",bad:["chevals","chevaus","chevaual"],note:"pluriel de cheval"},
     {d:3,ph:"Les ___ sont fermés.",good:"journaux",bad:["journals","journeaux","journaus"],note:"pluriel en -aux"},
@@ -2267,15 +2329,21 @@
       note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
   }
 
+  function genAccents(diff,cat,sub){
+    var it=pick(bandFilter(ACC_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(ACCENT_FRAMES).replace("{PH}",it.ph), hint:"Orthographe : "+it.note,
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genOrt(sub, diff, cat){
     var it, hint;
     if(sub==="Pluriels") return genPluriels(diff,cat,sub);
     if(sub==="Adverbes en -ment") return genAdverbes(diff,cat,sub);
     if(sub==="é ou er") return genErE(diff,cat,sub);
     if(sub==="m devant m, b, p") return genMbp(diff,cat,sub);
+    if(sub==="Accents") return genAccents(diff,cat,sub);
     if(sub==="Homophones"){ it=pickByDiff(HOMOPH,diff); hint="Homophones ("+it.note+")"; }
     else if(sub==="é ou er"){ it=pickByDiff(ER_E,diff); hint="é (participe) ou er (infinitif) ?"; }
-    else if(sub==="Accents"){ it=pickByDiff(ACCENTS,diff); hint="Orthographe : "+it.note; }
     else if(sub==="Pluriels"){ it=pickByDiff(PLUR,diff); hint="Écris le bon pluriel"; }
     else if(sub==="Homophones grammaticaux"){ it=pickByDiff(HOMOG,diff); hint="Homophones grammaticaux"; }
     else if(sub==="Adverbes en -ment"){ it=pickByDiff(ADVMENT,diff); hint="Forme l'adverbe en -ment"; }
