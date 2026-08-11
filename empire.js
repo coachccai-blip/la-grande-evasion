@@ -27,7 +27,8 @@
   var BUILD_LABEL=["Stand","Boutique","Grand Magasin","Palais"];
 
   function prop(q,name){ return {type:"prop", q:q, name:name, price:QUARTIERS[q].price, emoji:QUARTIERS[q].emoji,
-    rentBase:Math.round(QUARTIERS[q].price*0.1), build:QUARTIERS[q].build, owner:-1, level:0, mortgaged:false}; }
+    /* Loyers relevés (×2) pour des parties ~2× plus courtes. */
+    rentBase:Math.round(QUARTIERS[q].price*0.2), build:QUARTIERS[q].build, owner:-1, level:0, mortgaged:false}; }
   function transport(name,emoji){ return {type:"transport", name:name, price:200, emoji:emoji||"🚌", owner:-1, mortgaged:false}; }
   function service(name,emoji){ return {type:"service", name:name, price:150, emoji:emoji||"⚙️", owner:-1, mortgaged:false}; }
 
@@ -144,8 +145,8 @@
   function countType(pi, type){ var n=0; E.board.forEach(function(c){ if(c.type===type&&c.owner===pi&&!c.mortgaged) n++; }); return n; }
   function rentOf(c, diceTotal){
     if(c.owner<0||c.mortgaged) return 0;
-    if(c.type==="transport"){ var n=countType(c.owner,"transport"); return [0,50,100,150,200][n]||200; }
-    if(c.type==="service"){ var n2=countType(c.owner,"service"); return diceTotal*(n2>=2?10:5)||diceTotal*5; }
+    if(c.type==="transport"){ var n=countType(c.owner,"transport"); return [0,100,200,300,400][n]||400; }
+    if(c.type==="service"){ var n2=countType(c.owner,"service"); return diceTotal*(n2>=2?20:10)||diceTotal*10; }
     // prop
     if(c.level>0) return c.rentBase*RENT_MULT[c.level-1];
     return quartierComplete(c.owner,c.q)? c.rentBase*2 : c.rentBase;
@@ -426,9 +427,9 @@
       desc="<b>"+QUARTIERS[c.q].name+"</b><br>Prix : <b>₵"+c.price+"</b> · Loyer de base : ₵"+c.rentBase+" (×2 si quartier complet)<br>"+status
         +(c.level>0?"<br>🏠 Niveau : <b>"+BUILD_LABEL[c.level-1]+"</b>":"");
     } else if(c.type==="transport"){ bg="linear-gradient(160deg,#cfe0ff,#fff)";
-      desc="<b>Route migratoire</b> — Transport à acheter (<b>₵200</b>).<br>Le loyer grimpe avec le nombre de lignes possédées (50 → 200 ₵)."; }
+      desc="<b>Route migratoire</b> — Transport à acheter (<b>₵200</b>).<br>Le loyer grimpe avec le nombre de lignes possédées (100 → 400 ₵)."; }
     else if(c.type==="service"){ bg="linear-gradient(160deg,#d5f0e0,#fff)";
-      desc="<b>Service de la vallée</b> — À acheter (<b>₵150</b>).<br>Loyer = <b>10 × le total des dés</b> du visiteur."; }
+      desc="<b>Service de la vallée</b> — À acheter (<b>₵150</b>).<br>Loyer = <b>10 × le total des dés</b> du visiteur (× 20 avec les deux services)."; }
     else if(c.type==="depart"){ bg="linear-gradient(160deg,#dcf3b6,#fff)";
       desc="<b>Grand Baobab (Départ)</b><br>Touche <b>200 ₵</b> de salaire à chaque passage. Tente la <b>Prime de la Jungle</b> pour le doubler !"; }
     else if(c.type==="impot"){ bg="linear-gradient(160deg,#ffd9d0,#fff)";

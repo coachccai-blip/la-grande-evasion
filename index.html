@@ -394,6 +394,24 @@
     border-radius:9px; padding:8px 10px;
   }
   .hist-item.open .hist-explain{display:block;}
+  /* Traduction EN / 中文 des cartes */
+  .hist-tr-wrap{margin-top:8px;}
+  .hist-tr-btn{border:0; background:linear-gradient(90deg,#3b82f6,#6366f1); color:#fff;
+    font-family:var(--font); font-weight:800; font-size:11px; padding:6px 11px; border-radius:9px;
+    cursor:pointer; box-shadow:0 1px 3px rgba(59,130,246,.35);}
+  .hist-tr-btn:active{transform:translateY(1px);}
+  .hist-tr{display:none; margin-top:8px; flex-direction:column; gap:8px;}
+  .hist-tr.open{display:flex;}
+  .hist-tr-load{font-size:12px; color:var(--ink-soft); padding:4px 2px;}
+  .hist-tr-block{background:rgba(59,130,246,.07); border:1px solid rgba(59,130,246,.24);
+    border-radius:10px; padding:8px 11px;}
+  .hist-tr-lang{font-size:11px; font-weight:900; color:#3b5bd0; margin-bottom:3px;}
+  .hist-tr-cat{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.4px;
+    color:var(--ink-soft); margin-bottom:3px;}
+  .hist-tr-phrase{font-size:14px; font-weight:700; color:var(--ink); line-height:1.4;}
+  .hist-tr-line{font-size:12px; margin-top:3px; color:var(--ink); line-height:1.4;}
+  .hist-tr-line.ok{color:#1f8a4c;} .hist-tr-line.ko{color:var(--ko2,#c0392b);}
+  .hist-tr-rule{font-size:11.5px; margin-top:4px; color:var(--ink-soft); line-height:1.45;}
 
   /* ============================== Badges ============================= */
   .badges-head{margin-bottom:12px;}
@@ -2495,6 +2513,71 @@ function finishGame(playerWon, winnerIndex){
 /* ==================================================================== */
 /*                            HISTORIQUE                                */
 /* ==================================================================== */
+/* ==================================================================== */
+/*        TRADUCTION DES CARTES — Anglais natif & Chinois natif         */
+/*  Moteur Google (fr → en / zh-CN), qualité native, avec cache local   */
+/*  (les traductions déjà vues restent disponibles hors-ligne).         */
+/* ==================================================================== */
+var TR_KEY = SAVE_KEY + "::tr";
+var trCache = {};
+(function loadTr(){ try{ var r=localStorage.getItem(TR_KEY); if(r) trCache=JSON.parse(r)||{}; }catch(e){ trCache={}; } })();
+var _trSaveT=null;
+function saveTr(){ if(_trSaveT) return; _trSaveT=setTimeout(function(){ _trSaveT=null; try{ localStorage.setItem(TR_KEY, JSON.stringify(trCache)); }catch(e){} }, 500); }
+// Libellés de catégories traduits « à la main » pour une qualité native irréprochable.
+var CAT_EN={conjugaison:"Conjugation",grammaire:"Grammar",vocabulaire:"Vocabulary",orthographe:"Spelling",melange:"Mix",tout:"All"};
+var CAT_ZH={conjugaison:"动词变位",grammaire:"语法",vocabulaire:"词汇",orthographe:"拼写",melange:"综合",tout:"全部"};
+// Appel du moteur de traduction Google (gratuit, CORS ouvert, rendu natif).
+function gTranslate(text, tl){
+  var url="https://translate.googleapis.com/translate_a/single?client=gtx&sl=fr&tl="+tl+"&dt=t&q="+encodeURIComponent(text);
+  return fetch(url).then(function(r){ if(!r.ok) throw new Error("http "+r.status); return r.json(); })
+    .then(function(d){ var out=""; ((d&&d[0])||[]).forEach(function(s){ if(s&&s[0]) out+=s[0]; }); return out||text; });
+}
+// Traduit un champ (avec cache mémoire + localStorage).
+function trField(text, tl){
+  text=String(text==null?"":text).trim(); if(!text) return Promise.resolve("");
+  var key=tl+""+text;
+  if(trCache[key]!=null) return Promise.resolve(trCache[key]);
+  return gTranslate(text, tl).then(function(out){ trCache[key]=out; saveTr(); return out; });
+}
+// Remplit le panneau de traduction d'une carte (EN puis 中文).
+function fillTranslations(h, panel){
+  panel.innerHTML="<div class='hist-tr-load'>⏳ Traduction en cours…</div>";
+  var filled=String(h.phrase||"").replace("___", (h.options&&h.answer!=null)?h.options[h.answer]:"____");
+  var rule=h.explain || histExplain(h);
+  var answer=(h.options&&h.answer!=null)?h.options[h.answer]:"";
+  var chosen=(!h.result && h.chosen!=null && h.options)?h.options[h.chosen]:"";
+  var sub=(h.sub&&h.sub!=="Tout")?h.sub:"";
+  var ctx=h.context||"";
+  var LANGS=[
+    {tl:"en",    flag:"🇬🇧 English", cat:CAT_EN, your:"Your answer: ", good:"Correct answer: ", hint:"Hint: ", rule:"Rule: "},
+    {tl:"zh-CN", flag:"🇨🇳 中文",    cat:CAT_ZH, your:"你的答案：",     good:"正确答案：",       hint:"提示：",  rule:"规则："}
+  ];
+  Promise.all(LANGS.map(function(L){
+    return Promise.all([
+      trField(filled,L.tl), trField(h.hint||"",L.tl), trField(answer,L.tl),
+      trField(chosen,L.tl), trField(rule,L.tl), trField(sub,L.tl), trField(ctx,L.tl)
+    ]).then(function(v){ return {L:L, phrase:v[0], hint:v[1], answer:v[2], chosen:v[3], rule:v[4], sub:v[5], ctx:v[6]}; });
+  })).then(function(blocks){
+    panel.innerHTML="";
+    blocks.forEach(function(b){
+      var box=document.createElement("div"); box.className="hist-tr-block";
+      var catTxt=(b.L.cat[h.cat]||h.cat)+(b.sub?" · "+b.sub:"");
+      var html="<div class='hist-tr-lang'>"+b.L.flag+"</div>";
+      html+="<div class='hist-tr-cat'>"+escapeHtml(catTxt)+"</div>";
+      if(b.ctx) html+="<div class='hist-tr-line'>👑 "+escapeHtml(b.ctx)+"</div>";
+      html+="<div class='hist-tr-phrase'>"+escapeHtml(b.phrase)+"</div>";
+      if(b.hint) html+="<div class='hist-tr-line'>👉 "+escapeHtml(b.L.hint+b.hint)+"</div>";
+      if(b.chosen) html+="<div class='hist-tr-line ko'>✗ "+escapeHtml(b.L.your+b.chosen)+"</div>";
+      if(b.answer) html+="<div class='hist-tr-line ok'>✓ "+escapeHtml(b.L.good+b.answer)+"</div>";
+      if(b.rule) html+="<div class='hist-tr-rule'>💡 "+escapeHtml(b.L.rule+b.rule)+"</div>";
+      box.innerHTML=html; panel.appendChild(box);
+    });
+  }).catch(function(){
+    panel.innerHTML="<div class='hist-tr-load'>⚠️ Traduction indisponible hors-ligne. Connecte-toi à Internet puis réessaie.</div>";
+    panel.setAttribute("data-loaded","0");
+  });
+}
+
 var histFilter="all";   // "all" | "ok" | "ko" : filtre de l'historique (pastilles ✓/✗)
 function renderHistory(){
   var list=$("histList"); list.innerHTML="";
@@ -2562,6 +2645,20 @@ function renderHistory(){
         }
       };
     }
+    // --- Bouton de traduction (Anglais natif · Chinois natif) sur CHAQUE carte ---
+    var trWrap=document.createElement("div"); trWrap.className="hist-tr-wrap";
+    var trBtn=document.createElement("button"); trBtn.type="button"; trBtn.className="hist-tr-btn";
+    trBtn.textContent="🌐 Traduire (EN · 中文)";
+    var trPanel=document.createElement("div"); trPanel.className="hist-tr";
+    trBtn.onclick=function(ev){ ev.stopPropagation();
+      var open=trPanel.classList.toggle("open");
+      trBtn.textContent = open ? "🔽 Masquer la traduction" : "🌐 Traduire (EN · 中文)";
+      if(open && trPanel.getAttribute("data-loaded")!=="1"){
+        trPanel.setAttribute("data-loaded","1"); Sound.click&&Sound.click();
+        fillTranslations(h, trPanel);
+      }
+    };
+    trWrap.appendChild(trBtn); trWrap.appendChild(trPanel); main.appendChild(trWrap);
     it.appendChild(res); it.appendChild(main); list.appendChild(it);
   });
 }
