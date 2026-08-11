@@ -1513,15 +1513,110 @@
       note:"Un antonyme a le sens OPPOSÉ : « "+c.a+" » ↔ « "+c.b+" ».", options:build(good,bad), answer:0 };
   }
 
+  /* --- Mots du quotidien : générateur PARTITIONNÉ (définition → mot) --- */
+  var QUO_ITEMS=[
+    {c:"Pour écrire, on l'utilise",good:"stylo",bad:["balai","verre","oreiller"],d:1},{c:"Pour voir la nuit, on l'allume",good:"lampe",bad:["assiette","chaise","fourchette"],d:1},
+    {c:"On y dort",good:"lit",bad:["four","évier","placard"],d:1},{c:"On mange la soupe avec",good:"cuillère",bad:["fourchette","assiette","tasse"],d:1},
+    {c:"Quand il pleut, on le prend",good:"parapluie",bad:["chapeau","ballon","cartable"],d:1},{c:"On se lave les mains avec",good:"savon",bad:["sucre","sable","sel"],d:1},
+    {c:"Pour couper le pain",good:"couteau",bad:["crayon","peigne","marteau"],d:1},{c:"On boit dedans",good:"verre",bad:["balai","oreiller","tapis"],d:1},
+    {c:"On s'assoit dessus",good:"chaise",bad:["lampe","porte","fenêtre"],d:1},{c:"On l'ouvre pour entrer",good:"porte",bad:["mur","toit","sol"],d:1},
+    {c:"Pour se coiffer",good:"peigne",bad:["couteau","marteau","crayon"],d:1},{c:"Pour effacer le crayon",good:"gomme",bad:["règle","colle","ciseaux"],d:1},{c:"On y écrit ses leçons",good:"cahier",bad:["tapis","rideau","coussin"],d:1},
+    {c:"Le facteur l'apporte",good:"courrier",bad:["dîner","ballon","cartable"],d:2},{c:"Un bébé chien",good:"chiot",bad:["chaton","poulain","agneau"],d:2},
+    {c:"Un bébé chat",good:"chaton",bad:["chiot","veau","poussin"],d:2},{c:"On achète le pain ici",good:"boulangerie",bad:["pharmacie","librairie","boucherie"],d:2},
+    {c:"Un bébé de la poule",good:"poussin",bad:["chaton","chiot","veau"],d:2},{c:"On regarde un film dessus",good:"télévision",bad:["casserole","valise","brouette"],d:2},
+    {c:"Pour se brosser les dents",good:"brosse",bad:["fourchette","assiette","cuillère"],d:2},{c:"On garde le lait au froid dedans",good:"réfrigérateur",bad:["radiateur","grenier","garage"],d:2},
+    {c:"L'élève écrit au tableau avec",good:"craie",bad:["gomme","règle","trousse"],d:2},{c:"On y met ses affaires d'école",good:"cartable",bad:["oreiller","casserole","arrosoir"],d:2},
+    {c:"Un bébé de la vache",good:"veau",bad:["poulain","agneau","chevreau"],d:2},{c:"On y range les livres",good:"étagère",bad:["baignoire","casserole","brouette"],d:2},{c:"On y fait la cuisine (pièce)",good:"cuisine",bad:["chambre","garage","grenier"],d:2},
+    {c:"Le médecin y travaille",good:"hôpital",bad:["école","usine","garage"],d:3},{c:"On achète des médicaments ici",good:"pharmacie",bad:["boulangerie","librairie","boucherie"],d:3},
+    {c:"Pour faire cuire le pain",good:"four",bad:["frigo","lavabo","placard"],d:3},{c:"On y prend le train",good:"gare",bad:["port","aéroport","arrêt"],d:3},
+    {c:"On y voit des animaux",good:"zoo",bad:["musée","cinéma","théâtre"],d:3},{c:"Un bébé du cheval",good:"poulain",bad:["veau","agneau","chevreau"],d:3},
+    {c:"Pour arroser les plantes",good:"arrosoir",bad:["seau","bassine","brouette"],d:3},{c:"On y range la voiture",good:"garage",bad:["grenier","cave","cuisine"],d:3},
+    {c:"Pour mesurer une longueur",good:"règle",bad:["gomme","compas","équerre"],d:3},{c:"Un bébé du mouton",good:"agneau",bad:["veau","poulain","chevreau"],d:3},
+    {c:"On y emprunte des livres",good:"bibliothèque",bad:["librairie","imprimerie","kiosque"],d:3},{c:"On y achète la viande",good:"boucherie",bad:["boulangerie","poissonnerie","épicerie"],d:3},{c:"Pour balayer le sol",good:"balai",bad:["pelle","râteau","brosse"],d:3},
+    {c:"On y étudie après le lycée",good:"université",bad:["collège","école","crèche"],d:4},{c:"Pour observer les étoiles",good:"télescope",bad:["microscope","jumelles","loupe"],d:4},
+    {c:"Personne qui soigne les dents",good:"dentiste",bad:["médecin","vétérinaire","pharmacien"],d:4},{c:"Personne qui soigne les animaux",good:"vétérinaire",bad:["dentiste","chirurgien","infirmier"],d:4},
+    {c:"Bâtiment où l'on voit des tableaux",good:"musée",bad:["théâtre","cinéma","opéra"],d:4},{c:"Pour coudre",good:"aiguille",bad:["ciseaux","épingle","dé"],d:4},
+    {c:"On y fait pousser des légumes",good:"potager",bad:["verger","vignoble","pré"],d:4},{c:"Endroit planté d'arbres fruitiers",good:"verger",bad:["potager","jardin","champ"],d:4},
+    {c:"Personne qui répare les tuyaux",good:"plombier",bad:["électricien","maçon","menuisier"],d:4},{c:"Personne qui travaille le bois",good:"menuisier",bad:["plombier","maçon","forgeron"],d:4},
+    {c:"Appareil qui grossit le minuscule",good:"microscope",bad:["télescope","périscope","kaléidoscope"],d:4},{c:"Lieu de fabrication industrielle",good:"usine",bad:["atelier","boutique","entrepôt"],d:4},{c:"Instrument pour la température",good:"thermomètre",bad:["baromètre","chronomètre","altimètre"],d:4},
+    {c:"Personne qui étudie les astres",good:"astronome",bad:["astrologue","géologue","biologiste"],d:5},{c:"Instrument pour mesurer la pression",good:"baromètre",bad:["thermomètre","chronomètre","boussole"],d:5},
+    {c:"Pour s'orienter vers le nord",good:"boussole",bad:["horloge","baromètre","sextant"],d:5},{c:"Personne qui vend la viande (métier)",good:"boucher",bad:["boulanger","poissonnier","charcutier"],d:5},
+    {c:"Lieu où l'on juge les procès",good:"tribunal",bad:["mairie","préfecture","commissariat"],d:5},{c:"Médecin qui opère",good:"chirurgien",bad:["dentiste","pédiatre","kinésithérapeute"],d:5},
+    {c:"Abri vitré pour plantes",good:"serre",bad:["étable","grange","hangar"],d:5},{c:"Bâtiment où logent les moines",good:"monastère",bad:["château","palais","manoir"],d:5},
+    {c:"Personne qui pilote un avion",good:"pilote",bad:["steward","aiguilleur","mécanicien"],d:5},{c:"Personne qui fabrique le pain (métier)",good:"boulanger",bad:["boucher","épicier","pâtissier"],d:5},
+    {c:"Grand meuble à vêtements",good:"armoire",bad:["étagère","commode","buffet"],d:5},{c:"Personne qui étudie les plantes",good:"botaniste",bad:["zoologiste","géologue","chimiste"],d:5},{c:"Bateau qui pêche en mer",good:"chalutier",bad:["voilier","paquebot","remorqueur"],d:5},
+    {c:"Personne qui étudie les fossiles",good:"paléontologue",bad:["archéologue","géologue","anthropologue"],d:6},{c:"Personne qui étudie les vieilles ruines",good:"archéologue",bad:["paléontologue","historien","géographe"],d:6},
+    {c:"Spécialiste des tremblements de terre",good:"sismologue",bad:["volcanologue","météorologue","océanographe"],d:6},{c:"Médecin des maladies de la peau",good:"dermatologue",bad:["cardiologue","neurologue","ophtalmologue"],d:6},
+    {c:"Médecin du cœur",good:"cardiologue",bad:["dermatologue","pneumologue","radiologue"],d:6},{c:"Savant qui étudie les insectes",good:"entomologiste",bad:["ornithologue","ichtyologue","herpétologue"],d:6},
+    {c:"Savant qui étudie les oiseaux",good:"ornithologue",bad:["entomologiste","ichtyologue","mammalogiste"],d:6},{c:"Recueil de cartes géographiques",good:"atlas",bad:["almanach","annuaire","herbier"],d:6},
+    {c:"Recueil de plantes séchées",good:"herbier",bad:["atlas","bestiaire","album"],d:6},{c:"Artisan qui travaille les métaux précieux",good:"orfèvre",bad:["ferronnier","fondeur","tôlier"],d:6},
+    {c:"Personne qui restaure les tableaux",good:"restaurateur",bad:["conservateur","antiquaire","brocanteur"],d:6},{c:"Personne qui grave la pierre",good:"graveur",bad:["sculpteur","tailleur","potier"],d:6},{c:"Médecin des yeux",good:"ophtalmologue",bad:["dermatologue","cardiologue","dentiste"],d:6}
+  ];
+  var QUO_FRAMES=["{C} → ___.","{C} : quel mot ? ___.","Devinette — {C} : ___.","Trouve le mot juste : {C} → ___."];
+  function genQuotidien(diff,cat,sub){
+    var it=pick(bandFilter(QUO_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(QUO_FRAMES).replace("{C}",it.c), hint:"Mot du quotidien",
+      note:"Vocabulaire courant : choisis le mot qui correspond exactement à la définition.",
+      options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
+  /* --- Familles de mots : générateur PARTITIONNÉ (dérivation) --- */
+  var FAM_ITEMS=[
+    {ph:"Un petit chat est un ___.",good:"chaton",bad:["chatte","chatière","chatton"],d:1},{ph:"Celui qui joue est un ___.",good:"joueur",bad:["jouet","jouable","jeu"],d:1},
+    {ph:"Un petit jardin est un ___.",good:"jardinet",bad:["jardinier","jardinage","jardiner"],d:1},{ph:"Celui qui s'occupe du jardin est le ___.",good:"jardinier",bad:["jardinet","jardinage","jardin"],d:1},
+    {ph:"Un petit livre est un ___.",good:"livret",bad:["libraire","librairie","livreur"],d:1},{ph:"Une petite maison est une ___.",good:"maisonnette",bad:["maisonnée","maçon","manoir"],d:1},
+    {ph:"Un arbre qui donne des pommes est un ___.",good:"pommier",bad:["pomme","pommade","pommeau"],d:1},{ph:"Un petit garçon est un ___.",good:"garçonnet",bad:["garçonne","garagiste","gamin"],d:1},
+    {ph:"Celui qui coiffe est le ___.",good:"coiffeur",bad:["coiffe","coiffure","coiffé"],d:1},{ph:"Un petit ours est un ___.",good:"ourson",bad:["oursin","oursonne","ourage"],d:1},
+    {ph:"L'action de laver s'appelle le ___.",good:"lavage",bad:["laveur","lavable","laver"],d:1},{ph:"Une petite fille est une ___.",good:"fillette",bad:["filleul","filière","filet"],d:1},{ph:"Un petit chien est un ___.",good:"chiot",bad:["chienne","chenil","chiotte"],d:1},
+    {ph:"Celui qui chante est un ___.",good:"chanteur",bad:["chanson","chantier","chanteuse"],d:2},{ph:"Celui qui garde les buts est le ___.",good:"gardien",bad:["garderie","garage","gardienne"],d:2},
+    {ph:"Celui qui joue du piano est un ___.",good:"pianiste",bad:["piano","pianotage","pianoter"],d:2},{ph:"Celui qui vend des fleurs est le ___.",good:"fleuriste",bad:["fleurette","floraison","fleurir"],d:2},
+    {ph:"Celui qui conduit le camion est le ___.",good:"camionneur",bad:["camionnette","camionnage","camion"],d:2},{ph:"Avec « re- », « faire » devient ___.",good:"refaire",bad:["défaire","parfaire","forfait"],d:2},
+    {ph:"Avec « dé- », « faire » devient ___.",good:"défaire",bad:["refaire","parfaire","forfait"],d:2},{ph:"Avec « in- », « utile » devient ___.",good:"inutile",bad:["réutile","utilité","utiliser"],d:2},
+    {ph:"L'action de nager est la ___.",good:"natation",bad:["nageur","nageoire","nager"],d:2},{ph:"Une petite tarte est une ___.",good:"tartelette",bad:["tartine","tartinade","tarterie"],d:2},
+    {ph:"Celui qui répare les voitures est le ___.",good:"garagiste",bad:["garage","garer","gare"],d:2},{ph:"L'endroit où l'on garde les chiens est le ___.",good:"chenil",bad:["chiot","chienne","niche"],d:2},{ph:"Celui qui livre les colis est le ___.",good:"livreur",bad:["livre","livret","livraison"],d:2},
+    {ph:"Avec « re- », « lire » devient ___.",good:"relire",bad:["délire","élire","lecteur"],d:3},{ph:"Avec « para- », la « pluie » donne le ___.",good:"parapluie",bad:["parasol","paravent","parachute"],d:3},
+    {ph:"Avec « para- », le « soleil » donne le ___.",good:"parasol",bad:["parapluie","paravent","parachute"],d:3},{ph:"L'action de planter est la ___.",good:"plantation",bad:["planteur","plante","planter"],d:3},
+    {ph:"Celui qui écrit des livres est un ___.",good:"écrivain",bad:["écriture","écrit","écrivailleur"],d:3},{ph:"L'ensemble des feuilles d'un arbre est le ___.",good:"feuillage",bad:["feuillet","feuille","feuilleter"],d:3},
+    {ph:"Le petit du lion est le ___.",good:"lionceau",bad:["lionne","lionnet","lioneau"],d:3},{ph:"L'action d'arroser est l'___.",good:"arrosage",bad:["arroseur","arrosoir","arroser"],d:3},
+    {ph:"Rendre pur, c'est ___.",good:"purifier",bad:["pureté","purement","impur"],d:3},{ph:"Ce qui ne peut pas être cassé est ___.",good:"incassable",bad:["cassable","cassure","casseur"],d:3},
+    {ph:"Ce qui peut être mangé est ___.",good:"mangeable",bad:["immangeable","mangeoire","mangeur"],d:3},{ph:"L'action de démolir est la ___.",good:"démolition",bad:["démolisseur","démolir","molosse"],d:3},{ph:"Le lieu où l'on cuit le pain est le ___.",good:"fournil",bad:["four","fournée","fournisseur"],d:3},
+    {ph:"Rendre solide, c'est ___.",good:"solidifier",bad:["solidité","solidement","solide"],d:4},{ph:"L'action de construire est la ___.",good:"construction",bad:["constructeur","construire","constructif"],d:4},
+    {ph:"Ce qui ne peut pas être vu est ___.",good:"invisible",bad:["visible","vision","visuel"],d:4},{ph:"Le produit qui empêche le gel est l'___.",good:"antigel",bad:["antivol","antibruit","antichoc"],d:4},
+    {ph:"Celui qui étudie les sciences est un ___.",good:"scientifique",bad:["science","scientifiquement","sciemment"],d:4},{ph:"Rendre plus grand, c'est ___.",good:"agrandir",bad:["grandeur","grandement","grandir"],d:4},
+    {ph:"L'état de celui qui est libre est la ___.",good:"liberté",bad:["libérer","libéral","libre"],d:4},{ph:"La période avant l'histoire est la ___.",good:"préhistoire",bad:["posthistoire","histoire","historique"],d:4},
+    {ph:"Celui qui ment est un ___.",good:"menteur",bad:["mensonge","mentir","menterie"],d:4},{ph:"Rendre clair, c'est ___.",good:"clarifier",bad:["clarté","clairement","éclair"],d:4},
+    {ph:"Ce que l'on mange (aliments) est la ___.",good:"nourriture",bad:["nourrisson","nourrice","nourrir"],d:4},{ph:"Rendre plus court, c'est ___.",good:"raccourcir",bad:["courtiser","courtaud","courtoisie"],d:4},{ph:"L'action de fabriquer est la ___.",good:"fabrication",bad:["fabricant","fabrique","fabriquer"],d:4},
+    {ph:"L'étude des astres est l'___.",good:"astronomie",bad:["astrologie","astronaute","astéroïde"],d:5},{ph:"L'ensemble des mots d'une langue est le ___.",good:"vocabulaire",bad:["vocal","vociférer","vocatif"],d:5},
+    {ph:"Ce qui concerne la ville est ___.",good:"urbain",bad:["rural","urbanisme","urbaniste"],d:5},{ph:"Ce qui concerne la campagne est ___.",good:"rural",bad:["urbain","ruralité","rustique"],d:5},
+    {ph:"L'action de traduire est la ___.",good:"traduction",bad:["traducteur","traduire","traduisible"],d:5},{ph:"L'étude des roches est la ___.",good:"géologie",bad:["géographie","géométrie","géologue"],d:5},
+    {ph:"Celui qui gouverne un pays est le ___.",good:"gouverneur",bad:["gouvernement","gouvernail","gouverner"],d:5},{ph:"Rendre national, c'est ___.",good:"nationaliser",bad:["nationalité","national","nation"],d:5},
+    {ph:"L'art de bien parler est l'___.",good:"éloquence",bad:["élocution","allocution","éloquent"],d:5},{ph:"Ce qui ne peut être corrompu est ___.",good:"incorruptible",bad:["corruptible","corruption","corrupteur"],d:5},
+    {ph:"L'action de multiplier est la ___.",good:"multiplication",bad:["multiple","multitude","multiplier"],d:5},{ph:"Celui qui pratique la médecine est le ___.",good:"médecin",bad:["médecine","médical","médicament"],d:5},{ph:"Rendre simple, c'est ___.",good:"simplifier",bad:["simplicité","simplement","simpliste"],d:5},
+    {ph:"Celui qui aime les livres est un ___.",good:"bibliophile",bad:["bibliothécaire","bibliographe","bibliophobe"],d:6},{ph:"La peur des espaces clos est la ___.",good:"claustrophobie",bad:["agoraphobie","claustration","cloître"],d:6},
+    {ph:"Celui qui mange de tout est ___.",good:"omnivore",bad:["herbivore","carnivore","frugivore"],d:6},{ph:"Celui qui parle plusieurs langues est ___.",good:"polyglotte",bad:["monoglotte","polygone","polygame"],d:6},
+    {ph:"L'étude des populations est la ___.",good:"démographie",bad:["géographie","biographie","cartographie"],d:6},{ph:"Le produit qui tue les microbes est l'___.",good:"antiseptique",bad:["aseptique","septicémie","antibiotique"],d:6},
+    {ph:"Celui qui déteste les hommes est un ___.",good:"misanthrope",bad:["philanthrope","anthropophage","misogyne"],d:6},{ph:"Celui qui aime l'humanité est un ___.",good:"philanthrope",bad:["misanthrope","philosophe","philatéliste"],d:6},
+    {ph:"L'étude des sons d'une langue est la ___.",good:"phonétique",bad:["phonographe","phonème","symphonie"],d:6},{ph:"Rendre éternel, c'est ___.",good:"immortaliser",bad:["mortaliser","mortel","immortel"],d:6},
+    {ph:"Celui qui collectionne les timbres est le ___.",good:"philatéliste",bad:["numismate","bibliophile","philanthrope"],d:6},{ph:"Celui qui collectionne les pièces de monnaie est le ___.",good:"numismate",bad:["philatéliste","antiquaire","bibliophile"],d:6},{ph:"L'étude des tremblements de terre est la ___.",good:"sismologie",bad:["volcanologie","météorologie","minéralogie"],d:6}
+  ];
+  var FAM_FRAMES=["{PH}","Complète : {PH}","Même famille de mots — {PH}","Trouve le mot dérivé : {PH}"];
+  function genFamilles(diff,cat,sub){
+    var it=pick(bandFilter(FAM_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(FAM_FRAMES).replace("{PH}",it.ph), hint:"Même famille de mots",
+      note:"Les mots d'une même famille partagent un radical commun (jardin, jardinier, jardinet…).",
+      options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genVoc(sub, diff, cat){
     if(sub==="Synonymes") return genSynonymes(diff,cat,sub);
     if(sub==="Contraires") return genContraires(diff,cat,sub);
     if(sub==="Homonymes") return fromGood(pickByDiff(HOMO,diff),"Choisis le bon homonyme",cat,sub);
-    if(sub==="Familles de mots") return fromGood(pickByDiff(FAMILLE,diff),"Même famille de mots",cat,sub);
+    if(sub==="Familles de mots") return genFamilles(diff,cat,sub);
     if(sub==="Expressions idiomatiques") return fromGood(pickByDiff(IDIOM,diff),"Complète l'expression imagée",cat,sub);
     if(sub==="Registres de langue") return fromGood(pickByDiff(REGISTRE,diff),"Registre de langue",cat,sub);
     if(sub==="Paronymes") return fromGood(pickByDiff(PARONYM,diff),"Paronymes (mots proches à ne pas confondre)",cat,sub);
-    return fromGood(pickByDiff(QUOTIDIEN,diff),"Mot du quotidien",cat,sub);
+    if(sub==="Mots du quotidien") return genQuotidien(diff,cat,sub);
+    return genQuotidien(diff,cat,sub);
   }
 
   /* ======================================================================= */
