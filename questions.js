@@ -1614,22 +1614,88 @@
     {ph:"En registre soutenu, « abondant » se dit ___.",good:"pléthorique",bad:["à gogo","à la pelle","en pagaille"],note:"« pléthorique » = soutenu ; « à gogo / à la pelle » = familier.",d:6}
   ];
   var REG_FRAMES=["{PH}","Question de registre — {PH}","Niveau de langue : {PH}","Trouve le bon niveau de langue — {PH}"];
-  var PARONYM = [ // paronymes (mots proches souvent confondus)
-    {d:5,ph:"Un danger ___ nous menace (tout proche).",good:"imminent",bad:["éminent","immanent","imminant"],note:"« imminent » = tout proche ; « éminent » = remarquable."},
-    {d:5,ph:"C'est un ___ professeur (remarquable).",good:"éminent",bad:["imminent","immanent","éminant"],note:"« éminent » = remarquable ; « imminent » = tout proche."},
-    {d:6,ph:"La ___ économique est difficile (situation du moment).",good:"conjoncture",bad:["conjecture","conjointure","conjecure"],note:"« conjoncture » = situation ; « conjecture » = supposition."},
-    {d:6,ph:"Ce n'est qu'une simple ___ (supposition).",good:"conjecture",bad:["conjoncture","conjointure","conjecure"],note:"« conjecture » = hypothèse ; « conjoncture » = contexte."},
-    {d:6,ph:"Les cambrioleurs sont entrés par ___.",good:"effraction",bad:["infraction","réfraction","fraction"],note:"« effraction » = entrée par la force ; « infraction » = violation d'une règle."},
-    {d:5,ph:"Il a commis une ___ au code de la route.",good:"infraction",bad:["effraction","réfraction","fraction"],note:"« infraction » = violation d'une règle ; « effraction » = entrée forcée."},
-    {d:5,ph:"Le maire a prononcé une ___ (bref discours).",good:"allocution",bad:["allocation","élocution","allitération"],note:"« allocution » = discours ; « allocation » = somme d'argent versée."},
-    {d:5,ph:"La famille reçoit une ___ familiale (aide financière).",good:"allocation",bad:["allocution","élocution","allitération"],note:"« allocation » = aide financière ; « allocution » = discours."},
-    {d:5,ph:"L'acteur va ___ un poème (réciter avec emphase).",good:"déclamer",bad:["déclarer","proclamer","réclamer"],note:"« déclamer » = réciter avec emphase ; « déclarer » = affirmer."},
-    {d:5,ph:"Le témoin doit ___ ce qu'il a vu (dire officiellement).",good:"déclarer",bad:["déclamer","proclamer","réclamer"],note:"« déclarer » = affirmer officiellement ; « déclamer » = réciter."},
-    {d:6,ph:"Ce mot a une autre ___ (sens particulier).",good:"acception",bad:["acceptation","exception","acceptance"],note:"« acception » = sens d'un mot ; « acceptation » = fait d'accepter."},
-    {d:6,ph:"J'attends ton ___ du contrat (fait d'accepter).",good:"acceptation",bad:["acception","exception","acceptance"],note:"« acceptation » = fait d'accepter ; « acception » = sens d'un mot."},
-    {d:5,ph:"La ___ des deux voitures a fait du bruit (choc).",good:"collision",bad:["collusion","collation","colision"],note:"« collision » = choc ; « collusion » = entente secrète."},
-    {d:6,ph:"On soupçonne une ___ entre les deux sociétés (entente secrète).",good:"collusion",bad:["collision","collation","colusion"],note:"« collusion » = entente frauduleuse ; « collision » = choc."}
+  /* --- Paronymes : générateur PARTITIONNÉ (mots proches souvent confondus) --- */
+  var PARO_ITEMS = [
+    {ph:"Je fais une ___ dans le parc (promenade).",good:"balade",bad:["ballade","balaide","ballarde"],note:"« balade » = promenade ; « ballade » = poème chanté.",d:1},
+    {ph:"Le poète a écrit une ___ (poème chanté).",good:"ballade",bad:["balade","ballarde","balaide"],note:"« ballade » = poème/chanson ; « balade » = promenade.",d:1},
+    {ph:"Au ___, il y a une glace (fin du repas).",good:"dessert",bad:["désert","déssert","dessère"],note:"« dessert » = mets sucré ; « désert » = étendue aride.",d:1},
+    {ph:"Le chameau traverse le ___ (grande étendue de sable).",good:"désert",bad:["dessert","déssert","désère"],note:"« désert » = région aride ; « dessert » = fin du repas.",d:1},
+    {ph:"Le pêcheur attrape un gros ___ (animal qui vit dans l'eau).",good:"poisson",bad:["poison","poissont","poisçon"],note:"« poisson » = animal aquatique ; « poison » = substance toxique.",d:1},
+    {ph:"La sorcière verse un ___ mortel (substance qui tue).",good:"poison",bad:["poisson","poisont","poizon"],note:"« poison » = substance toxique ; « poisson » = animal aquatique.",d:1},
+    {ph:"Le magicien boit une ___ magique (breuvage).",good:"potion",bad:["portion","poution","potiont"],note:"« potion » = breuvage ; « portion » = part.",d:1},
+    {ph:"Je reprends une ___ de gâteau (une part).",good:"portion",bad:["potion","portiont","porcion"],note:"« portion » = part ; « potion » = breuvage.",d:1},
+    {ph:"Le ___ de ma tante est très gentil (son époux).",good:"mari",bad:["marri","marit","marrie"],note:"« mari » = époux ; « marri » (rare) = attristé.",d:1},
+    {ph:"Sa grande timidité lui cause de la ___ (embarras).",good:"gêne",bad:["gène","gaine","genne"],note:"« gêne » = embarras ; « gène » = élément du corps.",d:1},
+    {ph:"Je croque une ___ (petit fruit sec de l'amandier).",good:"amande",bad:["amende","amonde","ammande"],note:"« amande » = fruit sec ; « amende » = somme à payer.",d:1},
+    {ph:"Il paie une ___ pour excès de vitesse (somme à payer).",good:"amende",bad:["amande","amonde","ammende"],note:"« amende » = sanction financière ; « amande » = fruit sec.",d:1},
+    {ph:"Je mange une ___ sucrée (fruit du palmier dattier).",good:"datte",bad:["date","dat","datde"],note:"« datte » = fruit ; « date » = jour du calendrier.",d:1},
+    {ph:"Le volcan est en ___ (jaillissement de lave).",good:"éruption",bad:["irruption","éructation","érubtion"],note:"« éruption » = jaillissement ; « irruption » = entrée brusque.",d:2},
+    {ph:"Il fait ___ dans la salle (entrée soudaine).",good:"irruption",bad:["éruption","interruption","iruption"],note:"« irruption » = entrée brusque ; « éruption » = jaillissement.",d:2},
+    {ph:"C'est une idée très ___ (nouvelle, inédite).",good:"originale",bad:["originelle","orginale","originaire"],note:"« original(e) » = inédit ; « originel(le) » = des origines.",d:2},
+    {ph:"Le péché ___, selon la Bible (des origines, du début).",good:"originel",bad:["original","originaire","orginel"],note:"« originel » = des origines ; « original » = inédit.",d:2},
+    {ph:"Les deux voitures sont entrées en ___ (choc violent).",good:"collision",bad:["collusion","collation","colision"],note:"« collision » = choc ; « collusion » = entente secrète.",d:2},
+    {ph:"On soupçonne une ___ entre les deux sociétés (entente secrète).",good:"collusion",bad:["collision","collation","colusion"],note:"« collusion » = entente frauduleuse ; « collision » = choc.",d:2},
+    {ph:"Il y a une grande ___ au marché ce matin (foule, affluence).",good:"affluence",bad:["influence","affluent","afluence"],note:"« affluence » = foule ; « influence » = ascendant.",d:2},
+    {ph:"Elle a une bonne ___ sur ses camarades (ascendant, pouvoir).",good:"influence",bad:["affluence","influenza","inffluence"],note:"« influence » = ascendant ; « affluence » = foule.",d:2},
+    {ph:"L'ours va ___ tout l'hiver (passer l'hiver endormi).",good:"hiberner",bad:["hiverner","hibernir","hyberner"],note:"« hiberner » = dormir tout l'hiver ; « hiverner » = passer l'hiver à l'abri.",d:2},
+    {ph:"La vipère est un serpent ___ (qui injecte du venin).",good:"venimeux",bad:["vénéneux","vénimeux","venimeux"],note:"« venimeux » = qui a du venin ; « vénéneux » = toxique à manger.",d:2},
+    {ph:"Ce champignon est ___ (toxique si on le mange).",good:"vénéneux",bad:["venimeux","vénimeux","véneneux"],note:"« vénéneux » = toxique par ingestion ; « venimeux » = qui injecte du venin.",d:2},
+    {ph:"Ce texte est aisément ___ (que l'on comprend bien).",good:"compréhensible",bad:["compréhensif","compréhensable","comprennsible"],note:"« compréhensible » = clair ; « compréhensif » = indulgent.",d:2},
+    {ph:"Mon père est ___ quand je me trompe (indulgent).",good:"compréhensif",bad:["compréhensible","comprennsif","compréensif"],note:"« compréhensif » = indulgent ; « compréhensible » = clair.",d:2},
+    {ph:"Un danger ___ nous menace (tout proche, sur le point d'arriver).",good:"imminent",bad:["éminent","immanent","imminant"],note:"« imminent » = tout proche ; « éminent » = remarquable.",d:3},
+    {ph:"C'est un ___ professeur (remarquable, illustre).",good:"éminent",bad:["imminent","immanent","éminant"],note:"« éminent » = remarquable ; « imminent » = tout proche.",d:3},
+    {ph:"Le maire a prononcé une ___ (bref discours officiel).",good:"allocution",bad:["allocation","élocution","allitération"],note:"« allocution » = discours ; « allocation » = somme versée.",d:3},
+    {ph:"La famille touche une ___ familiale (aide financière).",good:"allocation",bad:["allocution","élocution","allocation"],note:"« allocation » = aide financière ; « allocution » = discours.",d:3},
+    {ph:"Les cambrioleurs sont entrés par ___ (en forçant l'entrée).",good:"effraction",bad:["infraction","réfraction","effration"],note:"« effraction » = entrée forcée ; « infraction » = violation d'une règle.",d:3},
+    {ph:"Il a commis une ___ au code de la route (violation d'une règle).",good:"infraction",bad:["effraction","réfraction","infration"],note:"« infraction » = violation d'une règle ; « effraction » = entrée forcée.",d:3},
+    {ph:"L'___ du toit est très forte (angle, pente).",good:"inclinaison",bad:["inclination","inclinason","enclinaison"],note:"« inclinaison » = angle, pente ; « inclination » = penchant.",d:3},
+    {ph:"Il a une ___ pour la musique (penchant, goût).",good:"inclination",bad:["inclinaison","inclinacion","enclination"],note:"« inclination » = penchant ; « inclinaison » = angle.",d:3},
+    {ph:"Cet enfant est un ___ du piano (talent extraordinaire).",good:"prodige",bad:["prodigue","prodig","prodidge"],note:"« prodige » = talent rare ; « prodigue » = dépensier.",d:3},
+    {ph:"Le fils ___ dépense tout son argent (dépensier).",good:"prodigue",bad:["prodige","prodiggue","prodigme"],note:"« prodigue » = dépensier ; « prodige » = talent rare.",d:3},
+    {ph:"Il vit dans le ___ le plus complet (grande richesse).",good:"luxe",bad:["luxure","luxueux","luce"],note:"« luxe » = richesse ; « luxure » = vice, débauche.",d:3},
+    {ph:"J'ai une ___ à te faire (proposition, idée).",good:"suggestion",bad:["sujétion","sugestion","suggession"],note:"« suggestion » = proposition ; « sujétion » = dépendance.",d:3},
+    {ph:"Le malade va bientôt ___ la santé (la retrouver).",good:"recouvrer",bad:["recouvrir","récupérer","recouvré"],note:"« recouvrer » = retrouver ; « recouvrir » = couvrir de nouveau.",d:3},
+    {ph:"Ce mot a une autre ___ dans ce contexte (sens particulier).",good:"acception",bad:["acceptation","exception","aception"],note:"« acception » = sens d'un mot ; « acceptation » = fait d'accepter.",d:4},
+    {ph:"J'attends ton ___ du contrat (fait d'accepter).",good:"acceptation",bad:["acception","exception","aceptation"],note:"« acceptation » = fait d'accepter ; « acception » = sens d'un mot.",d:4},
+    {ph:"La ___ économique est difficile (situation du moment).",good:"conjoncture",bad:["conjecture","conjointure","conjoncure"],note:"« conjoncture » = situation ; « conjecture » = supposition.",d:4},
+    {ph:"Ce n'est qu'une simple ___ (hypothèse, supposition).",good:"conjecture",bad:["conjoncture","conjointure","conjectture"],note:"« conjecture » = hypothèse ; « conjoncture » = contexte.",d:4},
+    {ph:"L'acteur va ___ un poème (réciter avec emphase).",good:"déclamer",bad:["déclarer","proclamer","réclamer"],note:"« déclamer » = réciter avec emphase ; « déclarer » = affirmer.",d:4},
+    {ph:"Le témoin doit ___ ce qu'il a vu (dire officiellement).",good:"déclarer",bad:["déclamer","proclamer","réclamer"],note:"« déclarer » = affirmer officiellement ; « déclamer » = réciter.",d:4},
+    {ph:"Ce parfum me fait ___ mon enfance (rappeler à l'esprit).",good:"évoquer",bad:["invoquer","provoquer","équivoquer"],note:"« évoquer » = rappeler ; « invoquer » = appeler à l'aide, alléguer.",d:4},
+    {ph:"Il ___ une excuse pour partir plus tôt (avance comme argument).",good:"invoque",bad:["évoque","provoque","invaque"],note:"« invoquer » = alléguer ; « évoquer » = rappeler.",d:4},
+    {ph:"Le bandit vient de ___ un crime affreux (commettre).",good:"perpétrer",bad:["perpétuer","perpétuel","pérpétrer"],note:"« perpétrer » = commettre ; « perpétuer » = faire durer.",d:4},
+    {ph:"Il faut ___ cette belle tradition (la faire durer).",good:"perpétuer",bad:["perpétrer","perpétuel","pérpétuer"],note:"« perpétuer » = faire durer ; « perpétrer » = commettre.",d:4},
+    {ph:"Le ___ des impôts collecte l'argent public (agent du fisc).",good:"percepteur",bad:["précepteur","précurseur","perscepteur"],note:"« percepteur » = agent des impôts ; « précepteur » = professeur privé.",d:4},
+    {ph:"Le jeune prince a un ___ à domicile (professeur particulier).",good:"précepteur",bad:["percepteur","précurseur","préscepteur"],note:"« précepteur » = professeur privé ; « percepteur » = agent des impôts.",d:4},
+    {ph:"C'est un fait ___, connu de tous (public, manifeste).",good:"notoire",bad:["notable","notarié","notoir"],note:"« notoire » = connu de tous ; « notable » = digne d'être noté, important.",d:4},
+    {ph:"Sa réponse ___ une grande culture (révèle, indique).",good:"dénote",bad:["détone","dénonce","dénotte"],note:"« dénoter » = révéler, indiquer ; « détoner » = exploser.",d:5},
+    {ph:"La charge d'explosif va ___ (exploser bruyamment).",good:"détoner",bad:["dénoter","détonner","détonné"],note:"« détoner » = exploser ; « détonner » = chanter faux, jurer.",d:5},
+    {ph:"Cette couleur criarde ___ dans le décor sobre (jure, contraste).",good:"détonne",bad:["détone","dénote","détonnne"],note:"« détonner » = jurer, contraster ; « détoner » = exploser.",d:5},
+    {ph:"La ___ de son menton est marquée (saillie, relief en avant).",good:"proéminence",bad:["prééminence","prédominance","proéminance"],note:"« proéminence » = saillie ; « prééminence » = supériorité.",d:5},
+    {ph:"La ___ du roi sur ses vassaux était absolue (supériorité, primauté).",good:"prééminence",bad:["proéminence","prédominance","préminence"],note:"« prééminence » = supériorité ; « proéminence » = saillie.",d:5},
+    {ph:"Le sous-marin va ___ sous les vagues (plonger, s'enfoncer).",good:"immerger",bad:["émerger","immiscer","imerger"],note:"« immerger » = plonger ; « émerger » = sortir de l'eau.",d:5},
+    {ph:"Le nageur finit par ___ à la surface (sortir de l'eau).",good:"émerger",bad:["immerger","émarger","émèrger"],note:"« émerger » = sortir de l'eau ; « immerger » = plonger.",d:5},
+    {ph:"Le médecin vient de ___ un remède (recommander, ordonner).",good:"prescrire",bad:["proscrire","proscription","préscrire"],note:"« prescrire » = ordonner ; « proscrire » = interdire.",d:5},
+    {ph:"La loi vient de ___ cette pratique dangereuse (interdire).",good:"proscrire",bad:["prescrire","proscription","proscrir"],note:"« proscrire » = interdire ; « prescrire » = ordonner.",d:5},
+    {ph:"La ___ pend du plafond de la grotte (concrétion venue du haut).",good:"stalactite",bad:["stalagmite","stalactitte","stalacmite"],note:"« stalactite » = du plafond (elle « tombe ») ; « stalagmite » = du sol.",d:5},
+    {ph:"La ___ monte depuis le sol de la grotte (concrétion venue du bas).",good:"stalagmite",bad:["stalactite","stalagmitte","stalacmite"],note:"« stalagmite » = du sol (elle « monte ») ; « stalactite » = du plafond.",d:5},
+    {ph:"Il y a une ___ dans ses connaissances (manque, trou).",good:"lacune",bad:["lagune","rancune","lacunne"],note:"« lacune » = manque ; « lagune » = étendue d'eau côtière.",d:5},
+    {ph:"Au XIXᵉ siècle, beaucoup ont dû ___ vers l'Amérique (quitter leur pays natal).",good:"émigrer",bad:["immigrer","émarger","émmigrer"],note:"« émigrer » = quitter son pays ; « immigrer » = entrer dans un pays d'accueil.",d:5},
+    {ph:"Beaucoup ont dû ___ pour fuir la guerre (quitter leur pays).",good:"immigrer",bad:["émigrer","immiger","imigrer"],note:"Ici on entre dans un pays d'accueil : « immigrer ». « Émigrer » = quitter le sien.",d:6},
+    {ph:"Venise est bâtie sur une ___ (étendue d'eau séparée de la mer).",good:"lagune",bad:["lacune","dune","lagunne"],note:"« lagune » = étendue d'eau côtière ; « lacune » = manque.",d:6},
+    {ph:"La ___ du Sud provoqua la guerre (séparation d'un État de l'ensemble).",good:"sécession",bad:["session","cession","succession"],note:"« sécession » = séparation ; « cession » = fait de céder ; « session » = période.",d:6},
+    {ph:"La ___ de l'entreprise est signée (fait de la céder, la vente).",good:"cession",bad:["session","sécession","succession"],note:"« cession » = fait de céder ; « session » = période ; « sécession » = séparation.",d:6},
+    {ph:"Le sens ___ d'un mot, c'est son sens à la lettre (mot à mot).",good:"littéral",bad:["littoral","litéral","littérale"],note:"« littéral » = à la lettre ; « littoral » = bord de mer.",d:6},
+    {ph:"On se promène le long du ___ (le bord de la mer).",good:"littoral",bad:["littéral","litoral","littorale"],note:"« littoral » = bord de mer ; « littéral » = à la lettre.",d:6},
+    {ph:"Mon ___ est mon nom de famille (nom hérité du père).",good:"patronyme",bad:["paronyme","pseudonyme","patronime"],note:"« patronyme » = nom de famille ; « paronyme » = mot ressemblant à un autre.",d:6},
+    {ph:"Une ___ correspond à une période de dix ans.",good:"décennie",bad:["décade","décanie","décennnie"],note:"« décennie » = dix ans ; « décade » = dix jours (à l'origine).",d:6},
+    {ph:"Le roi décide d'___ ce vaillant chevalier (lui donner un titre de noblesse).",good:"anoblir",bad:["ennoblir","annoblir","anoblire"],note:"« anoblir » = donner un titre de noblesse ; « ennoblir » = rendre plus digne.",d:6},
+    {ph:"Le courage vient ___ ses actions (les rendre plus nobles, plus dignes).",good:"ennoblir",bad:["anoblir","énoblir","ennoblire"],note:"« ennoblir » = rendre plus noble moralement ; « anoblir » = octroyer un titre.",d:6},
+    {ph:"Il mesure enfin l'___ de ses efforts (leur caractère vain, inutile).",good:"inanité",bad:["inanition","inaninité","inansité"],note:"« inanité » = vanité, inutilité ; « inanition » = épuisement par manque de nourriture.",d:6},
+    {ph:"Voici les ___ du printemps (les tout premiers signes, les débuts).",good:"prémices",bad:["prémisses","prémice","prémisce"],note:"« prémices » = premiers signes ; « prémisses » = propositions de départ d'un raisonnement.",d:6},
+    {ph:"Le raisonnement part de fausses ___ (propositions de départ d'un raisonnement).",good:"prémisses",bad:["prémices","prémisse","prémice"],note:"« prémisses » = propositions initiales ; « prémices » = premiers signes.",d:6}
   ];
+  var PARO_FRAMES=["{PH}","Le bon paronyme — {PH}","Ne confonds pas — {PH}","Choisis le mot exact : {PH}"];
   /* --- Synonymes & Contraires : générateurs PARTITIONNÉS par difficulté --- */
   var SYN_SETS=[
     // d1
@@ -1818,6 +1884,12 @@
       note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
   }
 
+  function genParonymes(diff,cat,sub){
+    var it=pick(bandFilter(PARO_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(PARO_FRAMES).replace("{PH}",it.ph), hint:"Paronymes (mots proches à ne pas confondre)",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genVoc(sub, diff, cat){
     if(sub==="Synonymes") return genSynonymes(diff,cat,sub);
     if(sub==="Contraires") return genContraires(diff,cat,sub);
@@ -1825,7 +1897,7 @@
     if(sub==="Familles de mots") return genFamilles(diff,cat,sub);
     if(sub==="Expressions idiomatiques") return genIdiomes(diff,cat,sub);
     if(sub==="Registres de langue") return genRegistres(diff,cat,sub);
-    if(sub==="Paronymes") return fromGood(pickByDiff(PARONYM,diff),"Paronymes (mots proches à ne pas confondre)",cat,sub);
+    if(sub==="Paronymes") return genParonymes(diff,cat,sub);
     if(sub==="Mots du quotidien") return genQuotidien(diff,cat,sub);
     return genQuotidien(diff,cat,sub);
   }
