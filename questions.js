@@ -1450,22 +1450,88 @@
     {d:4,ph:"L'élève écrit au tableau avec une ___.",good:"craie",bad:["gomme","règle","trousse"]}
   ];
   /* ---- Vocabulaire de niveau avancé (vers le C1) ---- */
-  var IDIOM = [ // expressions idiomatiques
-    {d:3,ph:"Il pleut des ___ (il pleut très fort).",good:"cordes",bad:["chats","gouttes","seaux"],note:"« Il pleut des cordes » = il pleut très fort."},
-    {d:4,ph:"Avoir le ___ (être déprimé, triste).",good:"cafard",bad:["moral","spleen","bourdon"],note:"« Avoir le cafard » = être déprimé."},
-    {d:4,ph:"Poser un ___ à quelqu'un (ne pas venir au rendez-vous).",good:"lapin",bad:["lièvre","chat","pigeon"],note:"« Poser un lapin » = ne pas venir à un rendez-vous."},
-    {d:5,ph:"Donner sa langue au ___ (renoncer à deviner).",good:"chat",bad:["chien","loup","renard"],note:"« Donner sa langue au chat » = renoncer à trouver la réponse."},
-    {d:3,ph:"Casser les ___ à quelqu'un (l'ennuyer).",good:"pieds",bad:["mains","bras","oreilles"],note:"« Casser les pieds » = ennuyer, importuner."},
-    {d:5,ph:"Avoir un chat dans la ___ (être enroué).",good:"gorge",bad:["bouche","voix","tête"],note:"« Avoir un chat dans la gorge » = être enroué."},
-    {d:4,ph:"Mettre la ___ à l'oreille (éveiller les soupçons).",good:"puce",bad:["mouche","abeille","fourmi"],note:"« Mettre la puce à l'oreille » = éveiller les soupçons."},
-    {d:5,ph:"Il n'y a pas un ___ (il n'y a personne).",good:"chat",bad:["chien","rat","bruit"],note:"« Il n'y a pas un chat » = il n'y a personne."},
-    {d:4,ph:"Tomber dans les ___ (s'évanouir).",good:"pommes",bad:["choux","poires","fraises"],note:"« Tomber dans les pommes » = s'évanouir."},
-    {d:5,ph:"Couper les ___ en quatre (compliquer inutilement).",good:"cheveux",bad:["fils","poils","brins"],note:"« Couper les cheveux en quatre » = chercher des complications inutiles."},
-    {d:6,ph:"En faire tout un ___ (exagérer un problème).",good:"fromage",bad:["gâteau","dessert","repas"],note:"« En faire tout un fromage » = exagérer l'importance d'une chose."},
-    {d:4,ph:"Avoir la ___ verte (être doué pour le jardinage).",good:"main",bad:["patte","paume","poigne"],note:"« Avoir la main verte » = savoir s'occuper des plantes."},
-    {d:5,ph:"Prendre ses ___ à son cou (s'enfuir vite).",good:"jambes",bad:["pieds","bras","talons"],note:"« Prendre ses jambes à son cou » = s'enfuir en courant."},
-    {d:6,ph:"Appeler un chat un ___ (parler franchement).",good:"chat",bad:["félin","animal","matou"],note:"« Appeler un chat un chat » = nommer les choses franchement."}
+  /* --- Expressions idiomatiques : générateur PARTITIONNÉ --- */
+  var IDIOM_ITEMS = [
+    {ph:"Il pleut des ___ (il pleut très fort).",good:"cordes",bad:["gouttes","seaux","chats"],note:"« Pleuvoir des cordes » = pleuvoir très fort.",d:1},
+    {ph:"Avoir un chat dans la ___ (être enroué).",good:"gorge",bad:["bouche","voix","tête"],note:"« Avoir un chat dans la gorge » = être enroué.",d:1},
+    {ph:"Casser les ___ à quelqu'un (l'ennuyer).",good:"pieds",bad:["mains","bras","oreilles"],note:"« Casser les pieds » = ennuyer, importuner.",d:1},
+    {ph:"Poser un ___ (ne pas venir au rendez-vous).",good:"lapin",bad:["lièvre","pigeon","chat"],note:"« Poser un lapin » = ne pas venir à un rendez-vous.",d:1},
+    {ph:"Donner sa langue au ___ (renoncer à deviner).",good:"chat",bad:["chien","loup","renard"],note:"« Donner sa langue au chat » = renoncer à trouver la réponse.",d:1},
+    {ph:"Il fait un froid de ___ (il fait très froid).",good:"canard",bad:["loup","ours","renard"],note:"« Un froid de canard » = un froid intense.",d:1},
+    {ph:"Avoir une faim de ___ (avoir très faim).",good:"loup",bad:["chien","ours","lion"],note:"« Une faim de loup » = une très grande faim.",d:1},
+    {ph:"Être doux comme un ___ (très gentil).",good:"agneau",bad:["chaton","mouton","lapin"],note:"« Doux comme un agneau » = très doux, docile.",d:1},
+    {ph:"Être rusé comme un ___ (très malin).",good:"renard",bad:["loup","singe","chat"],note:"« Rusé comme un renard » = très astucieux.",d:1},
+    {ph:"Sauter du coq à l'___ (changer brusquement de sujet).",good:"âne",bad:["oie","poule","cheval"],note:"« Passer du coq à l'âne » = changer soudainement de sujet.",d:1},
+    {ph:"Être muet comme une ___ (ne rien dire).",good:"carpe",bad:["tombe","truite","pierre"],note:"« Muet comme une carpe » = totalement silencieux.",d:1},
+    {ph:"Verser des larmes de ___ (des larmes fausses).",good:"crocodile",bad:["serpent","requin","loup"],note:"« Des larmes de crocodile » = un chagrin feint.",d:1},
+    {ph:"Monter sur ses grands ___ (s'emporter).",good:"chevaux",bad:["poneys","ânes","bœufs"],note:"« Monter sur ses grands chevaux » = s'emporter, se fâcher.",d:1},
+    {ph:"Tomber dans les ___ (s'évanouir).",good:"pommes",bad:["choux","poires","fraises"],note:"« Tomber dans les pommes » = s'évanouir.",d:2},
+    {ph:"Avoir le ___ (être déprimé).",good:"cafard",bad:["moral","bourdon","spleen"],note:"« Avoir le cafard » = être déprimé, triste.",d:2},
+    {ph:"Avoir la ___ verte (être doué pour le jardinage).",good:"main",bad:["patte","paume","poigne"],note:"« Avoir la main verte » = savoir s'occuper des plantes.",d:2},
+    {ph:"Mettre la ___ à l'oreille (éveiller les soupçons).",good:"puce",bad:["mouche","abeille","fourmi"],note:"« Mettre la puce à l'oreille » = éveiller les soupçons.",d:2},
+    {ph:"Prendre ses ___ à son cou (s'enfuir vite).",good:"jambes",bad:["pieds","bras","talons"],note:"« Prendre ses jambes à son cou » = s'enfuir en courant.",d:2},
+    {ph:"Il n'y a pas un ___ (il n'y a personne).",good:"chat",bad:["chien","rat","bruit"],note:"« Il n'y a pas un chat » = il n'y a personne.",d:2},
+    {ph:"Passer une nuit ___ (sans dormir).",good:"blanche",bad:["noire","grise","claire"],note:"« Une nuit blanche » = une nuit sans sommeil.",d:2},
+    {ph:"Chercher midi à ___ heures (compliquer inutilement).",good:"quatorze",bad:["treize","minuit","onze"],note:"« Chercher midi à quatorze heures » = compliquer les choses simples.",d:2},
+    {ph:"Se creuser les ___ (réfléchir intensément).",good:"méninges",bad:["neurones","cellules","idées"],note:"« Se creuser les méninges » = réfléchir très fort.",d:2},
+    {ph:"Mettre son grain de ___ (donner son avis sans qu'on le demande).",good:"sel",bad:["poivre","sucre","sable"],note:"« Mettre son grain de sel » = intervenir sans y être invité.",d:2},
+    {ph:"Couper la ___ à quelqu'un (l'empêcher de parler).",good:"parole",bad:["voix","langue","phrase"],note:"« Couper la parole » = interrompre quelqu'un.",d:2},
+    {ph:"Se mettre le doigt dans l'___ (se tromper lourdement).",good:"œil",bad:["oreille","nez","doigt"],note:"« Se mettre le doigt dans l'œil » = se tromper complètement.",d:2},
+    {ph:"Avoir d'autres ___ à fouetter (avoir mieux à faire).",good:"chats",bad:["chiens","soucis","affaires"],note:"« Avoir d'autres chats à fouetter » = avoir des occupations plus importantes.",d:2},
+    {ph:"En faire tout un ___ (exagérer un problème).",good:"fromage",bad:["gâteau","plat","repas"],note:"« En faire tout un fromage » = exagérer l'importance d'une chose.",d:3},
+    {ph:"Couper les ___ en quatre (compliquer inutilement).",good:"cheveux",bad:["fils","poils","brins"],note:"« Couper les cheveux en quatre » = chercher des complications.",d:3},
+    {ph:"Découvrir le ___ aux roses (le secret caché).",good:"pot",bad:["vase","pied","fond"],note:"« Découvrir le pot aux roses » = découvrir le secret d'une affaire.",d:3},
+    {ph:"Mettre les ___ dans le plat (parler sans tact).",good:"pieds",bad:["mains","doigts","coudes"],note:"« Mettre les pieds dans le plat » = aborder un sujet délicat sans ménagement.",d:3},
+    {ph:"Tourner autour du ___ (ne pas en venir au fait).",good:"pot",bad:["sujet","vase","feu"],note:"« Tourner autour du pot » = hésiter à aborder l'essentiel.",d:3},
+    {ph:"Avoir le ___ sur la main (être très généreux).",good:"cœur",bad:["billet","porte-monnaie","sou"],note:"« Avoir le cœur sur la main » = être très généreux.",d:3},
+    {ph:"Donner un coup de ___ (aider quelqu'un).",good:"main",bad:["pied","poing","coude"],note:"« Donner un coup de main » = aider.",d:3},
+    {ph:"Jeter l'___ par les fenêtres (dépenser sans compter).",good:"argent",bad:["or","billet","sou"],note:"« Jeter l'argent par les fenêtres » = gaspiller son argent.",d:3},
+    {ph:"Avoir plus d'un ___ dans son sac (avoir plusieurs ressources).",good:"tour",bad:["atout","as","piège"],note:"« Avoir plus d'un tour dans son sac » = être plein de ressources.",d:3},
+    {ph:"Ne pas y aller par quatre ___ (parler franchement).",good:"chemins",bad:["routes","voies","pistes"],note:"« Ne pas y aller par quatre chemins » = aller droit au but.",d:3},
+    {ph:"Mettre des ___ dans les roues (gêner quelqu'un).",good:"bâtons",bad:["cailloux","pierres","clous"],note:"« Mettre des bâtons dans les roues » = créer des obstacles.",d:3},
+    {ph:"Avoir la ___ facile (pleurer pour un rien).",good:"larme",bad:["goutte","peine","plainte"],note:"« Avoir la larme facile » = pleurer très facilement.",d:3},
+    {ph:"Tirer son ___ du jeu (se retirer habilement).",good:"épingle",bad:["aiguille","fil","as"],note:"« Tirer son épingle du jeu » = se sortir adroitement d'une situation.",d:3},
+    {ph:"Broyer du ___ (être mélancolique).",good:"noir",bad:["gris","sombre","bleu"],note:"« Broyer du noir » = avoir des idées sombres.",d:4},
+    {ph:"Reprendre du ___ de la bête (retrouver des forces).",good:"poil",bad:["cuir","muscle","souffle"],note:"« Reprendre du poil de la bête » = reprendre des forces, du courage.",d:4},
+    {ph:"Mener quelqu'un en ___ (le tromper).",good:"bateau",bad:["barque","radeau","voiture"],note:"« Mener en bateau » = duper, faire croire n'importe quoi.",d:4},
+    {ph:"Prendre la ___ (s'esquiver discrètement).",good:"tangente",bad:["poudre","clé","fuite"],note:"« Prendre la tangente » = s'éclipser habilement.",d:4},
+    {ph:"Se mettre en ___ pour quelqu'un (tout faire pour l'aider).",good:"quatre",bad:["deux","huit","ligne"],note:"« Se mettre en quatre » = se donner beaucoup de mal pour autrui.",d:4},
+    {ph:"Mener une vie de ___ (une vie luxueuse et oisive).",good:"château",bad:["palais","pacha","roi"],note:"« Mener une vie de château » = vivre dans le luxe et l'oisiveté.",d:4},
+    {ph:"Être au bout du ___ (à bout de forces).",good:"rouleau",bad:["fil","chemin","tunnel"],note:"« Être au bout du rouleau » = être épuisé, à bout.",d:4},
+    {ph:"Faire d'une pierre deux ___ (obtenir deux résultats à la fois).",good:"coups",bad:["pas","fois","buts"],note:"« Faire d'une pierre deux coups » = régler deux affaires en une seule action.",d:4},
+    {ph:"Avoir du ___ sur la planche (beaucoup de travail).",good:"pain",bad:["gâteau","plat","blé"],note:"« Avoir du pain sur la planche » = avoir beaucoup de travail devant soi.",d:4},
+    {ph:"Faire chou ___ (échouer complètement).",good:"blanc",bad:["noir","gris","vert"],note:"« Faire chou blanc » = échouer, ne rien obtenir.",d:4},
+    {ph:"Filer à l'___ (partir sans se faire remarquer).",good:"anglaise",bad:["française","sauvette","improviste"],note:"« Filer à l'anglaise » = partir discrètement.",d:4},
+    {ph:"Ne pas être dans son ___ (se sentir mal à l'aise).",good:"assiette",bad:["eau","élément","bain"],note:"« Ne pas être dans son assiette » = ne pas se sentir bien.",d:4},
+    {ph:"Rendre son ___ (démissionner).",good:"tablier",bad:["poste","badge","uniforme"],note:"« Rendre son tablier » = démissionner de son emploi.",d:4},
+    {ph:"Jeter l'___ (renoncer, abandonner).",good:"éponge",bad:["gant","serviette","manche"],note:"« Jeter l'éponge » = abandonner la partie.",d:5},
+    {ph:"Tenir la ___ haute à quelqu'un (lui faire attendre une faveur).",good:"dragée",bad:["bride","tête","main"],note:"« Tenir la dragée haute » = résister, faire payer cher une faveur.",d:5},
+    {ph:"Battre la ___ (délirer, dire n'importe quoi).",good:"campagne",bad:["mesure","plaine","ville"],note:"« Battre la campagne » = divaguer, déraisonner.",d:5},
+    {ph:"Prêcher le ___ pour savoir le vrai (ruser pour obtenir un aveu).",good:"faux",bad:["vrai","doute","bien"],note:"« Prêcher le faux pour savoir le vrai » = feindre pour faire avouer.",d:5},
+    {ph:"Rompre une ___ en faveur de quelqu'un (le défendre).",good:"lance",bad:["épée","flèche","arme"],note:"« Rompre une lance » = prendre la défense de quelqu'un.",d:5},
+    {ph:"Jeter des perles aux ___ (gaspiller pour des ingrats).",good:"pourceaux",bad:["cochons","ânes","chiens"],note:"« Jeter des perles aux pourceaux » = offrir de belles choses à qui n'en a que faire.",d:5},
+    {ph:"Ménager la ___ et le chou (ne pas choisir entre deux partis).",good:"chèvre",bad:["brebis","vache","poule"],note:"« Ménager la chèvre et le chou » = tenter de satisfaire deux camps opposés.",d:5},
+    {ph:"C'est son ___ d'Achille (son point faible).",good:"talon",bad:["pied","tendon","os"],note:"« Le talon d'Achille » = le point vulnérable de quelqu'un.",d:5},
+    {ph:"S'attirer les ___ de quelqu'un (sa colère).",good:"foudres",bad:["éclairs","orages","colères"],note:"« S'attirer les foudres » = provoquer la vive colère de quelqu'un.",d:5},
+    {ph:"Prendre des ___ avec la vérité (l'arranger, mentir un peu).",good:"libertés",bad:["distances","écarts","aises"],note:"« Prendre des libertés avec » = ne pas respecter fidèlement.",d:5},
+    {ph:"Damer le ___ à quelqu'un (le surpasser).",good:"pion",bad:["jeu","tour","coup"],note:"« Damer le pion » = l'emporter sur un rival.",d:5},
+    {ph:"Rentrer dans sa ___ (se replier sur soi).",good:"coquille",bad:["tanière","carapace","niche"],note:"« Rentrer dans sa coquille » = se refermer, s'isoler.",d:5},
+    {ph:"Avoir maille à ___ avec quelqu'un (avoir un différend).",good:"partir",bad:["perdre","payer","partager"],note:"« Avoir maille à partir » = avoir un démêlé, une querelle.",d:5},
+    {ph:"Cette coutume est tombée en ___ (elle n'est plus pratiquée).",good:"désuétude",bad:["décadence","déchéance","désarroi"],note:"« Tomber en désuétude » = cesser d'être en usage.",d:6},
+    {ph:"Un travail de ___ (long, minutieux et patient).",good:"bénédictin",bad:["fourmi","titan","forçat"],note:"« Un travail de bénédictin » = un travail long et méticuleux.",d:6},
+    {ph:"Ce n'est qu'un vœu ___ (un souhait sans espoir de réalisation).",good:"pieux",bad:["vain","creux","pur"],note:"« Un vœu pieux » = un souhait qui a peu de chances d'aboutir.",d:6},
+    {ph:"L'affaire s'en est allée en eau de ___ (elle n'a rien donné).",good:"boudin",bad:["roche","pluie","source"],note:"« S'en aller en eau de boudin » = échouer progressivement.",d:6},
+    {ph:"Être tout feu tout ___ (plein d'ardeur).",good:"flamme",bad:["cendre","fumée","braise"],note:"« Tout feu tout flamme » = plein d'enthousiasme.",d:6},
+    {ph:"Tirer les ___ du feu (agir au profit d'autrui).",good:"marrons",bad:["châtaignes","braises","bûches"],note:"« Tirer les marrons du feu » = prendre des risques dont un autre profite.",d:6},
+    {ph:"C'est son cheval de ___ (son sujet favori, son argument constant).",good:"bataille",bad:["course","trait","combat"],note:"« Un cheval de bataille » = un thème que l'on défend sans cesse.",d:6},
+    {ph:"Payer en monnaie de ___ (avec de belles paroles sans valeur).",good:"singe",bad:["plomb","papier","fer"],note:"« Payer en monnaie de singe » = payer de mots, sans rien donner de réel.",d:6},
+    {ph:"Se perdre en ___ (multiplier les suppositions).",good:"conjectures",bad:["digressions","détours","arguties"],note:"« Se perdre en conjectures » = faire des hypothèses sans fin.",d:6},
+    {ph:"Renvoyer aux ___ grecques (à une date qui ne viendra jamais).",good:"calendes",bad:["oubliettes","vacances","années"],note:"« Renvoyer aux calendes grecques » = remettre à un jour qui n'arrivera pas.",d:6},
+    {ph:"Ma demande est restée lettre ___ (sans réponse ni effet).",good:"morte",bad:["close","vaine","blanche"],note:"« Rester lettre morte » = demeurer sans suite.",d:6},
+    {ph:"Prendre des vessies pour des ___ (se tromper grossièrement).",good:"lanternes",bad:["lampions","bougies","flambeaux"],note:"« Prendre des vessies pour des lanternes » = se méprendre lourdement.",d:6},
+    {ph:"Faire contre mauvaise fortune bon ___ (accepter l'adversité).",good:"cœur",bad:["gré","sort","vent"],note:"« Faire contre mauvaise fortune bon cœur » = accepter l'adversité de bonne grâce.",d:6}
   ];
+  var IDIOM_FRAMES=["{PH}","Complète l'expression imagée : {PH}","Expression française — {PH}","Trouve le mot qui manque : {PH}"];
   var REGISTRE = [ // registres de langue (familier / courant / soutenu)
     {d:5,ph:"En registre soutenu, « manger » se dit ___.",good:"se restaurer",bad:["bouffer","grailler","boulotter"],note:"« se restaurer » (soutenu) vs « bouffer » (familier)."},
     {d:5,ph:"En registre soutenu, « avoir peur » se dit ___.",good:"être effrayé",bad:["flipper","avoir les jetons","avoir la trouille"],note:"« être effrayé » (soutenu) vs « flipper » (familier)."},
@@ -1674,12 +1740,18 @@
       options:build(it.good,it.bad.slice()), answer:0 };
   }
 
+  function genIdiomes(diff,cat,sub){
+    var it=pick(bandFilter(IDIOM_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(IDIOM_FRAMES).replace("{PH}",it.ph), hint:"Complète l'expression imagée",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genVoc(sub, diff, cat){
     if(sub==="Synonymes") return genSynonymes(diff,cat,sub);
     if(sub==="Contraires") return genContraires(diff,cat,sub);
     if(sub==="Homonymes") return genHomonymes(diff,cat,sub);
     if(sub==="Familles de mots") return genFamilles(diff,cat,sub);
-    if(sub==="Expressions idiomatiques") return fromGood(pickByDiff(IDIOM,diff),"Complète l'expression imagée",cat,sub);
+    if(sub==="Expressions idiomatiques") return genIdiomes(diff,cat,sub);
     if(sub==="Registres de langue") return fromGood(pickByDiff(REGISTRE,diff),"Registre de langue",cat,sub);
     if(sub==="Paronymes") return fromGood(pickByDiff(PARONYM,diff),"Paronymes (mots proches à ne pas confondre)",cat,sub);
     if(sub==="Mots du quotidien") return genQuotidien(diff,cat,sub);
