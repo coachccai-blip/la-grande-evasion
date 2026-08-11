@@ -436,14 +436,14 @@
     {d:"Marie",pi:2,g:"f",n:"s"},{d:"Jade",pi:2,g:"f",n:"s"},{d:"Alice",pi:2,g:"f",n:"s"},
     {d:"le maître",pi:2,g:"m",n:"s"},{d:"la maîtresse",pi:2,g:"f",n:"s"},
     {d:"mon frère",pi:2,g:"m",n:"s"},{d:"ma sœur",pi:2,g:"f",n:"s"},
-    {d:"le voisin",pi:2,g:"m",n:"s"},{d:"le chat",pi:2,g:"m",n:"s"},{d:"le chien",pi:2,g:"m",n:"s"}
+    {d:"le voisin",pi:2,g:"m",n:"s"},{d:"la voisine",pi:2,g:"f",n:"s"},{d:"le facteur",pi:2,g:"m",n:"s"}
   ];
   var NAMED_P = [ // 3e personne du PLURIEL (pi = 5)
     {d:"les enfants",pi:5,g:"m",n:"p"},{d:"les élèves",pi:5,g:"m",n:"p"},
     {d:"Paul et Léa",pi:5,g:"m",n:"p"},{d:"mes amis",pi:5,g:"m",n:"p"},
     {d:"les joueurs",pi:5,g:"m",n:"p"},{d:"mes parents",pi:5,g:"m",n:"p"},
     {d:"les filles",pi:5,g:"f",n:"p"},{d:"Emma et Jade",pi:5,g:"f",n:"p"},
-    {d:"les oiseaux",pi:5,g:"m",n:"p"},{d:"les voisins",pi:5,g:"m",n:"p"}
+    {d:"les touristes",pi:5,g:"m",n:"p"},{d:"les voisins",pi:5,g:"m",n:"p"}
   ];
   // Choisit un sujet : pronom classique OU sujet nommé (≈ 45 % du temps, un peu
   // plus en montée de difficulté). o.etre → uniquement des sujets à genre défini.
@@ -990,12 +990,12 @@
      toujours 3 distracteurs distincts (on évite gros/doux/vieux dont ms=mp). */
   var ADJ_ACC=[
     {ms:"grand",fs:"grande",mp:"grands",fp:"grandes"},{ms:"petit",fs:"petite",mp:"petits",fp:"petites"},
-    {ms:"content",fs:"contente",mp:"contents",fp:"contentes"},{ms:"joli",fs:"jolie",mp:"jolis",fp:"jolies"},
+    {ms:"bleu",fs:"bleue",mp:"bleus",fp:"bleues"},{ms:"joli",fs:"jolie",mp:"jolis",fp:"jolies"},
     {ms:"beau",fs:"belle",mp:"beaux",fp:"belles"},{ms:"vert",fs:"verte",mp:"verts",fp:"vertes"},
     {ms:"noir",fs:"noire",mp:"noirs",fp:"noires"},{ms:"blanc",fs:"blanche",mp:"blancs",fp:"blanches"},
     {ms:"rond",fs:"ronde",mp:"ronds",fp:"rondes"},{ms:"lourd",fs:"lourde",mp:"lourds",fp:"lourdes"},
-    {ms:"léger",fs:"légère",mp:"légers",fp:"légères"},{ms:"neuf",fs:"neuve",mp:"neufs",fp:"neuves"},
-    {ms:"poli",fs:"polie",mp:"polis",fp:"polies"},{ms:"fort",fs:"forte",mp:"forts",fp:"fortes"},
+    {ms:"léger",fs:"légère",mp:"légers",fp:"légères"},{ms:"long",fs:"longue",mp:"longs",fp:"longues"},
+    {ms:"chaud",fs:"chaude",mp:"chauds",fp:"chaudes"},{ms:"doré",fs:"dorée",mp:"dorés",fp:"dorées"},
     {ms:"brillant",fs:"brillante",mp:"brillants",fp:"brillantes"}
   ];
   var ACC_FRAMES=["{W} {V} ___.","{W} {V} très ___.","On dirait que {W} {V} ___.","{W} {V} vraiment ___."];
@@ -1437,7 +1437,7 @@
     {ph:"Le modèle prend la ___ devant l'objectif (attitude pour la photo).",good:"pose",bad:["pause","poses","pôse"],d:6},
     {ph:"Ce vieil homme paraît bien ___ (usé par la vieillesse).",good:"décrépit",bad:["décrépi","décrépits","decrépit"],d:6},
     {ph:"Le mur ___ laisse voir ses briques (dont le crépi tombe).",good:"décrépi",bad:["décrépit","décrépis","decrépi"],d:6},
-    {ph:"Le vinaigre a un goût ___ (relatif à l'acide du vinaigre).",good:"acétique",bad:["ascétique","acétiques","assétique"],d:6},
+    {ph:"En chimie, l'acide ___ est celui du vinaigre.",good:"acétique",bad:["ascétique","acétiques","assétique"],d:6},
     {ph:"Le moine mène une vie ___ (austère, faite de privations).",good:"ascétique",bad:["acétique","ascétiques","assétique"],d:6}
   ];
   var HOMO_FRAMES=["{PH}","Le bon homonyme — {PH}","Complète avec le bon homonyme : {PH}","Choisis le mot juste : {PH}",
@@ -1771,7 +1771,7 @@
     {d:6,w:["éphémère","fugace","passager"]},{d:6,w:["sournois","hypocrite","perfide"]},{d:6,w:["loquace","bavard","volubile"]},
     {d:6,w:["taciturne","silencieux","renfermé"]},{d:6,w:["opulent","luxueux","fastueux"]},{d:6,w:["indigent","nécessiteux","besogneux"]},
     {d:6,w:["véloce","rapide","prompt"]},{d:6,w:["placide","serein","imperturbable"]},{d:6,w:["irascible","coléreux","irritable"]},
-    {d:6,w:["sagace","perspicace","avisé"]},{d:6,w:["prodigue","dépensier","dispendieux"]},{d:6,w:["tenace","persévérant","opiniâtre"]},{d:6,w:["fallacieux","mensonger","trompeur"]}
+    {d:6,w:["sagace","perspicace","avisé"]},{d:6,w:["prodigue","dépensier","gaspilleur"]},{d:6,w:["tenace","persévérant","opiniâtre"]},{d:6,w:["fallacieux","mensonger","trompeur"]}
   ];
   var CONTR_PAIRS=[
     {d:1,a:"grand",b:"petit"},{d:1,a:"jour",b:"nuit"},{d:1,a:"chaud",b:"froid"},{d:1,a:"rapide",b:"lent"},{d:1,a:"content",b:"triste"},
@@ -2048,7 +2048,7 @@
     {ph:"Au comptoir, je bois un café ___ (rapide et serré).",good:"express",bad:["exprès","expresse","exprés"],note:"« express » (rapide) ≠ « exprès » (volontairement).",d:6},
     {ph:"Le randonneur gravit le ___ escarpé de la montagne (le côté).",good:"flanc",bad:["flan","flant","flang"],note:"« flanc » (le côté) ≠ « flan » (le dessert).",d:6},
     {ph:"Pour le dessert, je choisis un ___ au caramel.",good:"flan",bad:["flanc","flang","fland"],note:"« flan » (dessert) ≠ « flanc » (le côté).",d:6},
-    {ph:"L'avion se pose sur l'___ prévue (surface, zone plane).",good:"aire",bad:["air","ère","hère"],note:"« aire » (surface) ≠ « air » (qu'on respire) ≠ « ère » (époque).",d:6},
+    {ph:"L'hélicoptère se pose sur l'___ d'atterrissage (surface plane).",good:"aire",bad:["air","ère","hère"],note:"« aire » (surface) ≠ « air » (qu'on respire) ≠ « ère » (époque).",d:6},
     {ph:"Nous vivons à l'___ du numérique (une longue période).",good:"ère",bad:["air","aire","hère"],note:"« ère » (époque) ≠ « air » (qu'on respire) ≠ « aire » (surface).",d:6},
     {ph:"À la ___ du film, tout le monde applaudit (le terme, le bout).",good:"fin",bad:["faim","feint","fain"],note:"« fin » (le bout) ≠ « faim » (envie de manger).",d:6},
     {ph:"Après le sport, j'ai une grande ___ (envie de manger).",good:"faim",bad:["fin","feint","fain"],note:"« faim » (envie de manger) ≠ « fin » (le bout).",d:6},
@@ -2254,7 +2254,7 @@
     {ph:"En hiver, il faut bien s'___ sous les couvertures.",good:"emmitoufler",bad:["enmitoufler","ammitoufler","emmitouflér"],note:"m devant m",d:6},
     {ph:"Cette aventure invraisemblable est vraiment ___.",good:"rocambolesque",bad:["rocanbolesque","rocambolesqe","rocambolésque"],note:"m devant b",d:6},
     {ph:"Face au danger, il reste ___.",good:"imperturbable",bad:["inperturbable","amperturbable","imperturbabe"],note:"m devant p",d:6},
-    {ph:"Il est arrivé à l'___ (à l'improviste, sans préparation).",good:"impromptu",bad:["inpromptu","amproptu","impromptü"],note:"m devant p",d:6},
+    {ph:"Il a prononcé un discours ___ (sans aucune préparation).",good:"impromptu",bad:["inpromptu","amproptu","impromptü"],note:"m devant p",d:6},
     {ph:"On admire le ___ des flammes dans la cheminée.",good:"flamboiement",bad:["flanboiement","flamboyement","flamboiemant"],note:"m devant b",d:6},
     {ph:"La guerre entraîna le ___ de l'empire (sa division).",good:"démembrement",bad:["démenbrement","démambrement","démembremant"],note:"m devant b",d:6},
     {ph:"Avec l'âge, il a pris de l'___ (de la rondeur).",good:"embonpoint",bad:["embompoint","enbonpoint","ambonpoint"],note:"Exception : « embonpoint » garde le n devant p (bon + point).",d:6},
