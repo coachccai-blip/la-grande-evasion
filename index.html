@@ -1864,6 +1864,7 @@ function askQuestion(opts){
 
     function finish(chosenIdx, timedOut){
       if(done) return; done=true;
+      pendingQuestion=null;
       if(tvi) clearInterval(tvi);
       var correct = (!timedOut && chosenIdx===q.answer);
       // révèle : bonne réponse toujours en évidence (§5)
@@ -1902,15 +1903,20 @@ function askQuestion(opts){
       box.appendChild(b);
     });
 
+    function tick(){
+      timeLeft-=0.1; var pct=Math.max(0,timeLeft/DEFI_TIME*100); timerBar.style.width=pct+"%";
+      if(timeLeft<=0){ finish(null,true); }
+    }
+    // Mise en pause / reprise (utilisé quand on quitte l'onglet « Jeu »).
+    function pauseQ(){ if(tvi){ clearInterval(tvi); tvi=null; } }
+    function resumeQ(){ if(opts.timed && !done && tvi===null){ tvi=setInterval(tick,100); } }
     if(opts.timed){
       timer.style.display="block"; timerBar.style.width="100%";
-      tvi=setInterval(function(){
-        timeLeft-=0.1; var pct=Math.max(0,timeLeft/DEFI_TIME*100); timerBar.style.width=pct+"%";
-        if(timeLeft<=0){ finish(null,true); }
-      },100);
+      tvi=setInterval(tick,100);
     } else {
       timer.style.display="none";
     }
+    pendingQuestion={ ovId:"questionOverlay", pause:pauseQ, resume:resumeQ };
     ov.classList.add("show");
   });
 }
@@ -2745,10 +2751,26 @@ function showScreen(name){
   else if(name==="badges") $("badgesScreen").classList.add("active");
   else if(name==="empire") $("empireScreen").classList.add("active");
 }
+/* Question en cours (aventure ou Empire) : masquée quand on quitte l'onglet
+   « Jeu », restaurée en y revenant. Le chrono éventuel est mis en pause pour ne
+   pas pénaliser le joueur parti consulter l'historique ou les badges. */
+var pendingQuestion=null;
+function hideQuestionForTab(){
+  if(!pendingQuestion) return;
+  var ov=$(pendingQuestion.ovId); if(ov) ov.classList.remove("show");
+  if(pendingQuestion.pause) pendingQuestion.pause();
+}
+function restoreQuestionForTab(){
+  if(!pendingQuestion) return;
+  var ov=$(pendingQuestion.ovId); if(ov) ov.classList.add("show");
+  if(pendingQuestion.resume) pendingQuestion.resume();
+}
 function setTab(which){
   $("tabGame").classList.toggle("active", which==="game");
   $("tabHist").classList.toggle("active", which==="hist");
   if($("tabBadges")) $("tabBadges").classList.toggle("active", which==="badges");
+  // Onglet « Jeu » → on réaffiche la question en cours ; ailleurs → on la masque.
+  if(which==="game") restoreQuestionForTab(); else hideQuestionForTab();
 }
 
 /* ==================================================================== */
@@ -2775,6 +2797,7 @@ function presentQuestion(cat, sub, diff, contextLabel){
     var box=$("qOpts"); box.innerHTML=""; var done=false;
     function finish(chosen){
       if(done) return; done=true;
+      pendingQuestion=null;
       var correct=(chosen===q.answer);
       var btns=box.querySelectorAll(".opt");
       for(var i=0;i<btns.length;i++){ var oi=+btns[i].getAttribute("data-oi"); btns[i].setAttribute("disabled","");
@@ -2798,6 +2821,7 @@ function presentQuestion(cat, sub, diff, contextLabel){
       b.appendChild(lt); b.appendChild(tx); b.onclick=function(){ finish(oi); };
       box.appendChild(b);
     });
+    pendingQuestion={ ovId:"questionOverlay", pause:function(){}, resume:function(){} };
     ov.classList.add("show");
   });
 }
