@@ -1169,15 +1169,113 @@
       options:build(it.prep,bad), answer:0 };
   }
 
+  /* --- Pronoms relatifs : générateur PARTITIONNÉ --- */
+  var PRON_ITEMS=[
+    {ant:"le chien",good:"qui",rest:"aboie fort",d:1},{ant:"la fille",good:"qui",rest:"chante bien",d:1},
+    {ant:"le gâteau",good:"que",rest:"j'ai fait",d:1},{ant:"le livre",good:"que",rest:"tu lis",d:1},
+    {ant:"l'oiseau",good:"qui",rest:"vole haut",d:1},{ant:"la pomme",good:"que",rest:"je mange",d:1},
+    {ant:"le garçon",good:"qui",rest:"court vite",d:1},{ant:"le dessin",good:"que",rest:"tu as fait",d:1},
+    {ant:"le chat",good:"qui",rest:"dort là",d:1},{ant:"la chanson",good:"que",rest:"nous aimons",d:1},
+    {ant:"le ballon",good:"qui",rest:"roule",d:1},{ant:"la fleur",good:"que",rest:"j'ai cueillie",d:1},{ant:"le film",good:"qui",rest:"passe ce soir",d:1},
+    {ant:"la maison",good:"où",rest:"je vis",d:2},{ant:"la ville",good:"où",rest:"il est né",d:2},
+    {ant:"le jour",good:"où",rest:"tu es arrivé",d:2},{ant:"le pays",good:"que",rest:"je visite",d:2},
+    {ant:"l'école",good:"où",rest:"j'apprends",d:2},{ant:"le vélo",good:"que",rest:"j'ai réparé",d:2},
+    {ant:"la dame",good:"qui",rest:"habite ici",d:2},{ant:"le moment",good:"où",rest:"il est parti",d:2},
+    {ant:"le repas",good:"que",rest:"nous préparons",d:2},{ant:"le voisin",good:"qui",rest:"m'a salué",d:2},
+    {ant:"la route",good:"que",rest:"nous suivons",d:2},{ant:"le parc",good:"où",rest:"nous jouons",d:2},{ant:"l'histoire",good:"que",rest:"tu racontes",d:2},
+    {ant:"le film",good:"dont",rest:"je t'ai parlé",d:3},{ant:"le livre",good:"dont",rest:"tout le monde parle",d:3},
+    {ant:"l'outil",good:"dont",rest:"j'ai besoin",d:3},{ant:"le gâteau",good:"qu'",rest:"il a mangé",d:3},
+    {ant:"la robe",good:"qu'",rest:"elle a choisie",d:3},{ant:"l'ami",good:"dont",rest:"je me souviens",d:3},
+    {ant:"la région",good:"où",rest:"il travaille",d:3},{ant:"le sujet",good:"dont",rest:"nous discutons",d:3},
+    {ant:"le cadeau",good:"qu'",rest:"on a offert",d:3},{ant:"la personne",good:"qui",rest:"nous accueille",d:3},
+    {ant:"le chemin",good:"que",rest:"vous prenez",d:3},{ant:"l'année",good:"où",rest:"je suis né",d:3},{ant:"le problème",good:"dont",rest:"il s'occupe",d:3},
+    {ant:"le projet",good:"dont",rest:"il est fier",d:4},{ant:"la décision",good:"qu'",rest:"ils ont prise",d:4},
+    {ant:"la façon",good:"dont",rest:"tu parles",d:4},{ant:"l'endroit",good:"où",rest:"nous nous sommes rencontrés",d:4},
+    {ant:"le témoin",good:"qui",rest:"a tout vu",d:4},{ant:"la lettre",good:"qu'",rest:"elle a écrite",d:4},
+    {ant:"le moment",good:"où",rest:"tout a basculé",d:4},{ant:"l'auteur",good:"dont",rest:"j'admire le style",d:4},
+    {ant:"le pays",good:"d'où",rest:"il vient",bad:["dont","où","que"],d:4},{ant:"la raison",good:"pour laquelle",rest:"il est parti",bad:["dont","que","laquelle"],d:4},
+    {ant:"le collègue",good:"avec qui",rest:"je travaille",bad:["dont","qui","que"],d:4},{ant:"le stylo",good:"avec lequel",rest:"j'écris",bad:["dont","lequel","que"],d:4},{ant:"la personne",good:"à qui",rest:"je pense",bad:["dont","que","qui"],d:4},
+    {ant:"le fauteuil",good:"sur lequel",rest:"tu es assis",bad:["dont","lequel","auquel"],d:5},{ant:"la réunion",good:"à laquelle",rest:"j'ai assisté",bad:["dont","laquelle","auquel"],d:5},
+    {ant:"les amis",good:"parmi lesquels",rest:"il se trouve",bad:["dont","lesquels","auxquels"],d:5},{ant:"le sujet",good:"auquel",rest:"je m'intéresse",bad:["dont","lequel","à qui"],d:5},
+    {ant:"la boîte",good:"dans laquelle",rest:"il range ses outils",bad:["dont","laquelle","où"],d:5},{ant:"l'ami",good:"grâce à qui",rest:"j'ai réussi",bad:["dont","à qui","que"],d:5},
+    {ant:"le film",good:"dont",rest:"la fin m'a surpris",bad:["que","qui","où"],d:5},{ant:"la ville",good:"vers laquelle",rest:"nous roulons",bad:["où","laquelle","dont"],d:5},
+    {ant:"le problème",good:"auquel",rest:"il réfléchit",bad:["dont","lequel","que"],d:5},{ant:"la table",good:"sous laquelle",rest:"le chat dort",bad:["dont","laquelle","où"],d:5},
+    {ant:"l'époque",good:"à laquelle",rest:"il vivait",bad:["où","laquelle","dont"],d:5},{ant:"les outils",good:"avec lesquels",rest:"il travaille",bad:["dont","lesquels","auxquels"],d:5},{ant:"le moyen",good:"par lequel",rest:"il réussit",bad:["dont","lequel","auquel"],d:5},
+    {ant:"l'idéal",good:"vers lequel",rest:"il tend",bad:["auquel","lequel","dont"],d:6},{ant:"la cause",good:"pour laquelle",rest:"ils luttent",bad:["dont","laquelle","à laquelle"],d:6},
+    {ant:"les principes",good:"selon lesquels",rest:"il vit",bad:["dont","lesquels","auxquels"],d:6},{ant:"le contrat",good:"aux termes duquel",rest:"il s'engage",bad:["dont","duquel","auquel"],d:6},
+    {ant:"l'assemblée",good:"au sein de laquelle",rest:"il siège",bad:["dont","laquelle","où"],d:6},{ant:"les valeurs",good:"auxquelles",rest:"il tient",bad:["dont","lesquelles","à qui"],d:6},
+    {ant:"le procédé",good:"par lequel",rest:"il y parvient",bad:["dont","lequel","auquel"],d:6},{ant:"la manière",good:"dont",rest:"il procède",bad:["que","laquelle","où"],d:6},
+    {ant:"l'autorité",good:"à laquelle",rest:"il se soumet",bad:["dont","laquelle","auquel"],d:6},{ant:"les circonstances",good:"dans lesquelles",rest:"cela s'est produit",bad:["dont","lesquelles","où"],d:6},
+    {ant:"le fondement",good:"sur lequel",rest:"repose la théorie",bad:["duquel","lequel","auquel"],d:6},{ant:"l'objectif",good:"en vue duquel",rest:"il œuvre",bad:["dont","duquel","auquel"],d:6},{ant:"les gens",good:"parmi lesquels",rest:"je vis",bad:["dont","lesquels","auxquels"],d:6}
+  ];
+  var PRON_POOL=["qui","que","qu'","où","dont"];
+  var PRON_FRAMES=["Voici {ANT} ___ {R}.","C'est {ANT} ___ {R}.","Je te montre {ANT} ___ {R}.","Connais-tu {ANT} ___ {R} ?"];
+  function genPronoms(diff,cat,sub){
+    var it=pick(bandFilter(PRON_ITEMS,diff,"d"));
+    var bad=it.bad?it.bad.slice():shuffle(PRON_POOL.filter(function(x){return x!==it.good;})).slice(0,3);
+    return { cat:cat, sub:sub, phrase:cap(pick(PRON_FRAMES).replace("{ANT}",it.ant).replace("{R}",it.rest)),
+      hint:"Choisis le bon pronom relatif",
+      note:"Pronoms relatifs : qui (sujet), que/qu' (COD), où (lieu/temps), dont (complément avec « de »), lequel/auquel/duquel… après une préposition.",
+      options:build(it.good,bad), answer:0 };
+  }
+
+  /* --- Connecteurs logiques : générateur PARTITIONNÉ --- */
+  var CONN_ITEMS=[
+    {c1:"Il fait froid",good:"donc",c2:"je mets un manteau",bad:["car","mais","ou"],d:1},{c1:"J'aime le chocolat",good:"mais",c2:"pas les bonbons",bad:["donc","car","ou"],d:1},
+    {c1:"Veux-tu du thé",good:"ou",c2:"du café ?",bad:["et","car","donc"],d:1},{c1:"Il pleure",good:"car",c2:"il est tombé",bad:["donc","mais","ou"],d:1},
+    {c1:"Elle prend son sac",good:"et",c2:"elle part",bad:["mais","car","ou"],d:1},{c1:"Je suis fatigué",good:"donc",c2:"je vais dormir",bad:["mais","ou","car"],d:1},
+    {c1:"Il court vite",good:"mais",c2:"il perd la course",bad:["donc","car","et"],d:1},{c1:"Il a faim",good:"donc",c2:"il mange",bad:["mais","ou","car"],d:1},
+    {c1:"Elle rit",good:"car",c2:"c'est drôle",bad:["donc","mais","ou"],d:1},{c1:"J'ouvre la fenêtre",good:"car",c2:"il fait chaud",bad:["mais","ou","donc"],d:1},
+    {c1:"Il est petit",good:"mais",c2:"il est fort",bad:["donc","car","ou"],d:1},{c1:"Prends ton parapluie",good:"car",c2:"il va pleuvoir",bad:["mais","ou","donc"],d:1},{c1:"Tu ranges",good:"ou",c2:"tu es puni",bad:["car","donc","et"],d:1},
+    {c1:"Il a mangé",good:"puis",c2:"il a dormi",bad:["mais","car","ou"],d:2},{c1:"Il pleut",good:"pourtant",c2:"il sort sans manteau",bad:["donc","car","puis"],d:2},
+    {c1:"Fais tes devoirs",good:"alors",c2:"tu pourras jouer",bad:["car","pourtant","ou"],d:2},{c1:"Il est absent",good:"car",c2:"il est malade",bad:["donc","pourtant","puis"],d:2},
+    {c1:"Elle chante",good:"pendant que",c2:"il joue",bad:["car","donc","mais"],d:2},{c1:"Nous partirons",good:"dès que",c2:"tu seras prêt",bad:["car","mais","donc"],d:2},
+    {c1:"Il travaille",good:"tandis que",c2:"son frère se repose",bad:["car","donc","puis"],d:2},{c1:"Je t'aiderai",good:"si",c2:"tu me le demandes",bad:["car","donc","mais"],d:2},
+    {c1:"Range ta chambre",good:"avant de",c2:"sortir",bad:["car","donc","mais"],d:2},{c1:"Les étoiles brillent",good:"quand",c2:"il fait nuit",bad:["car","donc","mais"],d:2},
+    {c1:"Prends une veste",good:"au cas où",c2:"il ferait froid",bad:["car","donc","mais"],d:2},{c1:"Il sourit",good:"parce qu'",c2:"il est heureux",bad:["donc","pourtant","puis"],d:2},{c1:"Il lit",good:"puis",c2:"il écrit",bad:["mais","car","pourtant"],d:2},
+    {c1:"Il a beaucoup travaillé",good:"par conséquent",c2:"il a réussi",bad:["cependant","car","ou"],d:3},{c1:"J'aime l'été",good:"en revanche",c2:"je déteste l'hiver",bad:["donc","car","puis"],d:3},
+    {c1:"Il pleuvait",good:"cependant",c2:"nous sommes sortis",bad:["donc","car","ainsi"],d:3},{c1:"Il est absent",good:"en effet",c2:"il est souffrant",bad:["pourtant","mais","ou"],d:3},
+    {c1:"Il pleut",good:"c'est pourquoi",c2:"je reste chez moi",bad:["cependant","car","ou"],d:3},{c1:"Il est riche",good:"néanmoins",c2:"il reste modeste",bad:["donc","car","ainsi"],d:3},
+    {c1:"Il a menti",good:"or",c2:"personne ne le croit plus",bad:["car","donc","puis"],d:3},{c1:"Chauffe le beurre",good:"puis",c2:"ajoute la farine",bad:["car","mais","or"],d:3},
+    {c1:"Il s'entraîne dur",good:"afin de",c2:"gagner",bad:["car","donc","mais"],d:3},{c1:"Il réussit",good:"grâce à",c2:"ses efforts",bad:["malgré","car","donc"],d:3},
+    {c1:"Il sort",good:"malgré",c2:"la pluie",bad:["grâce à","car","donc"],d:3},{c1:"Reste ici",good:"jusqu'à ce que",c2:"je revienne",bad:["car","donc","mais"],d:3},{c1:"Il agit vite",good:"de peur de",c2:"perdre",bad:["afin de","car","donc"],d:3},
+    {c1:"Il a tout révisé",good:"si bien qu'",c2:"il a eu la meilleure note",bad:["bien qu'","car","ou"],d:4},{c1:"Il est riche",good:"bien qu'",c2:"il vive simplement",bad:["parce qu'","donc","car"],d:4},
+    {c1:"Tu peux entrer",good:"à condition que",c2:"tu enlèves tes chaussures",bad:["bien que","avant que","sans que"],d:4},{c1:"Il parle bas",good:"de sorte que",c2:"personne n'entende",bad:["parce que","donc","car"],d:4},
+    {c1:"Nous manquons de temps",good:"c'est pourquoi",c2:"nous devons nous hâter",bad:["cependant","or","puis"],d:4},{c1:"Il a échoué",good:"faute d'",c2:"avoir révisé",bad:["grâce à","afin d'","car"],d:4},
+    {c1:"Il pleuvait des cordes",good:"aussi",c2:"avons-nous annulé la sortie",bad:["car","mais","ou"],d:4},{c1:"Il s'est tu",good:"de crainte de",c2:"la vexer",bad:["afin de","grâce à","malgré"],d:4},
+    {c1:"Elle a insisté",good:"tant et si bien qu'",c2:"il a cédé",bad:["bien qu'","car","ou"],d:4},{c1:"Il viendra",good:"pourvu qu'",c2:"il soit invité",bad:["bien qu'","avant qu'","sans qu'"],d:4},
+    {c1:"Il agit ainsi",good:"non parce qu'",c2:"il le veut, mais par devoir",bad:["afin qu'","bien qu'","dès qu'"],d:4},{c1:"Il travaille dur",good:"en vue de",c2:"sa réussite",bad:["malgré","faute de","car"],d:4},{c1:"Il a plu",good:"si bien que",c2:"la rivière a débordé",bad:["bien que","car","ou"],d:4},
+    {c1:"Il persévère",good:"nonobstant",c2:"les obstacles",bad:["grâce à","afin de","car"],d:5},{c1:"Il a renoncé",good:"faute de",c2:"moyens suffisants",bad:["grâce à","en vue de","malgré"],d:5},
+    {c1:"Il resta calme",good:"quand bien même",c2:"tout s'effondrait",bad:["parce que","dès que","afin que"],d:5},{c1:"Il agit",good:"de manière que",c2:"chacun soit satisfait",bad:["parce que","car","donc"],d:5},
+    {c1:"Il a été puni",good:"pour avoir",c2:"désobéi",bad:["afin d'","grâce à","malgré"],d:5},{c1:"Il parlait",good:"à mesure que",c2:"les idées lui venaient",bad:["bien que","afin que","sans que"],d:5},
+    {c1:"Il réussit toujours",good:"quoi qu'",c2:"il entreprenne",bad:["bien qu'","dès qu'","parce qu'"],d:5},{c1:"Il se tut",good:"de sorte à",c2:"ne froisser personne",bad:["parce que","car","donc"],d:5},
+    {c1:"Il accepta",good:"non sans",c2:"une certaine hésitation",bad:["grâce à","afin de","malgré"],d:5},{c1:"Il avança",good:"au fur et à mesure que",c2:"le sentier montait",bad:["bien que","afin que","sans que"],d:5},
+    {c1:"Il obéit",good:"sous prétexte qu'",c2:"il n'avait pas le choix",bad:["bien qu'","afin qu'","dès qu'"],d:5},{c1:"Il triompha",good:"en dépit de",c2:"tous les pronostics",bad:["grâce à","au moyen de","car"],d:5},{c1:"Il renonça",good:"dès lors qu'",c2:"il comprit l'inutilité de la lutte",bad:["bien qu'","afin qu'","sans qu'"],d:5},
+    {c1:"Il persista dans l'erreur",good:"partant",c2:"il en subit les conséquences",bad:["cependant","néanmoins","or"],d:6},{c1:"Il agit avec prudence",good:"eu égard à",c2:"la gravité de la situation",bad:["en dépit de","faute de","malgré"],d:6},
+    {c1:"Il fut acquitté",good:"attendu qu'",c2:"aucune preuve ne l'accablait",bad:["bien qu'","afin qu'","dès qu'"],d:6},{c1:"Il céda",good:"non que",c2:"la peur l'emportât, mais par lassitude",bad:["parce que","bien que","dès que"],d:6},
+    {c1:"Il œuvra sans relâche",good:"si tant est qu'",c2:"on puisse le croire",bad:["bien qu'","afin qu'","parce qu'"],d:6},{c1:"Il demeura serein",good:"quelque",c2:"redoutables que fussent les menaces",bad:["bien que","afin que","dès que"],d:6},
+    {c1:"Il fut blâmé",good:"pour autant qu'",c2:"on pût en juger",bad:["bien qu'","afin qu'","dès qu'"],d:6},{c1:"Il avança ses arguments",good:"de telle sorte que",c2:"nul ne put le contredire",bad:["parce que","car","donc"],d:6},
+    {c1:"Il fut épargné",good:"moyennant qu'",c2:"il livrât ses complices",bad:["bien qu'","afin qu'","dès qu'"],d:6},{c1:"Il resta ferme",good:"encore que",c2:"la tentation fût grande",bad:["parce que","dès que","afin que"],d:6},
+    {c1:"Il conclut la paix",good:"à seule fin de",c2:"préserver son peuple",bad:["faute de","en dépit de","malgré"],d:6},{c1:"Il gouverna sagement",good:"en sorte que",c2:"le royaume prospérât",bad:["parce que","car","donc"],d:6},{c1:"Il fut réhabilité",good:"d'autant qu'",c2:"son innocence éclatait",bad:["bien qu'","afin qu'","dès qu'"],d:6}
+  ];
+  var CONN_FRAMES=["{C1} ___ {C2}.","Complète : {C1} ___ {C2}.","Choisis le connecteur : {C1} ___ {C2}.","Quel lien logique ? {C1} ___ {C2}."];
+  function genConnecteurs(diff,cat,sub){
+    var it=pick(bandFilter(CONN_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(CONN_FRAMES).replace("{C1}",it.c1).replace("{C2}",it.c2),
+      hint:"Choisis le bon connecteur logique",
+      note:"Connecteurs : cause (car, parce que), conséquence (donc, par conséquent, c'est pourquoi), opposition (mais, cependant, pourtant), but (afin de, pour que), condition (si, à condition que), concession (bien que, malgré).",
+      options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genGram(sub, diff, cat){
     if(sub==="Nature des mots") return genNature(diff,cat,sub);
     if(sub==="Déterminants") return genDeterminants(diff,cat,sub);
-    if(sub==="Pronoms") return fromGood(pickByDiff(PRON,diff),"Choisis le bon pronom",cat,sub);
+    if(sub==="Pronoms") return genPronoms(diff,cat,sub);
     if(sub==="Prépositions") return genPrep(diff,cat,sub);
     if(sub==="Accords") return genAccords(diff,cat,sub);
     if(sub==="Types de phrases") return genTypes(diff,cat,sub);
     if(sub==="Accord du participe passé") return genAccordPP(diff,cat,sub);
-    if(sub==="Connecteurs logiques") return fromGood(pickByDiff(CONNECT,diff),"Choisis le bon connecteur logique",cat,sub);
+    if(sub==="Connecteurs logiques") return genConnecteurs(diff,cat,sub);
     if(sub==="Voix passive") return genVoixPassive(diff,cat,sub);
     return fromGood(pickByDiff(DET,diff),"Grammaire",cat,sub);
   }
