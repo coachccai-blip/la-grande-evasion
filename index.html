@@ -372,6 +372,43 @@
   }
   .hist-item.open .hist-explain{display:block;}
 
+  /* ============================== Badges ============================= */
+  .badges-head{margin-bottom:12px;}
+  .badges-count{font-size:15px; font-weight:800; color:var(--ink);}
+  .badges-sub{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  #badgesGrid{display:grid; grid-template-columns:1fr; gap:8px;}
+  @media(min-width:520px){ #badgesGrid{grid-template-columns:1fr 1fr;} }
+  .badge-card{
+    display:flex; gap:11px; align-items:center; background:var(--panel); border:1px solid var(--line);
+    border-radius:13px; padding:10px 12px; opacity:1;
+  }
+  .badge-card:not(.got){opacity:.72;}
+  .badge-card .bic{
+    font-size:30px; line-height:1; width:46px; height:46px; flex:0 0 auto; display:flex;
+    align-items:center; justify-content:center; border-radius:12px; background:var(--bg2);
+    filter:grayscale(1) opacity(.55);
+  }
+  .badge-card.got .bic{filter:none; background:rgba(242,193,78,.18);}
+  .badge-card .btx{flex:1; min-width:0;}
+  .badge-card .bt{font-size:14px; font-weight:800; color:var(--ink);}
+  .badge-card.got .bt{color:var(--accent2);}
+  .badge-card .bd{font-size:11.5px; color:var(--ink-soft); margin:1px 0 5px;}
+  .badge-card .bbar{height:6px; border-radius:6px; background:var(--line); overflow:hidden;}
+  .badge-card .bbar i{display:block; height:100%; background:var(--accent2); border-radius:6px;}
+  .badge-card.got .bbar i{background:var(--ok2);}
+  .badge-card .bp{font-size:10.5px; font-weight:700; color:var(--ink-soft); margin-top:3px;}
+  .badge-card.got .bp{color:var(--ok2);}
+  /* Toast de badge débloqué */
+  #badgeToast{
+    position:fixed; left:50%; bottom:78px; transform:translate(-50%,20px); z-index:120;
+    display:flex; align-items:center; gap:9px; max-width:88%;
+    background:var(--ink); color:#fff; padding:10px 15px; border-radius:30px;
+    font-size:13.5px; font-weight:700; box-shadow:0 8px 24px rgba(0,0,0,.28);
+    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+  }
+  #badgeToast.show{opacity:1; transform:translate(-50%,0);}
+  #badgeToast .tic{font-size:22px;}
+
   /* ============================= Nav du bas ========================== */
   nav{
     flex:0 0 auto; display:flex; border-top:1px solid var(--line);
@@ -513,6 +550,17 @@
       </div>
     </section>
 
+    <!-- ==================== Écran : Badges ======================== -->
+    <section id="badgesScreen" class="screen">
+      <div class="scroll">
+        <div class="badges-head">
+          <div id="badgesCount" class="badges-count">🏅 Badges débloqués : <b>0 / 0</b></div>
+          <div class="badges-sub">Relève tous les défis pour tous les débloquer !</div>
+        </div>
+        <div id="badgesGrid"></div>
+      </div>
+    </section>
+
     <!-- =================== Superposition : Question ================ -->
     <div id="questionOverlay" class="overlay">
       <div class="card">
@@ -630,7 +678,9 @@
   <nav>
     <button id="tabGame" class="active"><span class="ic">🎲</span>Jeu</button>
     <button id="tabHist"><span class="ic">📜</span>Historique</button>
+    <button id="tabBadges"><span class="ic">🏅</span>Badges</button>
   </nav>
+  <div id="badgeToast"></div>
 </div>
 
 <script src="questions.js"></script>
@@ -714,13 +764,18 @@ function zoneOf(s){ if(s<=0) return 0; return Math.min(4, Math.floor((s-1)/10));
 
 /* --------------------------- Sauvegarde ---------------------------- */
 var SAVE_KEY = "lge_save_v1";
-var store = {history:[], missions:{}, game:null, seen:{}, seenN:0, attempts:{}};
+var store = {history:[], missions:{}, game:null, seen:{}, seenN:0, attempts:{},
+  stats:{bestStreak:0, curStreak:0, duelWins:0, flawless:0, errViewed:0, errSigs:{}}, badges:{}};
 function loadSave(){
   try{
     var raw = localStorage.getItem(SAVE_KEY);
     if(raw){ var o = JSON.parse(raw);
       store.history = o.history||[]; store.missions = o.missions||{}; store.game = o.game||null;
-      store.seen = o.seen||{}; store.seenN = o.seenN||0; store.attempts = o.attempts||{}; }
+      store.seen = o.seen||{}; store.seenN = o.seenN||0; store.attempts = o.attempts||{};
+      store.stats = o.stats||store.stats; store.badges = o.badges||{};
+      // complète les champs de stats manquants (compat. anciennes sauvegardes)
+      var d={bestStreak:0,curStreak:0,duelWins:0,flawless:0,errViewed:0,errSigs:{}};
+      for(var k in d){ if(store.stats[k]===undefined) store.stats[k]=d[k]; } }
   }catch(e){ /* repli silencieux si localStorage indisponible (§12) */ }
 }
 function persist(){
@@ -860,7 +915,26 @@ var Sound=(function(){
     },
     diceStop:function(){ tone(880,0.10,"square",0.20); setTimeout(function(){ tone(1319,0.20,"square",0.22); },90); },
     duelStart:function(){ seqAt([[0,392,0.12,"square",0.18],[120,523,0.12,"square",0.18],[240,659,0.2,"square",0.2]]); },
-    tick:function(){ tone(760,0.04,"square",0.06); }
+    tick:function(){ tone(760,0.04,"square",0.06); },
+    // Badge débloqué : arpège brillant ascendant
+    badge:function(){ seqAt([[0,659,0.10,"square",0.2],[90,880,0.10,"square",0.2],[180,1047,0.12,"square",0.22],[300,1319,0.30,"square",0.24]]); },
+    // Moteur de voiture (grondement grave) quand la voiture des gardiens bouge
+    engine:function(){
+      ensure(); if(!actx||muted) return;
+      var o=actx.createOscillator(), g=actx.createGain(), lfo=actx.createOscillator(), lg=actx.createGain();
+      o.type="sawtooth"; o.frequency.setValueAtTime(70,T());
+      o.frequency.linearRampToValueAtTime(115,T()+0.28); o.frequency.linearRampToValueAtTime(88,T()+0.62);
+      lfo.type="square"; lfo.frequency.value=24; lg.gain.value=16; lfo.connect(lg); lg.connect(o.frequency);
+      g.gain.setValueAtTime(0.0001,T()); g.gain.exponentialRampToValueAtTime(0.16,T()+0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001,T()+0.66);
+      o.connect(g); g.connect(sfxGain); o.start(); lfo.start(); o.stop(T()+0.72); lfo.stop(T()+0.72);
+    },
+    // Sirène de police (deux tons alternés) à l'arrivée des gardiens
+    siren:function(){ seqAt([[0,740,0.18,"sawtooth",0.12],[190,560,0.18,"sawtooth",0.12],[380,740,0.18,"sawtooth",0.12],[570,560,0.22,"sawtooth",0.12]]); },
+    // Filet qui tombe : souffle descendant puis choc sourd
+    net:function(){ tone(900,0.22,"triangle",0.10,null,170); setTimeout(function(){ tone(150,0.2,"square",0.16,null,70); },200); },
+    // Double dé des gardiens
+    guardDice:function(){ tone(700,0.08,"square",0.16); setTimeout(function(){ tone(760,0.08,"square",0.16); },70); setTimeout(function(){ tone(1046,0.14,"square",0.18); },150); }
   };
 })();
 
@@ -959,20 +1033,27 @@ function buildDiffChoices(){
     }));
   });
 }
+/* Statut GLOBAL de l'animal, commun à tous les modes de jeu :
+   - libéré (✓) : le joueur a gagné au moins une aventure avec cet animal ;
+   - enfermé (🔒) : le joueur a joué (au moins tenté) mais jamais gagné. */
+function animalFreed(id){
+  return Object.keys(store.missions).some(function(k){ return k.split("|")[0]===id; });
+}
+function animalTried(id){
+  return Object.keys(store.attempts||{}).some(function(k){ return k.split("|")[0]===id; });
+}
 function buildSelect(){
   var grid=$("animalGrid"); grid.innerHTML="";
-  var ready = setup.cat && setup.sub && setup.diff;
   ANIMAUX.forEach(function(a){
-    var key=missionKey(a.id, setup.cat, setup.sub, setup.diff);
-    var freed = ready && store.missions[key];                         // libéré (gagné)
-    var jailed = ready && !freed && store.attempts && store.attempts[key]; // enfermé (joué, pas gagné)
+    var freed = animalFreed(a.id);                 // libéré (gagné au moins une fois, tous modes)
+    var jailed = !freed && animalTried(a.id);      // enfermé (déjà tenté, jamais gagné)
     var card=document.createElement("div");
     card.className="animal-card"+(freed?" done":"")+(jailed?" jailed":"")+(selectedAnimal===a.id?" selected":"");
     card.appendChild(animalEl(a.id));
     var nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.name; card.appendChild(nm);
     var m=document.createElement("div"); m.className="mission";
     m.textContent = freed ? "✓" : (jailed ? "🔒" : "");
-    m.title = freed ? "Libéré ici ✓" : (jailed ? "Enfermé — gagne pour le libérer" : "");
+    m.title = freed ? "Libéré ✓" : (jailed ? "Enfermé — gagne une aventure pour le libérer" : "");
     card.appendChild(m);
     card.onclick=function(){ Sound.click(); selectAnimal(a.id); };
     grid.appendChild(card);
@@ -981,11 +1062,10 @@ function buildSelect(){
 function selectAnimal(id){
   selectedAnimal=id; buildSelect();
   var a=animalById(id);
-  var key=missionKey(id, setup.cat, setup.sub, setup.diff);
-  var done = store.missions[key];
-  var jailed = !done && store.attempts && store.attempts[key];
+  var freed = animalFreed(id);
+  var jailed = !freed && animalTried(id);
   $("traitBox").innerHTML = "<b>"+a.name+"</b> — "+a.trait +
-    (done ? " <span style='color:var(--ok2)'>(déjà libéré ici ✓)</span>"
+    (freed ? " <span style='color:var(--ok2)'>(libéré ✓)</span>"
           : (jailed ? " <span style='color:var(--ink-soft)'>(enfermé 🔒 — gagne pour le libérer)</span>" : ""));
   refreshLocks();
 }
@@ -1472,6 +1552,8 @@ function askQuestion(opts){
                        : (correct ? "Bravo, c'est juste !" : "Raté ! La bonne réponse : "+q.options[q.answer]);
       note.className="qnote "+(correct?"good":"bad");
       if(correct) Sound.good(); else Sound.bad();
+      // suivi des séries de bonnes réponses + fautes de l'aventure (badges)
+      noteAnswer(correct, !!opts.record);
       // historique (RG12)
       if(opts.record){
         store.history.unshift({
@@ -1521,7 +1603,7 @@ function startGame(animalId){
     animalId:animalId, setup:sp, botSuccess:sp.botSuccess,
     players:[{animalId:animalId, pos:0, skip:false, bot:false}]
       .concat(bots.map(function(b){ return {animalId:b, pos:0, skip:false, bot:true}; })),
-    turnStartPos:0, over:false
+    turnStartPos:0, over:false, mistakes:0, turn:0, guards:null
   };
   // NB : la mémoire anti-répétition (store.seen) est volontairement CONSERVÉE
   // d'une partie à l'autre, pour éviter que les mêmes questions ne reviennent.
@@ -1664,6 +1746,7 @@ function runDuel(botIndex){
           b.classList.add(correct?"correct":"wrong");
           if(correct){ youScore++; $("vsYouScore").textContent=youScore; bump($("vsYouScore")); Sound.good(); }
           else Sound.bad();
+          noteAnswer(correct, false);   // série de bonnes réponses (badges)
           store.history.unshift({result:correct,cat:q.cat,sub:q.sub,hint:q.hint,phrase:q.phrase,options:q.options.slice(),answer:q.answer,chosen:oi,explain:q.explain||"",tense:q.tense||""});
           setTimeout(nextQ, correct?240:480);
         };
@@ -1687,7 +1770,8 @@ function runDuel(botIndex){
       var btns=$("vsOpts").querySelectorAll(".opt"); for(var i=0;i<btns.length;i++){ btns[i].setAttribute("disabled",""); }
       persist();
       var r=$("vsResult");
-      if(youScore>foeScore){ r.textContent="🏆 Tu gagnes le duel !"; r.className="vs-result win"; Sound.win(); }
+      if(youScore>foeScore){ r.textContent="🏆 Tu gagnes le duel !"; r.className="vs-result win"; Sound.win();
+        store.stats.duelWins=(store.stats.duelWins||0)+1; persist(); refreshBadges(); }
       else if(foeScore>youScore){ r.textContent="Défaite… "+foeA.name+" l'emporte"; r.className="vs-result lose"; Sound.lose(); }
       else { r.textContent="Égalité !"; r.className="vs-result tie"; }
       setTimeout(function(){ ds.classList.remove("show"); resolve({you:youScore, foe:foeScore}); }, 2000);
@@ -1965,9 +2049,11 @@ function finishGame(playerWon, winnerIndex){
   store.attempts=store.attempts||{}; store.attempts[myKey]=true;
   if(playerWon){
     store.missions[missionKey(a.id, G.setup.cat, G.setup.sub, G.setup.diffKey)]=true;   // RG14
+    if(!G.mistakes) store.stats.flawless=(store.stats.flawless||0)+1;   // aventure sans faute
+    if(G.guards && G.guards.active) store.stats.guardEscapes=(store.stats.guardEscapes||0)+1; // battu les gardiens
     Sound.win();
   } else { Sound.lose(); }
-  saveGameState(); persist();
+  saveGameState(); persist(); refreshBadges();
   // écran de fin
   $("endArt").textContent = EMOJI[a.id]||"🎉";
   var title=$("endTitle");
@@ -2045,7 +2131,16 @@ function renderHistory(){
       it.onclick=function(){
         var open=it.classList.toggle("open");
         toggle.textContent = open ? "🔽 Masquer l'explication" : "💡 Voir l'explication";
-        if(open) Sound.click();
+        if(open){
+          Sound.click();
+          // badge « consulter ses erreurs » : compte les erreurs distinctes consultées
+          if(h.result===false){
+            store.stats.errSigs=store.stats.errSigs||{};
+            var sig=(h.phrase||"")+"§"+(h.options?h.options[h.answer]:"");
+            if(!store.stats.errSigs[sig]){ store.stats.errSigs[sig]=1;
+              store.stats.errViewed=Object.keys(store.stats.errSigs).length; persist(); refreshBadges(); }
+          }
+        }
       };
     }
     it.appendChild(res); it.appendChild(main); list.appendChild(it);
@@ -2062,14 +2157,90 @@ function escapeHtml(s){ return String(s).replace(/[&<>"]/g,function(c){return {"
 /*                        NAVIGATION / ONGLETS                          */
 /* ==================================================================== */
 function showScreen(name){
-  ["selectScreen","gameScreen","histScreen"].forEach(function(id){ $(id).classList.remove("active"); });
+  ["selectScreen","gameScreen","histScreen","badgesScreen"].forEach(function(id){ var e=$(id); if(e) e.classList.remove("active"); });
   if(name==="select") $("selectScreen").classList.add("active");
   else if(name==="game") $("gameScreen").classList.add("active");
   else if(name==="hist") $("histScreen").classList.add("active");
+  else if(name==="badges") $("badgesScreen").classList.add("active");
 }
 function setTab(which){
   $("tabGame").classList.toggle("active", which==="game");
   $("tabHist").classList.toggle("active", which==="hist");
+  if($("tabBadges")) $("tabBadges").classList.toggle("active", which==="badges");
+}
+
+/* ============================== BADGES ============================= */
+/* Suivi d'une réponse : met à jour la série de bonnes réponses (badges
+   « … d'affilée ») et compte les fautes de l'aventure en cours (badge
+   « sans faute »). Appelé pour chaque question jouée. */
+function noteAnswer(correct, inGame){
+  var s=store.stats;
+  if(correct){ s.curStreak=(s.curStreak||0)+1; if(s.curStreak>(s.bestStreak||0)) s.bestStreak=s.curStreak; }
+  else { s.curStreak=0; if(inGame && G && !G.over) G.mistakes=(G.mistakes||0)+1; }
+  persist(); refreshBadges();
+}
+function countFreed(){
+  var f={}; Object.keys(store.missions).forEach(function(k){ f[k.split("|")[0]]=1; });
+  return Object.keys(f).length;
+}
+function badgeDefs(){
+  var s=store.stats||{}, nFreed=countFreed(), adv=Object.keys(store.missions).length;
+  return [
+    {id:"first_free", ic:"🔓", t:"Première évasion",        d:"Libérer un animal",                       v:nFreed,           g:1},
+    {id:"all_free",   ic:"🏅", t:"Grande libération",        d:"Libérer les 10 animaux au moins une fois", v:nFreed,           g:10},
+    {id:"zoo_empty",  ic:"🌈", t:"Zoo au grand complet",     d:"Avoir les 10 animaux libres en même temps",v:nFreed,           g:10},
+    {id:"flawless",   ic:"💯", t:"Sans faute",               d:"Finir une aventure sans aucune erreur",   v:s.flawless||0,    g:1},
+    {id:"streak5",    ic:"🔥", t:"En feu",                   d:"5 bonnes réponses d'affilée",             v:s.bestStreak||0,  g:5},
+    {id:"streak20",   ic:"🔥", t:"Série impressionnante",    d:"20 bonnes réponses d'affilée",            v:s.bestStreak||0,  g:20},
+    {id:"streak100",  ic:"⚡", t:"Centurion",                d:"100 bonnes réponses d'affilée",           v:s.bestStreak||0,  g:100},
+    {id:"streak250",  ic:"⚡", t:"Machine à réponses",       d:"250 bonnes réponses d'affilée",           v:s.bestStreak||0,  g:250},
+    {id:"streak500",  ic:"🌟", t:"Légende vivante",          d:"500 bonnes réponses d'affilée",           v:s.bestStreak||0,  g:500},
+    {id:"errors5",    ic:"🔍", t:"Réviser ses erreurs",      d:"Consulter 5 erreurs commises",            v:s.errViewed||0,   g:5},
+    {id:"duel1",      ic:"⚔️", t:"Premier duel gagné",       d:"Gagner 1 duel",                           v:s.duelWins||0,    g:1},
+    {id:"duel10",     ic:"⚔️", t:"Duelliste",               d:"Gagner 10 duels",                         v:s.duelWins||0,    g:10},
+    {id:"duel50",     ic:"🏆", t:"Maître du duel",           d:"Gagner 50 duels",                         v:s.duelWins||0,    g:50},
+    {id:"duel100",    ic:"👑", t:"Champion incontesté",      d:"Gagner 100 duels",                        v:s.duelWins||0,    g:100},
+    {id:"adv10",      ic:"🎯", t:"Grand aventurier",         d:"Réussir 10 aventures",                    v:adv,              g:10},
+    {id:"escape_guards",ic:"🚓",t:"Plus rapide que les gardiens", d:"Gagner une partie malgré les gardiens", v:s.guardEscapes||0, g:1}
+  ];
+}
+/* Évalue les badges : débloque les nouveaux (toast), sauvegarde, et rafraîchit
+   l'écran s'il est visible. */
+function refreshBadges(){
+  store.badges=store.badges||{};
+  var defs=badgeDefs(), changed=false;
+  defs.forEach(function(b){
+    if(b.v>=b.g && !store.badges[b.id]){ store.badges[b.id]=Date.now(); changed=true; showBadgeToast(b); }
+  });
+  if(changed) persist();
+  if($("badgesScreen") && $("badgesScreen").classList.contains("active")) renderBadges();
+}
+function renderBadges(){
+  var defs=badgeDefs();
+  var earned=defs.filter(function(b){return store.badges[b.id];}).length;
+  $("badgesCount").innerHTML="🏅 Badges débloqués : <b>"+earned+" / "+defs.length+"</b>";
+  var grid=$("badgesGrid"); grid.innerHTML="";
+  defs.forEach(function(b){
+    var got=!!store.badges[b.id];
+    var el=document.createElement("div"); el.className="badge-card"+(got?" got":"");
+    var pct=Math.max(0, Math.min(100, Math.round(b.v/b.g*100)));
+    var prog=got ? "Débloqué ✓" : (b.g>1 ? Math.min(b.v,b.g)+" / "+b.g : "À débloquer");
+    el.innerHTML =
+      "<div class='bic'>"+b.ic+"</div>"+
+      "<div class='btx'><div class='bt'>"+b.t+"</div><div class='bd'>"+b.d+"</div>"+
+      "<div class='bbar'><i style='width:"+pct+"%'></i></div>"+
+      "<div class='bp'>"+prog+"</div></div>";
+    grid.appendChild(el);
+  });
+}
+var _toastT=null;
+function showBadgeToast(b){
+  var t=$("badgeToast"); if(!t) return;
+  t.innerHTML="<span class='tic'>"+b.ic+"</span><span>Badge débloqué : <b>"+b.t+"</b></span>";
+  t.classList.add("show");
+  try{ Sound.badge(); }catch(e){}
+  if(_toastT) clearTimeout(_toastT);
+  _toastT=setTimeout(function(){ t.classList.remove("show"); }, 2600);
 }
 
 /* ------------------------------ SON -------------------------------- */
@@ -2099,6 +2270,8 @@ function init(){
   Sound.setMuted(!!store.muted); updateSoundBtn();
   initBoard();
   buildSetup();
+  store.badges=store.badges||{};   // débloque silencieusement les badges déjà acquis (compat.)
+  badgeDefs().forEach(function(b){ if(b.v>=b.g) store.badges[b.id]=store.badges[b.id]||Date.now(); });
 
   $("soundBtn").onclick=toggleSound;
   $("abandonBtn").onclick=abandonGame;
@@ -2118,6 +2291,7 @@ function init(){
     if(G){ showScreen("game"); drawBoard(); } else showScreen("select");
   };
   $("tabHist").onclick=function(){ Sound.click(); setTab("hist"); showScreen("hist"); renderHistory(); };
+  $("tabBadges").onclick=function(){ Sound.click(); setTab("badges"); showScreen("badges"); renderBadges(); };
 
   $("clearHist").onclick=function(){
     Sound.click();
