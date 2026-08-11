@@ -1444,9 +1444,64 @@
       options:build(it.p, bad), answer:0 };
   }
 
+  /* --- Adverbes en -ment : générateur PARTITIONNÉ par difficulté --- */
+  var ADV_WORDS=[
+    // d1 : féminin + -ment (+ cas courants)
+    {a:"lent",v:"lentement",d:1},{a:"rapide",v:"rapidement",d:1},{a:"doux",v:"doucement",d:1},
+    {a:"poli",v:"poliment",d:1,bad:["poliement","polîment","polimment"]},{a:"joli",v:"joliment",d:1,bad:["joliement","joliment","jolimment"]},
+    {a:"calme",v:"calmement",d:1},{a:"triste",v:"tristement",d:1},{a:"grand",v:"grandement",d:1},
+    {a:"fort",v:"fortement",d:1},{a:"gentil",v:"gentiment",d:1,bad:["gentillement","gentimment","gentiement"]},
+    {a:"sage",v:"sagement",d:1},{a:"timide",v:"timidement",d:1},{a:"vrai",v:"vraiment",d:1,bad:["vraiement","vraîment","vraimment"]},
+    // d2
+    {a:"heureux",v:"heureusement",d:2},{a:"franc",v:"franchement",d:2},{a:"sérieux",v:"sérieusement",d:2},
+    {a:"courageux",v:"courageusement",d:2},{a:"joyeux",v:"joyeusement",d:2},{a:"léger",v:"légèrement",d:2},
+    {a:"complet",v:"complètement",d:2},{a:"premier",v:"premièrement",d:2},{a:"dernier",v:"dernièrement",d:2},
+    {a:"entier",v:"entièrement",d:2},{a:"régulier",v:"régulièrement",d:2},{a:"naturel",v:"naturellement",d:2},{a:"réel",v:"réellement",d:2},
+    // d3
+    {a:"précis",v:"précisément",d:3},{a:"énorme",v:"énormément",d:3},{a:"profond",v:"profondément",d:3},
+    {a:"commun",v:"communément",d:3},{a:"immense",v:"immensément",d:3},{a:"aveugle",v:"aveuglément",d:3},
+    {a:"obscur",v:"obscurément",d:3},{a:"vif",v:"vivement",d:3,bad:["vifment","vivment","viveument"]},{a:"long",v:"longuement",d:3,bad:["longment","longuemment","longeument"]},
+    {a:"bref",v:"brièvement",d:3,bad:["brefment","brièfement","brievemment"]},{a:"gai",v:"gaiement",d:3,bad:["gaiment","gaîement","gaiemment"]},{a:"mou",v:"mollement",d:3,bad:["moument","molement","moument"]},{a:"fou",v:"follement",d:3,bad:["fouement","folement","foulement"]},
+    // d4 : -ant → -amment, -ent → -emment
+    {a:"prudent",v:"prudemment",d:4},{a:"courant",v:"couramment",d:4},{a:"évident",v:"évidemment",d:4},
+    {a:"suffisant",v:"suffisamment",d:4},{a:"patient",v:"patiemment",d:4},{a:"violent",v:"violemment",d:4},
+    {a:"fréquent",v:"fréquemment",d:4},{a:"apparent",v:"apparemment",d:4},{a:"constant",v:"constamment",d:4},
+    {a:"savant",v:"savamment",d:4},{a:"méchant",v:"méchamment",d:4},{a:"brillant",v:"brillamment",d:4},{a:"élégant",v:"élégamment",d:4},
+    // d5 : -u → -ûment (exceptions) + soutenu
+    {a:"absolu",v:"absolument",d:5,bad:["absoluement","absolumment","absolûment"]},{a:"résolu",v:"résolument",d:5,bad:["résoluement","résolumment","résolûment"]},
+    {a:"assidu",v:"assidûment",d:5,bad:["assidument","assiduement","assidumment"]},{a:"goulu",v:"goulûment",d:5,bad:["goulument","gouluement","goulumment"]},
+    {a:"continu",v:"continûment",d:5,bad:["continument","continuement","continumment"]},{a:"cru",v:"crûment",d:5,bad:["crument","cruement","crumment"]},
+    {a:"éperdu",v:"éperdument",d:5,bad:["éperduement","éperdûment","éperdumment"]},{a:"ingénu",v:"ingénument",d:5,bad:["ingénuement","ingénûment","ingénumment"]},
+    {a:"hardi",v:"hardiment",d:5,bad:["hardiement","hardîment","hardimment"]},{a:"aisé",v:"aisément",d:5},{a:"spontané",v:"spontanément",d:5},
+    {a:"sincère",v:"sincèrement",d:5},{a:"énergique",v:"énergiquement",d:5},
+    // d6 : -ent → -emment (soutenu)
+    {a:"décent",v:"décemment",d:6},{a:"récent",v:"récemment",d:6},{a:"négligent",v:"négligemment",d:6},
+    {a:"diligent",v:"diligemment",d:6},{a:"éloquent",v:"éloquemment",d:6},{a:"conscient",v:"consciemment",d:6},
+    {a:"innocent",v:"innocemment",d:6},{a:"excellent",v:"excellemment",d:6},{a:"pertinent",v:"pertinemment",d:6},
+    {a:"différent",v:"différemment",d:6},{a:"insolent",v:"insolemment",d:6},{a:"ardent",v:"ardemment",d:6},{a:"impertinent",v:"impertinemment",d:6}
+  ];
+  var ADV_FRAMES=["« {A} » → il agit ___.","L'adverbe formé sur « {A} » est ___.","« {A} » donne l'adverbe ___.","Il le fait ___ (adjectif : {A})."];
+  function advBad(a, v){
+    var c=[a+"ment", a+"ement", v.replace(/emment$/,"ament"), v.replace(/amment$/,"emment"),
+      v.replace(/ément$/,"ement"), v.replace(/ment$/,"mment"), v.replace(/é/g,"e")];
+    var out=[], seen={}; seen[norm(v)]=1; shuffle(c);
+    for(var i=0;i<c.length && out.length<3;i++){ if(c[i] && norm(c[i])!==norm(v) && !seen[norm(c[i])]){ seen[norm(c[i])]=1; out.push(c[i]); } }
+    var extra=[a+"emment", a+"amment", v+"e"];
+    for(var j=0;j<extra.length && out.length<3;j++){ if(!seen[norm(extra[j])]){ seen[norm(extra[j])]=1; out.push(extra[j]); } }
+    return out;
+  }
+  function genAdverbes(diff,cat,sub){
+    var it=pick(bandFilter(ADV_WORDS,diff,"d"));
+    var bad=it.bad?it.bad.slice():advBad(it.a,it.v);
+    return { cat:cat, sub:sub, phrase:pick(ADV_FRAMES).replace("{A}",it.a), hint:"Forme l'adverbe en -ment",
+      note:"Adverbe en -ment : adjectif au féminin + -ment (lente→lentement). En -ant → -amment, en -ent → -emment, terminé par une voyelle → + -ment (vrai→vraiment).",
+      options:build(it.v, bad), answer:0 };
+  }
+
   function genOrt(sub, diff, cat){
     var it, hint;
     if(sub==="Pluriels") return genPluriels(diff,cat,sub);
+    if(sub==="Adverbes en -ment") return genAdverbes(diff,cat,sub);
     if(sub==="Homophones"){ it=pickByDiff(HOMOPH,diff); hint="Homophones ("+it.note+")"; }
     else if(sub==="é ou er"){ it=pickByDiff(ER_E,diff); hint="é (participe) ou er (infinitif) ?"; }
     else if(sub==="Accents"){ it=pickByDiff(ACCENTS,diff); hint="Orthographe : "+it.note; }
