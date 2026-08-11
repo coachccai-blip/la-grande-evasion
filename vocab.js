@@ -254,8 +254,11 @@
     // barre de progression de session
     var pb=el("div","vk-sessbar"); pb.innerHTML="<i style='width:"+Math.round(SESS.idx/SESS.queue.length*100)+"%'></i>";
     wrap.appendChild(pb);
-    var meta=el("div","vk-sessmeta", (SESS.idx+1)+" / "+SESS.queue.length+(cur.isNew?"　🆕 新词":"　🔁 复习"));
-    wrap.appendChild(meta);
+    var top=el("div","vk-sesstop");
+    top.appendChild(el("div","vk-sessmeta", (SESS.idx+1)+" / "+SESS.queue.length+(cur.isNew?"　🆕 新词":"　🔁 复习")));
+    var skip=el("button","vk-skip","跳过 ⏭️"); skip.title="跳过这个单词"; skip.onclick=function(){ nextCard(); };
+    top.appendChild(skip);
+    wrap.appendChild(top);
     if(cur.isNew && SESS.phase==="discover"){ wrap.appendChild(discoverCard(cur.word)); }
     else {
       var mode=cur.isNew?"image":MODE[Math.max(1,prog(cur.word.id)?prog(cur.word.id).stage:1)];
@@ -278,7 +281,7 @@
   function fiche(wd, opts){
     opts=opts||{};
     var c=el("div","vk-fiche");
-    var posline=wd.pos_zh + (wd.gender?("　"+(wd.gender==="m"?"阳性名词":"阴性名词")):"");
+    var posline=wd.pos_zh; // 已含 阳性名词/阴性名词（名词）或 动词/形容词… 无需重复
     var head=el("div","vk-fhead");
     head.innerHTML="<div class='vk-emoji'>"+(wd.emoji||"🔤")+"</div>"+
       "<div class='vk-fword'><div class='vk-word'>"+esc(displayWord(wd))+"</div>"+
@@ -420,7 +423,7 @@
 
   /* ---------------------- Feuilles modales ------------------------------- */
   function sheet(title, buildBody){
-    var ov=$("vkSheet"); if(!ov){ ov=el("div"); ov.id="vkSheet"; ov.className="vk-sheetov"; document.body.appendChild(ov); }
+    var ov=$("vkSheet"); if(!ov){ ov=el("div"); ov.id="vkSheet"; ov.className="vk-sheetov"; ($("app")||document.body).appendChild(ov); }
     ov.innerHTML=""; var card=el("div","vk-sheet");
     var h=el("div","vk-sheeth"); h.appendChild(el("div","vk-sheettitle",title));
     var x=el("button","vk-sheetx","✕"); x.onclick=function(){ ov.classList.remove("show"); }; h.appendChild(x);
@@ -562,8 +565,6 @@
         row.appendChild(add);
       }
       card.appendChild(row);
-      card.appendChild(el("div","vk-play2",""));
-      var play=el("button","vk-play","🔊 读单词"); play.onclick=function(){ speak(withDef(wd)); }; card.appendChild(play);
     });
   }
 
