@@ -1905,35 +1905,88 @@
   /* ======================================================================= */
   /*                            ORTHOGRAPHE                                   */
   /* ======================================================================= */
-  var HOMOPH = [
-    {d:2,ph:"Elle ___ partie à l'école.",good:"est",bad:["et","es","ait"],note:"est / et"},
-    {d:2,ph:"Paul ___ Marie sont amis.",good:"et",bad:["est","ait","ai"],note:"et / est"},
-    {d:2,ph:"Il joue ___ la balle.",good:"à",bad:["a","as","ah"],note:"à / a"},
-    {d:2,ph:"Il ___ mangé une pomme.",good:"a",bad:["à","as","ah"],note:"a / à"},
-    {d:3,ph:"Les oiseaux ___ dans le ciel.",good:"sont",bad:["son","s'ont","sonts"],note:"sont / son"},
-    {d:3,ph:"Il a mis ___ manteau.",good:"son",bad:["sont","sons","s'on"],note:"son / sont"},
-    {d:2,ph:"Tu ___ mon meilleur ami.",good:"es",bad:["est","et","ai"],note:"es / est"},
-    {d:4,ph:"Je ne sais pas ___ il est.",good:"où",bad:["ou","houx","oux"],note:"où / ou"},
-    {d:4,ph:"Tu veux du thé ___ du café ?",good:"ou",bad:["où","houx","oût"],note:"ou / où"},
-    {d:3,ph:"___ sont mes clés.",good:"Ce",bad:["Se","Ceux","Ces"],note:"ce / se"},
-    {d:3,ph:"Il ___ lave les mains.",good:"se",bad:["ce","ceux","ces"],note:"se / ce"},
-    {d:4,ph:"C'est ___ livre préféré.",good:"mon",bad:["mont","m'ont","mons"],note:"mon / m'ont"},
-    {d:5,ph:"Ils ___ fini leurs devoirs.",good:"ont",bad:["on","onts","hont"],note:"ont / on"},
-    {d:5,ph:"___ part en vacances demain.",good:"On",bad:["Ont","Ons","Hont"],note:"on / ont"},
-    {d:4,ph:"Je mets ___ chaussures.",good:"mes",bad:["mais","met","mets"],note:"mes / mais"},
-    {d:5,ph:"Il pleure ___ il est tombé.",good:"car",bad:["quart","carre","quarts"],note:"car"},
-    {d:4,ph:"La poule pond dans ___ nid.",good:"son",bad:["sont","sons","s'ont"],note:"son / sont"},
-    {d:3,ph:"Le chat ___ caché sous le lit.",good:"est",bad:["et","es","ait"],note:"est / et"},
-    {d:4,ph:"Des bonbons ? Il ___ a beaucoup.",good:"en",bad:["an","ent","end"],note:"en / an"},
-    {d:5,ph:"Range tes jouets ___ de partir.",good:"avant",bad:["avent","avan","avans"],note:"avant / avent"},
-    {d:4,ph:"Je ne sais pas ___ elle habite.",good:"où",bad:["ou","houx","oût"],note:"où / ou"},
-    {d:3,ph:"___ chien aboie toute la nuit.",good:"Ce",bad:["Se","Ces","Ceux"],note:"ce / se"},
-    {d:5,ph:"Elles ___ promènent au parc.",good:"se",bad:["ce","ses","c'est"],note:"se / ce"},
-    {d:4,ph:"C'___ une très belle histoire.",good:"est",bad:["es","ait","et"],note:"c'est"},
-    {d:5,ph:"Il range ___ jouets dans la boîte.",good:"ses",bad:["ces","c'est","s'est"],note:"ses / ces"},
-    {d:5,ph:"Le chat ___ blessé en tombant.",good:"s'est",bad:["c'est","ses","ces"],note:"s'est / c'est"},
-    {d:3,ph:"Tu joues ___ moi aujourd'hui.",good:"avec",bad:["avek","avéc","avecque"],note:"avec"}
+  /* --- Homophones : générateur PARTITIONNÉ --- */
+  var HOMOPH_ITEMS = [
+    {ph:"Il ___ mangé une pomme rouge.",good:"a",bad:["à","as","ah"],note:"« a » (verbe avoir) ≠ « à » (préposition).",d:1},
+    {ph:"Il joue ___ la balle dans la cour.",good:"à",bad:["a","as","ah"],note:"« à » (préposition) ≠ « a » (verbe avoir).",d:1},
+    {ph:"Paul ___ Marie sont de grands amis.",good:"et",bad:["est","es","ait"],note:"« et » (= et puis) ≠ « est » (verbe être).",d:1},
+    {ph:"Elle ___ partie très tôt ce matin.",good:"est",bad:["et","es","ait"],note:"« est » (verbe être) ≠ « et » (= et puis).",d:1},
+    {ph:"Tu ___ mon meilleur ami.",good:"es",bad:["est","et","ai"],note:"« es » (tu es) ≠ « est » (il est).",d:1},
+    {ph:"Il met ___ manteau bleu.",good:"son",bad:["sont","sons","s'on"],note:"« son » (le sien) ≠ « sont » (verbe être).",d:1},
+    {ph:"Les oiseaux ___ dans le ciel.",good:"sont",bad:["son","s'ont","sonts"],note:"« sont » (verbe être) ≠ « son » (le sien).",d:1},
+    {ph:"Tu veux du thé ___ du café ?",good:"ou",bad:["où","houx","oût"],note:"« ou » (= ou bien) ≠ « où » (le lieu).",d:1},
+    {ph:"Je ne sais pas ___ il habite.",good:"où",bad:["ou","houx","oux"],note:"« où » (le lieu) ≠ « ou » (= ou bien).",d:1},
+    {ph:"___ part en vacances demain matin.",good:"On",bad:["Ont","Ons","Hont"],note:"« on » (pronom) ≠ « ont » (verbe avoir).",d:1},
+    {ph:"Ils ___ fini tous leurs devoirs.",good:"ont",bad:["on","onts","hont"],note:"« ont » (verbe avoir) ≠ « on » (pronom).",d:1},
+    {ph:"C'est ___ livre préféré à moi.",good:"mon",bad:["mont","m'ont","mons"],note:"« mon » (le mien) ≠ « m'ont » (m' + ont).",d:1},
+    {ph:"Je mets ___ chaussures neuves.",good:"mes",bad:["mais","met","mets"],note:"« mes » (les miens) ≠ « mais » (opposition).",d:1},
+    {ph:"___ chien aboie toute la nuit.",good:"Ce",bad:["Se","Ces","Ceux"],note:"« ce » (déterminant) ≠ « se » (pronom).",d:2},
+    {ph:"Il ___ lave les mains avant de manger.",good:"se",bad:["ce","ceux","ces"],note:"« se » (pronom) ≠ « ce » (déterminant).",d:2},
+    {ph:"Range ___ jouets qui sont à toi.",good:"ses",bad:["ces","c'est","s'est"],note:"« ses » (les siens) ≠ « ces » (ceux-là).",d:2},
+    {ph:"Regarde ___ montagnes tout au loin.",good:"ces",bad:["ses","c'est","s'est"],note:"« ces » (ceux-là) ≠ « ses » (les siens).",d:2},
+    {ph:"___ une très belle histoire.",good:"C'est",bad:["S'est","Ces","Ses"],note:"« c'est » (cela est) ≠ « s'est » (se + est).",d:2},
+    {ph:"Le chat ___ blessé en tombant.",good:"s'est",bad:["c'est","ses","ces"],note:"« s'est » (se + est) ≠ « c'est » (cela est).",d:2},
+    {ph:"Des bonbons ? Il ___ a beaucoup.",good:"en",bad:["an","ent","end"],note:"« en » (pronom) ≠ « an » (l'année).",d:2},
+    {ph:"Ma sœur a huit ___ aujourd'hui.",good:"ans",bad:["an","han","and"],note:"« ans » (les années) ≠ « en » (pronom).",d:2},
+    {ph:"Pose le livre ___, sur la table.",good:"là",bad:["la","l'a","las"],note:"« là » (le lieu) ≠ « la » (article).",d:2},
+    {ph:"Sa maman ___ accompagné à l'école.",good:"l'a",bad:["la","là","las"],note:"« l'a » (l' + a) ≠ « la » (article).",d:2},
+    {ph:"___ girafe mange les feuilles hautes.",good:"La",bad:["Là","L'a","Las"],note:"« la » (article) ≠ « là » (le lieu).",d:2},
+    {ph:"___ ne me plaît pas du tout.",good:"Ça",bad:["Sa","Çà","Ca"],note:"« ça » (cela) ≠ « sa » (le sien).",d:2},
+    {ph:"Il range ___ trousse dans le cartable.",good:"sa",bad:["ça","çà","saa"],note:"« sa » (la sienne) ≠ « ça » (cela).",d:2},
+    {ph:"Il pleure ___ il est tombé (parce que).",good:"car",bad:["quart","carre","quarts"],note:"« car » (= parce que).",d:3},
+    {ph:"Range tes jouets ___ de partir.",good:"avant",bad:["avent","avan","avans"],note:"« avant » (le temps) ≠ « avent » (période de Noël).",d:3},
+    {ph:"Le chat dort ___ le panier.",good:"dans",bad:["d'en","dent","dend"],note:"« dans » (à l'intérieur) ≠ « d'en » (de + en).",d:3},
+    {ph:"Il vient ___ parler à l'instant (de + en).",good:"d'en",bad:["dans","dent","dand"],note:"« d'en » (de + en) ≠ « dans » (à l'intérieur).",d:3},
+    {ph:"Elle ___ offert un joli cadeau (m' + a).",good:"m'a",bad:["ma","mât","mas"],note:"« m'a » (m' + a) ≠ « ma » (la mienne).",d:3},
+    {ph:"Voici ___ nouvelle bicyclette.",good:"ma",bad:["m'a","mât","mas"],note:"« ma » (la mienne) ≠ « m'a » (m' + a).",d:3},
+    {ph:"Qui ___ raconté cette histoire (t' + a) ?",good:"t'a",bad:["ta","tas","tât"],note:"« t'a » (t' + a) ≠ « ta » (la tienne).",d:3},
+    {ph:"Prends ___ veste, il fait froid dehors.",good:"ta",bad:["t'a","tas","tât"],note:"« ta » (la tienne) ≠ « t'a » (t' + a).",d:3},
+    {ph:"Il fait beau, on ___ promène volontiers (s' + y).",good:"s'y",bad:["si","scie","ci"],note:"« s'y » (se + y) ≠ « si » (condition).",d:3},
+    {ph:"___ tu viens, préviens-moi à l'avance.",good:"Si",bad:["S'y","Scie","Ci"],note:"« si » (condition) ≠ « s'y » (se + y).",d:3},
+    {ph:"Il a mangé ___ le gâteau à lui seul.",good:"tout",bad:["tous","toux","toue"],note:"« tout » (en entier) ≠ « tous » (pluriel).",d:3},
+    {ph:"Il part ___ manteau sous la pluie.",good:"sans",bad:["cent","s'en","sang"],note:"« sans » (privation) ≠ « cent » (100) ≠ « s'en ».",d:3},
+    {ph:"Il ___ va sans dire au revoir (s' + en).",good:"s'en",bad:["sans","sang","cent"],note:"« s'en » (se + en) ≠ « sans » (privation).",d:3},
+    {ph:"J'entends une ___ au loin (le son d'une personne).",good:"voix",bad:["voie","vois","voit"],note:"« voix » (le son) ≠ « voie » (le chemin).",d:4},
+    {ph:"Le train arrive sur la ___ numéro deux (le chemin).",good:"voie",bad:["voix","vois","voit"],note:"« voie » (le chemin) ≠ « voix » (le son).",d:4},
+    {ph:"Je ___ un oiseau sur la branche (verbe voir).",good:"vois",bad:["voix","voie","voit"],note:"« vois » (je vois) ≠ « voix » (le son).",d:4},
+    {ph:"Il y a ___ de monde ici (une telle quantité) !",good:"tant",bad:["temps","tend","taon"],note:"« tant » (quantité) ≠ « temps » (durée) ≠ « taon » (insecte).",d:4},
+    {ph:"Je préfère le thé ___ que le café (de préférence).",good:"plutôt",bad:["plus tôt","plutot","plustôt"],note:"« plutôt » (de préférence) ≠ « plus tôt » (avant).",d:4},
+    {ph:"Il est arrivé ___ que prévu (avant l'heure).",good:"plus tôt",bad:["plutôt","plustôt","plus tot"],note:"« plus tôt » (avant) ≠ « plutôt » (de préférence).",d:4},
+    {ph:"Je voudrais ___ de dessert, s'il vous plaît (plus, encore).",good:"davantage",bad:["d'avantage","daventage","d'avantages"],note:"« davantage » (plus) ≠ « d'avantage » (de + avantage).",d:4},
+    {ph:"Le vieil homme marche avec une ___ (un bâton).",good:"canne",bad:["cane","cannes","kane"],note:"« canne » (bâton) ≠ « cane » (femelle du canard).",d:4},
+    {ph:"La ___ nage avec ses canetons (femelle du canard).",good:"cane",bad:["canne","cannes","kane"],note:"« cane » (femelle du canard) ≠ « canne » (bâton).",d:4},
+    {ph:"Il faut ___ la table avant le repas (poser, placer).",good:"mettre",bad:["mètre","maître","métré"],note:"« mettre » (poser) ≠ « mètre » (mesure) ≠ « maître ».",d:4},
+    {ph:"Il est fatigué mais il vient ___ (malgré tout).",good:"quand même",bad:["comme même","quant même","quand meme"],note:"On écrit « quand même », jamais « comme même ».",d:4},
+    {ph:"À ___, on se revoit très vite (dans peu de temps) !",good:"bientôt",bad:["bien tôt","biento","bientot"],note:"« bientôt » (dans peu de temps) s'écrit en un seul mot.",d:4},
+    {ph:"Il y en a ___ pour toi que pour moi (une quantité égale).",good:"autant",bad:["au tant","autan","hautant"],note:"« autant » (quantité égale) s'écrit en un seul mot.",d:4},
+    {ph:"Le chat dort ___ le canapé (dessus).",good:"sur",bad:["sûr","sûre","cure"],note:"« sur » (dessus) ≠ « sûr » (certain, avec accent).",d:5},
+    {ph:"Le colis arrive ___ la poste (au moyen de).",good:"par",bad:["part","pars","pard"],note:"« par » (moyen) ≠ « part » (la portion, ou verbe partir).",d:5},
+    {ph:"Je prends une ___ de tarte aux pommes (une portion).",good:"part",bad:["par","pars","pards"],note:"« part » (portion) ≠ « par » (préposition).",d:5},
+    {ph:"J'achète une ___ de chaussures (un ensemble de deux).",good:"paire",bad:["pair","père","pers"],note:"« paire » (deux objets) ≠ « pair » (nombre) ≠ « père ».",d:5},
+    {ph:"Le nombre deux est ___ (divisible par deux).",good:"pair",bad:["paire","père","pers"],note:"« pair » (divisible par 2) ≠ « paire » (deux objets).",d:5},
+    {ph:"Le ___ de la vie ne cesse d'augmenter (le prix).",good:"coût",bad:["coup","cou","coûts"],note:"« coût » (prix) ≠ « coup » (choc) ≠ « cou » (du corps).",d:5},
+    {ph:"Il donne un ___ de pied dans le ballon (un choc).",good:"coup",bad:["coût","cou","coups"],note:"« coup » (choc) ≠ « coût » (prix) ≠ « cou ».",d:5},
+    {ph:"Le trésor est caché ___ le vieux lit (en bas).",good:"dessous",bad:["dessus","desous","dessou"],note:"« dessous » (en bas) ≠ « dessus » (en haut).",d:5},
+    {ph:"Le vase est posé ___ la commode (en haut).",good:"dessus",bad:["dessous","desus","dessu"],note:"« dessus » (en haut) ≠ « dessous » (en bas).",d:5},
+    {ph:"Le verre est ___ à ras bord (rempli).",good:"plein",bad:["plain","pleins","plun"],note:"« plein » (rempli) ≠ « plain » (comme dans « plain-pied »).",d:5},
+    {ph:"Il mène une vie ___ et équilibrée (bonne pour la santé).",good:"saine",bad:["sainte","seine","scène"],note:"« saine » (santé) ≠ « sainte » (religion) ≠ « Seine » (fleuve).",d:5},
+    {ph:"Après sa maladie, elle a le ___ pâle (couleur du visage).",good:"teint",bad:["thym","tain","tint"],note:"« teint » (le visage) ≠ « thym » (herbe) ≠ « tain » (du miroir).",d:5},
+    {ph:"Le cuisinier parfume le plat avec du ___ (herbe aromatique).",good:"thym",bad:["teint","tain","tin"],note:"« thym » (herbe) ≠ « teint » (visage) ≠ « tain » (du miroir).",d:5},
+    {ph:"J'écris ma lettre avec de l'___ noire (liquide pour écrire).",good:"encre",bad:["ancre","antre","hanche"],note:"« encre » (pour écrire) ≠ « ancre » (du bateau).",d:6},
+    {ph:"Le bateau jette l'___ dans le port (pièce de métal du navire).",good:"ancre",bad:["encre","antre","ambre"],note:"« ancre » (du bateau) ≠ « encre » (pour écrire).",d:6},
+    {ph:"Le peuple vaincu paie un lourd ___ au vainqueur (contribution imposée).",good:"tribut",bad:["tribu","tribun","tribue"],note:"« tribut » (contribution imposée) ≠ « tribu » (peuplade).",d:6},
+    {ph:"Cette ___ vit au cœur de la forêt (groupe, peuplade).",good:"tribu",bad:["tribut","tribun","tribue"],note:"« tribu » (peuplade) ≠ « tribut » (contribution).",d:6},
+    {ph:"Il l'a fait ___ pour m'agacer (volontairement).",good:"exprès",bad:["express","exprés","expraie"],note:"« exprès » (volontairement) ≠ « express » (rapide).",d:6},
+    {ph:"Au comptoir, je bois un café ___ (rapide et serré).",good:"express",bad:["exprès","expresse","exprés"],note:"« express » (rapide) ≠ « exprès » (volontairement).",d:6},
+    {ph:"Le randonneur gravit le ___ escarpé de la montagne (le côté).",good:"flanc",bad:["flan","flant","flang"],note:"« flanc » (le côté) ≠ « flan » (le dessert).",d:6},
+    {ph:"Pour le dessert, je choisis un ___ au caramel.",good:"flan",bad:["flanc","flang","fland"],note:"« flan » (dessert) ≠ « flanc » (le côté).",d:6},
+    {ph:"L'avion se pose sur l'___ prévue (surface, zone plane).",good:"aire",bad:["air","ère","hère"],note:"« aire » (surface) ≠ « air » (qu'on respire) ≠ « ère » (époque).",d:6},
+    {ph:"Nous vivons à l'___ du numérique (une longue période).",good:"ère",bad:["air","aire","hère"],note:"« ère » (époque) ≠ « air » (qu'on respire) ≠ « aire » (surface).",d:6},
+    {ph:"À la ___ du film, tout le monde applaudit (le terme, le bout).",good:"fin",bad:["faim","feint","fain"],note:"« fin » (le bout) ≠ « faim » (envie de manger).",d:6},
+    {ph:"Après le sport, j'ai une grande ___ (envie de manger).",good:"faim",bad:["fin","feint","fain"],note:"« faim » (envie de manger) ≠ « fin » (le bout).",d:6},
+    {ph:"Devant cette promesse, il reste ___ (dubitatif, méfiant).",good:"sceptique",bad:["septique","sceptic","septic"],note:"« sceptique » (méfiant) ≠ « septique » (fosse septique).",d:6}
   ];
+  var HP_FRAMES=["{PH}","Le bon homophone — {PH}","Complète correctement — {PH}","Choisis la bonne graphie : {PH}"];
   var ER_E = [
     {d:3,ph:"Je vais ___ une pomme.",good:"manger",bad:["mangé","mangez","mangeais"],note:"infinitif après « vais »"},
     {d:3,ph:"Il a ___ son travail.",good:"terminé",bad:["terminer","terminez","terminés"],note:"participe après « a »"},
@@ -2335,6 +2388,12 @@
       note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
   }
 
+  function genHomophones(diff,cat,sub){
+    var it=pick(bandFilter(HOMOPH_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(HP_FRAMES).replace("{PH}",it.ph), hint:"Homophones ("+it.note+")",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genOrt(sub, diff, cat){
     var it, hint;
     if(sub==="Pluriels") return genPluriels(diff,cat,sub);
@@ -2342,12 +2401,12 @@
     if(sub==="é ou er") return genErE(diff,cat,sub);
     if(sub==="m devant m, b, p") return genMbp(diff,cat,sub);
     if(sub==="Accents") return genAccents(diff,cat,sub);
-    if(sub==="Homophones"){ it=pickByDiff(HOMOPH,diff); hint="Homophones ("+it.note+")"; }
-    else if(sub==="é ou er"){ it=pickByDiff(ER_E,diff); hint="é (participe) ou er (infinitif) ?"; }
+    if(sub==="Homophones") return genHomophones(diff,cat,sub);
+    if(sub==="é ou er"){ it=pickByDiff(ER_E,diff); hint="é (participe) ou er (infinitif) ?"; }
     else if(sub==="Pluriels"){ it=pickByDiff(PLUR,diff); hint="Écris le bon pluriel"; }
     else if(sub==="Homophones grammaticaux"){ it=pickByDiff(HOMOG,diff); hint="Homophones grammaticaux"; }
     else if(sub==="Adverbes en -ment"){ it=pickByDiff(ADVMENT,diff); hint="Forme l'adverbe en -ment"; }
-    else { it=pickByDiff(HOMOPH,diff); hint="Orthographe"; }
+    else return genHomophones(diff,cat,sub);
     return { cat:cat, sub:sub, phrase:it.ph, hint:hint, note:it.note||"", options:build(it.good, it.bad.slice()), answer:0 };
   }
 
