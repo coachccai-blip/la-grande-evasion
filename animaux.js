@@ -231,5 +231,21 @@ const BANTER = {
   }
 };
 
+/* Répliques de faillite (jeu 2 « L'Empire des Évadés ») — bonnes joueuses,
+   pour dédramatiser la défaite. 2 à 3 par animal, dans leur caractère. */
+const FAILLITE = {
+  lion:      ["Un roi déchu reste un roi… je reviendrai !", "Bah, la couronne rouille de toute façon.", "Ruiné, mais toujours majestueux."],
+  elephant:  ["Je retiendrai la leçon, sans rancune.", "Un éléphant se relève toujours, lentement.", "Mes comptes étaient bons… c'est la faute des dés."],
+  girafe:    ["Je visais trop haut, tant pis.", "De si haut, la chute est longue mais douce.", "La prochaine fois, je verrai plus juste."],
+  singe:     ["Il me reste mes bananes, c'est l'essentiel !", "Ruiné ? Quel bon tour vous m'avez joué !", "J'ai perdu la vallée, pas mon humour."],
+  panda:     ["Pas grave, je vais faire une sieste.", "Tant qu'il y a du bambou, tout va bien.", "L'argent, bof… la zen attitude, voilà."],
+  manchot:   ["J'ai glissé sur ma fortune, oups !", "Trop pressé, comme toujours…", "Direction la banquise, je repars de zéro."],
+  flamant:   ["Ruinée mais toujours la plus chic !", "Le style, ça ne se met pas en faillite.", "J'ai perdu mes plumes, gardé mon élégance."],
+  crocodile: ["Une petite larme… puis on recommence.", "Mon cœur est plus grand que mon compte.", "Snap ! La revanche sera savoureuse."],
+  zebre:     ["Trop vite pour la fortune, dommage !", "Je repars au sprint la prochaine fois.", "Rayé du classement… mais pas abattu."],
+  hibou:     ["Statistiquement, ça devait arriver.", "J'analyserai mes erreurs, promis.", "La sagesse survit à la faillite."]
+};
+ANIMAUX.forEach(function(a){ a.faillite = FAILLITE[a.id] || ["Ce n'est que partie remise."]; });
+
 /* Export pour un usage éventuel hors navigateur (tests, scripts). */
-if (typeof module !== "undefined" && module.exports) { module.exports = ANIMAUX; module.exports.BANTER = BANTER; }
+if (typeof module !== "undefined" && module.exports) { module.exports = ANIMAUX; module.exports.BANTER = BANTER; module.exports.FAILLITE = FAILLITE; }

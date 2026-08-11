@@ -1,5 +1,5 @@
 /* La Grande Évasion — service worker (offline, standalone PWA) */
-const CACHE = 'evasion-v6';
+const CACHE = 'evasion-v7';
 
 /* Tout ce qu'il faut pour jouer 100 % hors-ligne. */
 const ASSETS = [
@@ -8,6 +8,7 @@ const ASSETS = [
   './questions.js',
   './animaux.js',
   './sprites.js',
+  './empire.js',
   './manifest.webmanifest',
   './assets/icon-192.png',
   './assets/icon-512.png',

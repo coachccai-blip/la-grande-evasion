@@ -105,6 +105,34 @@ Les pions (le tien et ceux des robots) sautent de case en case, comme sur un
 compris pendant le tour des adversaires. Un bouton **« Abandonner »** permet de
 quitter la partie en cours et de revenir à la configuration.
 
+## 👑 Deuxième jeu : L'Empire des Évadés
+
+Une fois **au moins 3 animaux libérés** dans *La Grande Évasion*, un second jeu
+se **débloque** (avant cela, un cadenas 🔒 l'indique). Le jeu se choisit comme
+les matières, dans un premier temps de l'assistant : **« Choisis ton jeu »**.
+
+*L'Empire des Évadés* est un **jeu de gestion façon Monopoly** : les animaux ont
+franchi le portail et bâtissent leur empire dans la **Vallée Sauvage**. Sur un
+plateau en boucle de **32 cases** (8 quartiers de 2 propriétés, 4 transports,
+2 services, cartes, Fourrière, Gardien…), on lance **deux dés** et **chaque
+action clé se joue avec une question de français** (les **mêmes questions** que
+le premier jeu, matière au choix ou **Mélange**) :
+
+- **Acheter** une propriété libre (réussite = achat ; échec = **enchère éclair**) ;
+- **Négocier** un loyer (loyer ÷ 2 si juste) ou tenter l'**OPA sauvage**
+  (3 bonnes réponses d'affilée pour un rachat forcé — clin d'œil aux 3 serrures) ;
+- **Construire** (Stand → Boutique → Grand Magasin → Palais) ;
+- tenter la **Prime de la Jungle** au passage du Grand Baobab (salaire ×2, sans
+  risque) ; s'**évader de la Fourrière** en crochetant la serrure ou en payant
+  la caution.
+
+La monnaie est la **Cacahuète (₵)** ; on démarre avec 1 500 ₵. On gagne quand les
+**3 adversaires** (bots, ~55 % de réussite) sont en **faillite** ; on perd si l'on
+est ruiné (écran d'encouragement et revanche immédiate). Gagner pose une
+**couronne dorée 👑** sur le portrait de l'animal (distincte de la coche verte du
+premier jeu). Toutes les questions jouées alimentent **l'historique commun** aux
+deux jeux, avec le **contexte** (achat, loyer, OPA, Fourrière…).
+
 ## 🔊 Son
 
 Musique d'ambiance et bruitages sont générés en direct (Web Audio, sans aucun
@@ -138,8 +166,9 @@ logo (mêmes noms, mêmes dimensions).
 | Fichier        | Rôle |
 |----------------|------|
 | `index.html`   | Interface, assistant de configuration, plateau, logique du jeu, musique et bruitages. |
-| `questions.js` | **Générateur** de questions (banques de mots + moteur de conjugaison). |
-| `animaux.js`   | Les 10 animaux : nom, trait, répliques de libération et **dialogues d'ambiance** (`BANTER`). |
+| `questions.js` | **Générateur** de questions (banques de mots + moteur de conjugaison), **commun aux deux jeux**. |
+| `empire.js`    | **Jeu 2 — L'Empire des Évadés** : plateau, cartes, économie et logique du jeu de gestion. |
+| `animaux.js`   | Les 10 animaux : nom, trait, répliques de libération, **dialogues d'ambiance** (`BANTER`) et **répliques de faillite** (`FAILLITE`, jeu 2). |
 | `sprites.js`   | Anciennes primitives pixel art (héritage) ; le décor « safari » actuel est dessiné dans `index.html`. |
 | `manifest.webmanifest` | Manifeste PWA (nom, icônes, lancement autonome plein écran). |
 | `sw.js`        | *Service worker* : mise en cache pour un fonctionnement hors-ligne. |
