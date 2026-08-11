@@ -24,6 +24,9 @@
     --bg:#eef6e2; --bg2:#e2f0d1; --panel:#ffffff; --panel2:#f4f9ec;
     --ink:#26332a; --ink-soft:#61735f; --line:#d8e6cd;
     --accent:#e88b2a; --accent2:#ffb64d;
+    /* Palette bleue des menus (hors jeux) */
+    --blue1:#C3E7EF; --blue2:#A7DFEA; --blue3:#89D6E9; --blue4:#4AC2DB;
+    --blue5:#0090BF; --blue6:#0172B0; --blue7:#0E677C; --blue-deep:#023C65; --blue-navy:#03045A;
     --ok:#3fae5a; --ok2:#2f9a4c; --ko:#e0574a; --ko2:#c8402f;
     /* couleurs des catégories */
     --c-conjugaison:#3b82f6; --c-grammaire:#8b5cf6;
@@ -68,10 +71,10 @@
   }
   #installBtn:active{transform:translateY(2px); box-shadow:none;}
   header h1{
-    margin:0; font-size:20px; letter-spacing:2px; text-transform:uppercase;
-    color:var(--accent); text-shadow:0 2px 0 #fff, 0 0 10px rgba(232,139,42,.25);
+    margin:0; font-size:23px; letter-spacing:2px;
+    color:var(--blue-deep); text-shadow:0 2px 0 #fff, 0 0 12px rgba(2,60,101,.22);
   }
-  header .sub{font-size:11px; color:var(--ink-soft); letter-spacing:.5px; margin-top:2px;}
+  header .sub{font-size:11px; color:var(--blue6); font-weight:700; letter-spacing:.5px; margin-top:2px;}
 
   /* ============================== Scènes =============================== */
   main{flex:1 1 auto; position:relative; overflow:hidden;}
@@ -97,6 +100,14 @@
   .vk-start:active{transform:translateY(3px); box-shadow:0 1px 0 #a9781a,0 3px 6px rgba(0,0,0,.3);}
   .vk-start .vk-sub{font-size:12px; font-weight:700; opacity:.85;}
   .vk-check{font-size:13px; text-align:center; color:var(--ink-soft); background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px;}
+  .vk-check.on{color:var(--ok2); background:rgba(63,174,90,.14); border-color:transparent; font-weight:800;}
+  .vk-playlab{font-size:12px; font-weight:800; color:var(--ink-soft); text-align:center; margin:2px 0;}
+  .vk-playrow{display:flex; gap:9px;}
+  .vk-playbtn{flex:1; border:0; border-radius:14px; padding:13px 8px; font-family:var(--font); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px;
+    background:linear-gradient(180deg,var(--accent2),var(--accent)); color:#241a12; box-shadow:0 4px 0 #a9781a,0 6px 10px rgba(0,0,0,.22); transition:transform .05s,box-shadow .05s;}
+  .vk-playbtn:active{transform:translateY(3px); box-shadow:0 1px 0 #a9781a,0 3px 6px rgba(0,0,0,.3);}
+  .vk-pbn{font-size:18px; font-weight:900; letter-spacing:.3px;}
+  .vk-pbs{font-size:11px; font-weight:700; opacity:.85;}
   .vk-ctitle{font-size:13px; font-weight:800; color:var(--ink); margin-bottom:8px;}
   .vk-ctitle2{font-size:14px; font-weight:800; color:var(--ink); margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;}
   .vk-cal{display:grid; grid-template-columns:repeat(7,1fr); gap:3px;}
@@ -124,10 +135,13 @@
     background:rgba(232,139,42,.15); color:var(--accent); cursor:pointer;}
   .vk-play:active{transform:translateY(1px);}
   .vk-zh{font-size:18px; font-weight:800; color:var(--ink); margin-top:11px;}
+  .vk-en{font-size:14px; font-weight:600; color:var(--ink-soft); margin-top:3px; font-style:italic;}
   .vk-ex{margin-top:11px; background:var(--panel2); border-radius:12px; padding:9px 11px;}
   .vk-exfr{font-size:15px; color:var(--ink);}
   .vk-exaudio{border:0; background:transparent; cursor:pointer; font-size:14px;}
   .vk-exzh{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+  .vk-exen{font-size:13px; color:var(--ink-soft); margin-top:2px; font-style:italic; opacity:.92;}
+  .vk-ren{font-size:12px; color:var(--ink-soft); font-style:italic; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .vk-coll{margin-top:11px;} .vk-colt{font-size:12px; font-weight:800; color:var(--ink-soft); margin-bottom:3px;}
   .vk-colr{font-size:13px; color:var(--ink);}
   .vk-notes{margin-top:11px; font-size:12.5px; color:#8a6d1e; background:rgba(255,182,77,.18); border-radius:12px; padding:9px 11px;}
@@ -728,16 +742,17 @@
 
   /* ============================= Nav du bas ========================== */
   nav{
-    flex:0 0 auto; display:flex; border-top:1px solid var(--line);
-    background:var(--bg2); padding-bottom:env(safe-area-inset-bottom);
+    flex:0 0 auto; display:flex; border-top:1px solid #cfe9f2;
+    background:linear-gradient(180deg,#eaf7fb,#dcf0f7); padding-bottom:env(safe-area-inset-bottom);
   }
   nav button{
-    flex:1; border:0; background:transparent; color:var(--ink-soft); font-family:var(--font);
+    flex:1; border:0; background:transparent; color:var(--blue7); font-family:var(--font);
     font-weight:700; font-size:13px; padding:12px 0; cursor:pointer; display:flex;
     flex-direction:column; align-items:center; gap:3px;
   }
   nav button .ic{font-size:18px;}
-  nav button.active{color:var(--accent2);}
+  nav button.active{color:var(--blue6);}
+  nav button.active .ic{filter:drop-shadow(0 0 6px rgba(1,114,176,.4));}
 
   /* ============================== Toast ============================== */
   #toast{
@@ -799,14 +814,38 @@
   #vsText{margin:6px 2px 10px;}
   #vsOpts .opt{padding:11px 12px;}
 
+  /* ============ Thème BLEU des menus (hors jeux) ============ */
+  /* Fond bleuté pour les écrans de menu : sélection, historique, badges */
+  #selectScreen, #histScreen, #badgesScreen{
+    background:linear-gradient(180deg,var(--blue1) 0%, #dff1f7 26%, #eef8fb 60%);
+  }
+  /* Titres d'étape + pastilles numérotées */
+  #selectScreen .step-title{color:var(--blue-deep);}
+  #selectScreen .step-title .num{background:linear-gradient(180deg,var(--blue4),var(--blue6)); color:#fff;}
+  /* Choix sélectionnés en bleu */
+  #selectScreen .chip-btn.sel{border-color:var(--blue6); background:#eaf6fb; box-shadow:0 0 0 2px var(--blue6) inset;}
+  /* Boutons principaux des menus en dégradé bleu */
+  #selectScreen .btn:not(.secondary), #histScreen .btn:not(.secondary), #badgesScreen .btn:not(.secondary){
+    background:linear-gradient(180deg,var(--blue4),var(--blue6)); color:#fff;
+    box-shadow:0 4px 0 var(--blue-deep), 0 6px 10px rgba(0,0,0,.22);
+  }
+  #selectScreen .btn:not(.secondary):active, #histScreen .btn:not(.secondary):active, #badgesScreen .btn:not(.secondary):active{
+    box-shadow:0 1px 0 var(--blue-deep), 0 3px 6px rgba(0,0,0,.3);
+  }
+  /* Barre de progression de mission */
+  #selectScreen .progress{color:var(--blue7);}
+  /* Badges débloqués : accent bleu plutôt qu'orange */
+  #badgesScreen .badge-card.got .bt{color:var(--blue6);}
+  #badgesScreen .badge-card.got .bic{background:rgba(1,114,176,.14);}
+
   .hidden{display:none !important;}
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <h1>La Grande Évasion</h1>
-    <div class="sub">Réponds juste et aide ton animal à s'échapper du zoo&nbsp;!</div>
+    <h1>跟克莱蒙学法语</h1>
+    <div class="sub">Apprends le français avec Clément</div>
     <button id="soundBtn" title="Activer / couper le son" aria-label="Son">🔊</button>
     <button id="installBtn" title="Installer l'application" aria-label="Installer">📲</button>
   </header>
@@ -1074,8 +1113,8 @@
     <button id="tabGame" class="active"><span class="ic">🎲</span>Jeu</button>
     <button id="tabHist"><span class="ic">📜</span>Historique</button>
     <button id="tabBadges"><span class="ic">🏅</span>Badges</button>
-    <button id="tabVocab"><span class="ic">🥖</span>词汇</button>
-    <button id="tabDict"><span class="ic">📚</span>词典</button>
+    <button id="tabVocab"><span class="ic">🥖</span>Vocabulaire</button>
+    <button id="tabDict"><span class="ic">⭐</span>Favoris</button>
   </nav>
   <div id="badgeToast"></div>
 </div>
@@ -3024,6 +3063,9 @@ function countFreed(){
 }
 function badgeDefs(){
   var s=store.stats||{}, nFreed=countFreed(), adv=Object.keys(store.missions).length;
+  // Métriques du module Vocabulaire : série de jours (calendrier) + mots favoris
+  var voc=store.vocab||{}, vStreak=voc.streak||0, favCount=0;
+  if(voc.prog){ for(var vk in voc.prog){ if(voc.prog[vk]&&voc.prog[vk].fav) favCount++; } }
   return [
     {id:"first_free", ic:"🔓", t:"Première évasion",        d:"Libérer un animal",                       v:nFreed,           g:1},
     {id:"all_free",   ic:"🏅", t:"Grande libération",        d:"Libérer les 10 animaux au moins une fois", v:nFreed,           g:10},
@@ -3040,7 +3082,20 @@ function badgeDefs(){
     {id:"duel50",     ic:"🏆", t:"Maître du duel",           d:"Gagner 50 duels",                         v:s.duelWins||0,    g:50},
     {id:"duel100",    ic:"👑", t:"Champion incontesté",      d:"Gagner 100 duels",                        v:s.duelWins||0,    g:100},
     {id:"adv10",      ic:"🎯", t:"Grand aventurier",         d:"Réussir 10 aventures",                    v:adv,              g:10},
-    {id:"escape_guards",ic:"🚓",t:"Plus rapide que les gardiens", d:"Gagner une partie malgré les gardiens", v:s.guardEscapes||0, g:1}
+    {id:"escape_guards",ic:"🚓",t:"Plus rapide que les gardiens", d:"Gagner une partie malgré les gardiens", v:s.guardEscapes||0, g:1},
+    /* --- Vocabulaire : jours de calendrier joués d'affilée --- */
+    {id:"vstreak3",  ic:"📗", t:"Assidu",               d:"Jouer au vocabulaire 3 jours d'affilée",  v:vStreak, g:3},
+    {id:"vstreak7",  ic:"📘", t:"Semaine studieuse",    d:"Jouer au vocabulaire 7 jours d'affilée",  v:vStreak, g:7},
+    {id:"vstreak15", ic:"📙", t:"Quinzaine de feu",     d:"Jouer au vocabulaire 15 jours d'affilée", v:vStreak, g:15},
+    {id:"vstreak30", ic:"📚", t:"Un mois sans faille",  d:"Jouer au vocabulaire 30 jours d'affilée", v:vStreak, g:30},
+    {id:"vstreak60", ic:"🎓", t:"Marathon du lexique",  d:"Jouer au vocabulaire 60 jours d'affilée", v:vStreak, g:60},
+    /* --- Favoris : mots marqués en favori --- */
+    {id:"fav1",   ic:"⭐", t:"Premier favori",       d:"Marquer 1 mot en favori",    v:favCount, g:1},
+    {id:"fav5",   ic:"🌟", t:"Petite collection",    d:"Marquer 5 mots en favori",   v:favCount, g:5},
+    {id:"fav10",  ic:"💫", t:"Collectionneur",       d:"Marquer 10 mots en favori",  v:favCount, g:10},
+    {id:"fav25",  ic:"📖", t:"Bibliothèque perso",   d:"Marquer 25 mots en favori",  v:favCount, g:25},
+    {id:"fav50",  ic:"🏵️", t:"Grand collectionneur", d:"Marquer 50 mots en favori",  v:favCount, g:50},
+    {id:"fav100", ic:"👑", t:"Trésor de mots",       d:"Marquer 100 mots en favori", v:favCount, g:100}
   ];
 }
 /* Traductions natives (anglais & chinois) des badges — jeu fixe, traduit à la
@@ -3061,7 +3116,18 @@ var BADGE_I18N={
   duel50:{ en:{t:"Duel Master",d:"Win 50 duels"}, zh:{t:"对决大师",d:"赢得50场对决"} },
   duel100:{ en:{t:"Undisputed Champion",d:"Win 100 duels"}, zh:{t:"无可争议的冠军",d:"赢得100场对决"} },
   adv10:{ en:{t:"Great Adventurer",d:"Complete 10 adventures"}, zh:{t:"伟大冒险家",d:"完成10次冒险"} },
-  escape_guards:{ en:{t:"Faster Than the Guards",d:"Win a game despite the guards"}, zh:{t:"比看守更快",d:"在看守出动的情况下赢得一局"} }
+  escape_guards:{ en:{t:"Faster Than the Guards",d:"Win a game despite the guards"}, zh:{t:"比看守更快",d:"在看守出动的情况下赢得一局"} },
+  vstreak3:{ en:{t:"Diligent",d:"Play vocabulary 3 days in a row"}, zh:{t:"勤奋",d:"连续3天学习词汇"} },
+  vstreak7:{ en:{t:"Studious Week",d:"Play vocabulary 7 days in a row"}, zh:{t:"用功一周",d:"连续7天学习词汇"} },
+  vstreak15:{ en:{t:"Two Fiery Weeks",d:"Play vocabulary 15 days in a row"}, zh:{t:"半月不辍",d:"连续15天学习词汇"} },
+  vstreak30:{ en:{t:"Flawless Month",d:"Play vocabulary 30 days in a row"}, zh:{t:"整月坚持",d:"连续30天学习词汇"} },
+  vstreak60:{ en:{t:"Lexicon Marathon",d:"Play vocabulary 60 days in a row"}, zh:{t:"词汇马拉松",d:"连续60天学习词汇"} },
+  fav1:{ en:{t:"First Favorite",d:"Bookmark 1 word"}, zh:{t:"首个收藏",d:"收藏1个单词"} },
+  fav5:{ en:{t:"Small Collection",d:"Bookmark 5 words"}, zh:{t:"小小收藏",d:"收藏5个单词"} },
+  fav10:{ en:{t:"Collector",d:"Bookmark 10 words"}, zh:{t:"收藏家",d:"收藏10个单词"} },
+  fav25:{ en:{t:"Personal Library",d:"Bookmark 25 words"}, zh:{t:"私人词库",d:"收藏25个单词"} },
+  fav50:{ en:{t:"Great Collector",d:"Bookmark 50 words"}, zh:{t:"收藏大家",d:"收藏50个单词"} },
+  fav100:{ en:{t:"Word Treasure",d:"Bookmark 100 words"}, zh:{t:"词汇宝库",d:"收藏100个单词"} }
 };
 var BADGE_UI={
   fr:{ count:"🏅 Badges débloqués : ", sub:"Relève tous les défis pour tous les débloquer !", got:"Débloqué ✓", todo:"À débloquer" },
@@ -3157,7 +3223,7 @@ function init(){
     animalById:animalById, presentQuestion:presentQuestion, freedCount:freedCount, toast:toast,
     showEmpireEnd:showEmpireEnd, exitEmpire:exitEmpire });
   // Module de vocabulaire (百词斩)
-  if(window.Vocab) Vocab.init({ store:store, persist:persist, Sound:Sound });
+  if(window.Vocab) Vocab.init({ store:store, persist:persist, Sound:Sound, refreshBadges:refreshBadges });
 
   $("soundBtn").onclick=toggleSound;
   $("abandonBtn").onclick=abandonGame;

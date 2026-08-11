@@ -26,7 +26,7 @@
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function deacc(s){ return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z' ]/g,"").trim(); }
-  function persist(){ B.persist(); }
+  function persist(){ B.persist(); if(B.refreshBadges){ try{ B.refreshBadges(); }catch(e){} } }
   function beep(ok){ try{ if(B.Sound){ ok?B.Sound.good():B.Sound.bad(); } }catch(e){} if(navigator.vibrate){ try{ navigator.vibrate(ok?20:[15,40,15]); }catch(e){} } }
 
   /* ------------------------------ Audio (TTS) ---------------------------- */
@@ -53,13 +53,6 @@
   function statusZh(st){ return {"new":"未学",learning:"学习中",review:"学习中",mastered:"已掌握"}[st||"new"]||"未学"; }
   function article(wd){ if(!wd.gender) return wd.word; return (wd.gender==="m"?"un ":"une ")+wd.word; }
   function displayWord(wd){ return article(wd); }
-
-  /* Article défini pour l'oral / la fiche : le/la/l' */
-  function withDef(wd){
-    if(!wd.gender) return wd.word;
-    var v=/^[aeiouhàâéèêîïô]/i.test(wd.word);
-    return (v?"l'":(wd.gender==="m"?"le ":"la "))+wd.word;
-  }
 
   /* ------------------------------ SRS ------------------------------------ */
   function isDue(id){ var p=prog(id); if(!p) return false;
@@ -98,28 +91,40 @@
   function todayLog(){ var k=ymd(); S.logs[k]=S.logs[k]||{n:0,r:0,goal:false}; return S.logs[k]; }
 
   /* ============================ SESSION ================================== */
-  function buildSession(favMode){
+  /* size : 5, 10 ou Infinity (illimité). Illimité = toutes les difficultés. */
+  function buildSession(favMode, size){
     var lvl=S.settings.level;
     var due=[], neu=[];
     if(favMode){
       DATA.words.forEach(function(wd){ var p=prog(wd.id); if(p&&p.fav) due.push({word:wd,isNew:false,fav:true}); });
       shuffle(due);
-      return { queue:due, idx:0, favMode:true, stats:{n:0,r:0,ok:0,total:due.length} };
+      return { queue:due, idx:0, favMode:true, size:Infinity, stats:{n:0,r:0,ok:0,total:due.length} };
     }
-    // révisions dues (tous niveaux — les mots ajoutés manuellement comptent)
+    if(size===undefined) size=(S.settings.dailyGoal||10);
+    var unlimited=!isFinite(size);
+    // révisions dues (tous niveaux — les mots ajoutés manuellement comptent), les plus urgentes d'abord
     DATA.words.forEach(function(wd){ if(isDue(wd.id)) due.push({word:wd,isNew:false}); });
     due.sort(function(a,b){ return (prog(a.word.id).next)-(prog(b.word.id).next); });
-    // nouveaux mots du niveau courant, dans la limite du quota restant
-    var t=todayLog(), remaining=Math.max(0,(S.settings.dailyGoal||10)-t.n);
-    var candidates=wordsOf(lvl).filter(function(wd){ var p=prog(wd.id); return !p||p.st==="new"; });
+    // nouveaux mots : niveau courant en 5/10, TOUTES les difficultés en illimité
+    var pool=unlimited? DATA.words.slice() : wordsOf(lvl);
+    var candidates=pool.filter(function(wd){ var p=prog(wd.id); return !p||p.st==="new"; });
     shuffle(candidates);
-    candidates.slice(0,remaining).forEach(function(wd){ neu.push({word:wd,isNew:true}); });
-    var queue=due.concat(neu);
-    return { queue:queue, idx:0, favMode:false, phase:null, stats:{n:0,r:0,ok:0,total:queue.length} };
+    var queue;
+    if(unlimited){
+      candidates.forEach(function(wd){ neu.push({word:wd,isNew:true}); });
+      queue=due.concat(neu);
+    } else {
+      // série bornée à `size` cartes : révisions d'abord, puis nouveaux mots
+      var cap=Math.max(1,size|0);
+      queue=[];
+      for(var i=0;i<due.length && queue.length<cap;i++){ queue.push(due[i]); }
+      for(var j=0;j<candidates.length && queue.length<cap;j++){ queue.push({word:candidates[j],isNew:true}); }
+    }
+    return { queue:queue, idx:0, favMode:false, phase:null, size:size, stats:{n:0,r:0,ok:0,total:queue.length} };
   }
-  function startSession(favMode){
-    SESS=buildSession(favMode);
-    if(!SESS.queue.length){ SESS=null; renderVocab(); toast(favMode?"生词本是空的":"今天没有需要学习的内容 🎉"); return; }
+  function startSession(favMode, size){
+    SESS=buildSession(favMode, size);
+    if(!SESS.queue.length){ SESS=null; renderVocab(); toast(favMode?"生词本是空的":"暂时没有可学习的内容 🎉"); return; }
     SESS.phase = SESS.queue[0].isNew?"discover":"quiz";
     renderVocab();
   }
@@ -133,9 +138,10 @@
     var st=SESS.stats;
     if(!SESS.favMode){
       var t=todayLog(); t.n+=st.n; t.r+=st.r;
-      var goal=(t.n>=(S.settings.dailyGoal||10));
-      var first= t.goal===false && goal;
-      t.goal = t.goal||goal;
+      // « jouer une fois le jour J » suffit : le jour devient vert (t.goal) et valide le 打卡
+      var played=(st.n+st.r)>0;
+      var first= (t.goal!==true) && played;
+      if(played) t.goal=true;
       if(first){ // 打卡 : incrémente le streak
         var y=ymd(new Date(now()-dayMs()));
         S.streak = (S.lastCheckin===y)? (S.streak+1) : 1;
@@ -201,16 +207,21 @@
         "<span>⏰ 今日待复习 "+s.dueToday+"</span><span>✅ 已掌握 "+s.mastered+"</span>"+
       "</div>";
     wrap.appendChild(card);
-    // bouton démarrer
-    var t=todayLog(), remaining=Math.max(0,(S.settings.dailyGoal||10)-t.n);
-    var start=el("button","vk-start");
-    start.innerHTML="▶ 开始学习<span class='vk-sub'>今日 "+s.dueToday+" 复习 · "+remaining+" 新词</span>";
-    start.onclick=function(){ startSession(false); };
-    wrap.appendChild(start);
-    // 打卡 aujourd'hui
-    var chk=el("div","vk-check");
-    chk.innerHTML= t.goal? "✅ 今日已打卡（连续 "+(S.streak||0)+" 天）" :
-      "🎯 今日目标 "+(S.settings.dailyGoal||10)+" 个新词，已学 "+t.n+" 个";
+    // choix de la série : 5 / 10 / illimité
+    var t=todayLog();
+    wrap.appendChild(el("div","vk-playlab","选择学习组 · Choisir une série"));
+    var play=el("div","vk-playrow");
+    [{n:5,lab:"5 词",sub:"快速"},{n:10,lab:"10 词",sub:"标准"},{n:Infinity,lab:"∞ 无限",sub:"全部难度"}].forEach(function(o){
+      var b=el("button","vk-playbtn");
+      b.innerHTML="<span class='vk-pbn'>"+o.lab+"</span><span class='vk-pbs'>"+o.sub+"</span>";
+      b.onclick=function(){ startSession(false, o.n); };
+      play.appendChild(b);
+    });
+    wrap.appendChild(play);
+    // 打卡 aujourd'hui : jouer une fois suffit
+    var chk=el("div","vk-check"+(t.goal?" on":""));
+    chk.innerHTML= t.goal? "✅ 今日已完成 · 连续 "+(S.streak||0)+" 天 🔥" :
+      "🎯 今天学一组即可完成打卡（连续 "+(S.streak||0)+" 天）";
     wrap.appendChild(chk);
     // calendrier du mois
     wrap.appendChild(renderCalendar());
@@ -274,6 +285,14 @@
     return row;
   }
 
+  function exBlock(fr, zh, en){
+    var ex=el("div","vk-ex");
+    ex.innerHTML="<div class='vk-exfr'>"+esc(fr)+" <button class='vk-exaudio'>🔊</button></div>"+
+      "<div class='vk-exzh'>"+esc(zh||"")+"</div>"+
+      (en?"<div class='vk-exen'>"+esc(en)+"</div>":"");
+    ex.querySelector(".vk-exaudio").onclick=function(){ speak(fr); };
+    return ex;
+  }
   function fiche(wd, opts){
     opts=opts||{};
     var c=el("div","vk-fiche");
@@ -283,14 +302,13 @@
       "<div class='vk-fword'><div class='vk-word'>"+esc(displayWord(wd))+"</div>"+
       "<div class='vk-ipa'>"+esc(wd.ipa||"")+"　<span class='vk-pos'>"+esc(posline)+"</span></div></div>";
     c.appendChild(head);
-    var play=el("button","vk-play","🔊 读单词"); play.onclick=function(){ speak(withDef(wd)); }; c.appendChild(play);
-    // traductions
+    var play=el("button","vk-play","🔊 读单词"); play.onclick=function(){ speak(article(wd)); }; c.appendChild(play);
+    // traductions : chinois + anglais (pour apprenants anglophones)
     c.appendChild(el("div","vk-zh", wd.zh.join("；")));
-    // exemple
-    var ex=el("div","vk-ex");
-    ex.innerHTML="<div class='vk-exfr'>"+esc(wd.ex_fr)+" <button class='vk-exaudio'>🔊</button></div><div class='vk-exzh'>"+esc(wd.ex_zh)+"</div>";
-    ex.querySelector(".vk-exaudio").onclick=function(){ speak(wd.ex_fr); };
-    c.appendChild(ex);
+    if(wd.en&&wd.en.length){ c.appendChild(el("div","vk-en", wd.en.join("; "))); }
+    // deux exemples (fr / zh / en)
+    c.appendChild(exBlock(wd.ex_fr, wd.ex_zh, wd.ex_en));
+    if(wd.ex2_fr){ c.appendChild(exBlock(wd.ex2_fr, wd.ex2_zh, wd.ex2_en)); }
     // collocations
     if(wd.coll&&wd.coll.length){ var col=el("div","vk-coll"); col.appendChild(el("div","vk-colt","常用搭配"));
       wd.coll.forEach(function(cc){ col.appendChild(el("div","vk-colr","· "+cc.fr+"　"+cc.zh)); }); c.appendChild(col); }
@@ -307,7 +325,7 @@
     next.onclick=function(){ SESS.phase="quiz"; renderVocab(); };
     box.appendChild(next);
     // lecture auto à l'affichage
-    setTimeout(function(){ speak(withDef(wd)); },180);
+    setTimeout(function(){ speak(article(wd)); },180);
     return box;
   }
 
@@ -324,7 +342,7 @@
     if(mode==="image"){
       box.appendChild(el("div","vk-qprompt","选择对应的图片"));
       var wq=el("div","vk-qword"); wq.innerHTML=esc(displayWord(wd))+" <button class='vk-mini'>🔊</button>";
-      wq.querySelector(".vk-mini").onclick=function(){ speak(withDef(wd)); }; box.appendChild(wq);
+      wq.querySelector(".vk-mini").onclick=function(){ speak(article(wd)); }; box.appendChild(wq);
       var opts=fourChoices(wd,function(x){return x.emoji;});
       var g=el("div","vk-imgs");
       opts.forEach(function(o){ var b=el("button","vk-imgopt",o.wd.emoji);
@@ -332,7 +350,7 @@
           markImg(g,opts,o); afterAnswer(box,o.correct,wd); };
         g.appendChild(b); });
       box.appendChild(g);
-      setTimeout(function(){ speak(withDef(wd)); },150);
+      setTimeout(function(){ speak(article(wd)); },150);
     }
     else if(mode==="fr2zh"||mode==="zh2fr"||mode==="audio"){
       var prompt, keyFn, label;
@@ -341,8 +359,8 @@
       else { label="听发音，选择单词"; prompt="🔊 点击播放"; keyFn=function(x){return x.word;}; }
       box.appendChild(el("div","vk-qprompt",label));
       var pr=el("div","vk-qword");
-      if(mode==="audio"){ pr.innerHTML="<button class='vk-bigplay'>🔊 播放发音</button>"; pr.querySelector(".vk-bigplay").onclick=function(){ speak(withDef(wd)); }; setTimeout(function(){speak(withDef(wd));},200); }
-      else { pr.innerHTML=prompt; if(mode==="fr2zh"){ pr.innerHTML+=" <button class='vk-mini'>🔊</button>"; pr.querySelector(".vk-mini").onclick=function(){speak(withDef(wd));}; } }
+      if(mode==="audio"){ pr.innerHTML="<button class='vk-bigplay'>🔊 播放发音</button>"; pr.querySelector(".vk-bigplay").onclick=function(){ speak(article(wd)); }; setTimeout(function(){speak(article(wd));},200); }
+      else { pr.innerHTML=prompt; if(mode==="fr2zh"){ pr.innerHTML+=" <button class='vk-mini'>🔊</button>"; pr.querySelector(".vk-mini").onclick=function(){speak(article(wd));}; } }
       box.appendChild(pr);
       var choices=fourChoices(wd,keyFn);
       var g2=el("div","vk-opts");
@@ -355,8 +373,8 @@
     else if(mode==="spell"){
       box.appendChild(el("div","vk-qprompt","根据中文和发音，拼写法语单词"));
       var hint=el("div","vk-qword"); hint.innerHTML=esc(wd.zh[0])+" <button class='vk-mini'>🔊</button>";
-      hint.querySelector(".vk-mini").onclick=function(){ speak(withDef(wd)); }; box.appendChild(hint);
-      setTimeout(function(){speak(withDef(wd));},200);
+      hint.querySelector(".vk-mini").onclick=function(){ speak(article(wd)); }; box.appendChild(hint);
+      setTimeout(function(){speak(article(wd));},200);
       var inp=el("input","vk-input"); inp.type="text"; inp.autocapitalize="off"; inp.autocomplete="off"; inp.spellcheck=false; inp.placeholder="在此输入法语…";
       box.appendChild(inp);
       var sub=el("button","vk-next","确认");
@@ -405,11 +423,10 @@
       "<div class='vk-rrow'>🆕 新学 <b>"+st.n+"</b></div>"+
       "<div class='vk-rrow'>🔁 复习 <b>"+st.r+"</b></div>"+
       "<div class='vk-rrow'>🎯 正确率 <b>"+rate+"%</b></div>"+
-      (!sess.favMode && t.goal? "<div class='vk-checkin'>✅ 打卡成功！连续 "+(S.streak||0)+" 天 🔥</div>"
-        : (!sess.favMode? "<div class='vk-checkin off'>还差 "+Math.max(0,(S.settings.dailyGoal||10)-t.n)+" 个新词即可打卡</div>":""));
+      (!sess.favMode && t.goal? "<div class='vk-checkin'>✅ 打卡成功！连续 "+(S.streak||0)+" 天 🔥</div>":"");
     scroll.appendChild(c);
-    var again=el("button","vk-start"); again.textContent="继续学习";
-    again.onclick=function(){ startSession(false); }; scroll.appendChild(again);
+    var again=el("button","vk-start"); again.textContent="继续学习 →";
+    again.onclick=function(){ startSession(false, sess.size); }; scroll.appendChild(again);
     var back=el("button","vk-next","返回"); back.onclick=function(){ SESS=null; renderVocab(); }; scroll.appendChild(back);
     root.appendChild(scroll);
   }
@@ -475,7 +492,7 @@
   function renderDict(){
     var root=$("dictScreen"); if(!root) return; root.innerHTML="";
     var scroll=el("div","vk-scroll");
-    scroll.appendChild(el("div","vk-dicttitle","📚 法语词典 · 词典"));
+    scroll.appendChild(el("div","vk-dicttitle","⭐ Favoris · 生词本"));
     var bar=el("div","vk-searchbar");
     var inp=el("input","vk-search"); inp.type="search"; inp.placeholder="搜索法语或中文…（ecole 可找到 école）";
     bar.appendChild(inp); scroll.appendChild(bar);
@@ -531,7 +548,8 @@
     row.innerHTML=
       "<span class='vk-remoji'>"+(wd.emoji||"🔤")+"</span>"+
       "<span class='vk-rmid'><span class='vk-rword'>"+esc(displayWord(wd))+"</span>"+
-      "<span class='vk-rzh'>"+esc(wd.zh.join("；"))+"</span></span>"+
+      "<span class='vk-rzh'>"+esc(wd.zh.join("；"))+"</span>"+
+      ((wd.en&&wd.en.length)?"<span class='vk-ren'>"+esc(wd.en.join("; "))+"</span>":"")+"</span>"+
       "<span class='vk-badges'><span class='vk-lvb'>"+esc(DATA.levelLabel[wd.level])+"</span>"+
       "<span class='vk-stb'>"+statusZh(p&&p.st)+"</span></span>";
     row.onclick=function(){ openWordSheet(wd); };
