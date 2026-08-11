@@ -1,6 +1,6 @@
 # La Grande Évasion 🦁🚪
 
-**Jeu de plateau en pixel art pour apprendre le français.**
+**Jeu de plateau « safari moderne » pour apprendre le français.**
 Aide ton animal à s'échapper du zoo en répondant juste !
 
 L'élève incarne un animal du zoo qui rêve de liberté : à chaque tour, il lance
@@ -49,6 +49,12 @@ Ensuite, la course commence :
   **reculer tous les autres animaux** (−1 à −6) et le **piège** fait **passer le
   prochain tour**. Un petit bouton **❔** en bas à gauche de la carte ouvre la
   **légende** (effet de chaque case, par emoji).
+- **Les gardiens 🚓 :** à partir du **10ᵉ tour**, la voiture des gardiens démarre
+  en case départ. À chaque tour, ils lancent un **double dé** (animation dédiée,
+  bruit de moteur) et foncent, **sans être ralentis par les cases spéciales**.
+  S'ils **rattrapent** un animal, il est **pris au filet 🥅 et mis en cage**
+  (éliminé de la partie). Si **tous** les animaux sont capturés, **les gardiens
+  gagnent** ; toi, tu l'emportes si tu franchis le **portail avant eux**.
 - Arrivé au **portail** (case 50), ouvre les 3 serrures : 3 bonnes réponses
   d'affilée, sans dé. La moindre erreur referme tout !
 
@@ -58,14 +64,22 @@ plus grand nombre de questions possible (écran *versus* avec les deux emojis fa
 à face et les scores en direct). Le bot répond **plus ou moins vite selon la
 difficulté** choisie. Le **gagnant avance de 6 cases**, le **perdant recule de 6**.
 
-**Collection & progression :** sur la carte de sélection, chaque animal affiche
-son statut pour la combinaison *matière · thème · difficulté* choisie :
-- **🔒 enfermé** : tu as tenté mais pas encore gagné (l'animal est grisé) ;
-- **✓ libéré** (coche verte) : tu as gagné → il est libre !
+**Collection & progression :** le statut de chaque animal est **commun à tous
+les modes de jeu** (toutes matières, tous thèmes, toutes difficultés) :
+- **✓ libéré** (coche verte) : tu as **gagné au moins une aventure** avec cet
+  animal → il est libre !
+- **🔒 enfermé** : tu l'as **déjà tenté sans jamais gagner** (l'animal est grisé).
 
-Gagner transforme le 🔒 en ✓. Le vrai défi est de libérer **tous les animaux,
-dans toutes les matières, tous les thèmes et toutes les difficultés** — de quoi
-jouer très longtemps !
+Gagner une seule aventure avec un animal le libère pour de bon. L'objectif est
+d'afficher **10 / 10 animaux libérés** !
+
+**Badges 🏅 :** un troisième onglet réunit une collection de **succès à
+débloquer** : libérer un premier animal, libérer les 10, finir une aventure
+**sans faute**, enchaîner **5, 20, 100, 250 puis 500 bonnes réponses d'affilée**,
+gagner **1, 10, 50 puis 100 duels**, consulter **5 erreurs** dans l'historique,
+réussir **10 aventures**, ou encore **battre les gardiens de vitesse**. Chaque
+badge affiche sa progression ; un petit *toast* et un bruitage célèbrent chaque
+déblocage.
 
 L'onglet **Historique** conserve toutes les questions jouées (avec la bonne
 réponse mise en évidence) pour servir de carnet de révision. Les pastilles
