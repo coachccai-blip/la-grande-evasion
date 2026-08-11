@@ -50,7 +50,7 @@
   function byId(id){ for(var i=0;i<DATA.words.length;i++){ if(DATA.words[i].id===id) return DATA.words[i]; } return null; }
   function prog(id){ return S.prog[id]||null; }
   function ensureProg(id){ if(!S.prog[id]) S.prog[id]={st:"new",stage:0,next:0,succ:0,fail:0,fav:false,added:false}; return S.prog[id]; }
-  function statusZh(st){ return {"new":"未学",learning:"学习中",review:"学习中",mastered:"已掌握",slashed:"已斩"}[st||"new"]||"未学"; }
+  function statusZh(st){ return {"new":"未学",learning:"学习中",review:"学习中",mastered:"已掌握"}[st||"new"]||"未学"; }
   function article(wd){ if(!wd.gender) return wd.word; return (wd.gender==="m"?"un ":"une ")+wd.word; }
   function displayWord(wd){ return article(wd); }
 
@@ -62,7 +62,7 @@
   }
 
   /* ------------------------------ SRS ------------------------------------ */
-  function isDue(id){ var p=prog(id); if(!p) return false; if(p.st==="slashed") return false;
+  function isDue(id){ var p=prog(id); if(!p) return false;
     if(p.st==="mastered"){ return S.settings.recycle && p.next && p.next<=now(); }
     return (p.st==="learning"||p.st==="review") && p.next<=now(); }
   function applyResult(wd, correct, isNew){
@@ -81,17 +81,14 @@
       p.fail++; p.stage=Math.max(1,p.stage-1); p.st="review"; p.next=now(); // à revoir vite, mode plus facile
     }
   }
-  function slash(id){ var p=ensureProg(id); p.st="slashed"; p.next=0; persist(); }
-  function unslash(id){ var p=ensureProg(id); p.st= p.stage>0?"review":"new"; if(p.st==="review") p.next=now(); persist(); }
   function toggleFav(id){ var p=ensureProg(id); p.fav=!p.fav; persist(); return p.fav; }
 
   /* ------------------------------ Stats ---------------------------------- */
   function stat(level){
-    var ws=wordsOf(level), s={total:ws.length,mastered:0,learning:0,neu:0,slashed:0,dueToday:0,fav:0};
+    var ws=wordsOf(level), s={total:ws.length,mastered:0,learning:0,neu:0,dueToday:0,fav:0};
     ws.forEach(function(wd){ var p=prog(wd.id);
       if(!p||p.st==="new"){ s.neu++; }
       else if(p.st==="mastered"){ s.mastered++; }
-      else if(p.st==="slashed"){ s.slashed++; }
       else { s.learning++; }
       if(p&&p.fav) s.fav++;
       if(isDue(wd.id)) s.dueToday++;
@@ -107,7 +104,7 @@
     if(favMode){
       DATA.words.forEach(function(wd){ var p=prog(wd.id); if(p&&p.fav) due.push({word:wd,isNew:false,fav:true}); });
       shuffle(due);
-      return { queue:due, idx:0, favMode:true, stats:{n:0,r:0,ok:0,total:due.length,slashed:0} };
+      return { queue:due, idx:0, favMode:true, stats:{n:0,r:0,ok:0,total:due.length} };
     }
     // révisions dues (tous niveaux — les mots ajoutés manuellement comptent)
     DATA.words.forEach(function(wd){ if(isDue(wd.id)) due.push({word:wd,isNew:false}); });
@@ -118,7 +115,7 @@
     shuffle(candidates);
     candidates.slice(0,remaining).forEach(function(wd){ neu.push({word:wd,isNew:true}); });
     var queue=due.concat(neu);
-    return { queue:queue, idx:0, favMode:false, phase:null, stats:{n:0,r:0,ok:0,total:queue.length,slashed:0} };
+    return { queue:queue, idx:0, favMode:false, phase:null, stats:{n:0,r:0,ok:0,total:queue.length} };
   }
   function startSession(favMode){
     SESS=buildSession(favMode);
@@ -201,7 +198,7 @@
       "<div class='vk-bar'><i style='width:"+pct+"%'></i></div>"+
       "<div class='vk-dist'>"+
         "<span>🆕 未学 "+s.neu+"</span><span>📖 学习中 "+s.learning+"</span>"+
-        "<span>⏰ 今日待复习 "+s.dueToday+"</span><span>✅ 已掌握 "+s.mastered+"</span><span>🗡️ 已斩 "+s.slashed+"</span>"+
+        "<span>⏰ 今日待复习 "+s.dueToday+"</span><span>✅ 已掌握 "+s.mastered+"</span>"+
       "</div>";
     wrap.appendChild(card);
     // bouton démarrer
@@ -267,9 +264,8 @@
     return wrap;
   }
 
-  function actionRow(wd, afterSlash){
-    // Plus de « 斩 » ici : le saut se fait via « 跳过 ⏭️ » (en haut de la carte).
-    // Marquer un mot comme « déjà connu » (斩) reste possible depuis le dictionnaire.
+  function actionRow(wd){
+    // Une seule action ici : « ☆ 收藏 » (favori). Passer un mot se fait via « 跳过 ⏭️ » en haut de la carte.
     var row=el("div","vk-actions");
     var p=prog(wd.id);
     var fav=el("button","vk-abtn"+((p&&p.fav)?" on":""), (p&&p.fav)?"⭐ 已收藏":"☆ 收藏");
@@ -306,9 +302,7 @@
   function discoverCard(wd){
     var box=el("div");
     box.appendChild(fiche(wd));
-    box.appendChild(actionRow(wd, function(){ // après un 斩 pendant la découverte : passer au suivant
-      SESS.stats.slashed++; nextCard();
-    }));
+    box.appendChild(actionRow(wd));
     var next=el("button","vk-next","下一个 →");
     next.onclick=function(){ SESS.phase="quiz"; renderVocab(); };
     box.appendChild(next);
@@ -411,7 +405,6 @@
       "<div class='vk-rrow'>🆕 新学 <b>"+st.n+"</b></div>"+
       "<div class='vk-rrow'>🔁 复习 <b>"+st.r+"</b></div>"+
       "<div class='vk-rrow'>🎯 正确率 <b>"+rate+"%</b></div>"+
-      "<div class='vk-rrow'>🗡️ 斩词 <b>"+st.slashed+"</b></div>"+
       (!sess.favMode && t.goal? "<div class='vk-checkin'>✅ 打卡成功！连续 "+(S.streak||0)+" 天 🔥</div>"
         : (!sess.favMode? "<div class='vk-checkin off'>还差 "+Math.max(0,(S.settings.dailyGoal||10)-t.n)+" 个新词即可打卡</div>":""));
     scroll.appendChild(c);
@@ -554,9 +547,6 @@
       var fav=el("button","vk-abtn"+((p&&p.fav)?" on":""), (p&&p.fav)?"⭐ 已收藏":"☆ 收藏");
       fav.onclick=function(){ var v=toggleFav(wd.id); fav.textContent=v?"⭐ 已收藏":"☆ 收藏"; fav.classList.toggle("on",v); };
       row.appendChild(fav);
-      // trancher / restaurer
-      if(p&&p.st==="slashed"){ var res=el("button","vk-abtn","♻️ 恢复学习"); res.onclick=function(){ unslash(wd.id); $("vkSheet").classList.remove("show"); toast("已恢复"); }; row.appendChild(res); }
-      else { var cut=el("button","vk-abtn","🗡️ 斩"); cut.onclick=function(){ slash(wd.id); $("vkSheet").classList.remove("show"); toast("已斩 🗡️"); }; row.appendChild(cut); }
       // ajouter à la file (si pas déjà en apprentissage)
       if(!p || p.st==="new"){
         var add=el("button","vk-abtn primary","➕ 加入学习");
@@ -580,6 +570,9 @@
       // complète les champs manquants (compat.)
       var d=defaults(); for(var k in d){ if(S[k]===undefined) S[k]=d[k]; }
       for(var k2 in d.settings){ if(S.settings[k2]===undefined) S.settings[k2]=d.settings[k2]; }
+      // migration : la fonction « 斩 » a été retirée — on réintègre les mots anciennement « slashed »
+      if(S.prog){ for(var pid in S.prog){ var pp=S.prog[pid];
+        if(pp&&pp.st==="slashed"){ pp.st=(pp.stage>0?"review":"new"); if(pp.st==="review") pp.next=now(); } } }
       loadVoices();
     },
     renderVocab:renderVocab,
