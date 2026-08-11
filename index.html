@@ -283,18 +283,10 @@
     font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji","Twemoji Mozilla","EmojiOne Color","Segoe UI Symbol",sans-serif;
   }
   .animal-card .nm{font-size:12px; font-weight:700; margin-top:4px;}
-  .animal-card .mission{
-    position:absolute; top:5px; right:5px; width:22px; height:22px; border-radius:50%;
-    font-size:13px; line-height:22px; text-align:center; font-weight:900;
-    display:none; box-shadow:0 2px 4px rgba(40,50,25,.25);
-  }
-  .animal-card.done .mission{display:block; background:var(--ok); color:#fff;}
-  .animal-card.jailed .mission{display:block; background:#eaeef0; font-size:12px; box-shadow:0 1px 3px rgba(40,50,25,.2);}
-  .animal-card.jailed{border-color:#cdd6cf;}
-  .animal-card.jailed .emoji{filter:grayscale(.4) opacity(.85);}
+  /* Symboles de complétion sur la photo : 🕊️ (Grande Évasion), 💰 (Empire), ✅ (les deux) */
+  .animal-card .marks{position:absolute; top:3px; right:4px; display:flex; gap:1px;
+    font-size:15px; line-height:1; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));}
   .animal-card.done{border-color:var(--ok2);}
-  .animal-card .crown{position:absolute; top:4px; left:4px; font-size:16px; line-height:1;
-    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));}
   .chip-btn.chip-locked{opacity:.6;}
   .trait-box{
     min-height:40px; margin:14px 2px 6px; padding:10px 12px; border-radius:12px;
@@ -1457,7 +1449,7 @@ var setup = { game:"evasion", cat:null, sub:null, diff:null };  // choix de l'as
 function freedCount(){
   var f={}; Object.keys(store.missions).forEach(function(k){ f[k.split("|")[0]]=1; }); return Object.keys(f).length;
 }
-function empireUnlocked(){ return freedCount()>=3; }
+function empireUnlocked(){ return true; }   /* Jeu 2 débloqué dès le départ (plus de critère de libération). */
 
 /* Assistant de configuration : jeu → matière → (thème) → difficulté → animal. */
 function buildSetup(){
@@ -1474,13 +1466,9 @@ function buildGameChoices(){
   box.appendChild(chipBtn("La Grande Évasion", setup.game==="evasion", "🦁", "var(--accent2)", function(){
     Sound.click(); setup.game="evasion"; buildSetup();
   }));
-  var unlocked=empireUnlocked();
-  var lab=unlocked ? "L'Empire des Évadés" : ("L'Empire des Évadés 🔒 ("+freedCount()+"/3)");
-  var chip=chipBtn(lab, setup.game==="empire", "👑", "#f2c14e", function(){
-    if(!unlocked){ Sound.bad(); toast("🔒 Libère au moins 3 animaux dans « La Grande Évasion » pour débloquer ce jeu.", 3200); return; }
+  var chip=chipBtn("L'Empire des Évadés", setup.game==="empire", "👑", "#f2c14e", function(){
     Sound.click(); setup.game="empire"; if(setup.sub && setup.sub!=="Tout") setup.sub="Tout"; buildSetup();
   });
-  if(!unlocked) chip.classList.add("chip-locked");
   box.appendChild(chip);
 }
 function chipBtn(label, sel, emoji, color, onclick){
@@ -1532,22 +1520,28 @@ function animalFreed(id){
 function animalTried(id){
   return Object.keys(store.attempts||{}).some(function(k){ return k.split("|")[0]===id; });
 }
+/* Complétion par mode pour un animal :
+   - evasionDone : « La Grande Évasion » réussie au moins une fois avec cet animal → 🕊️
+   - empireDone  : « L'Empire des Évadés » réussi au moins une fois avec cet animal → 💰
+   - les deux    → ✅ (check vert). Aucun verrou en cas d'échec. */
+function evasionDone(id){ return Object.keys(store.missions).some(function(k){ return k.split("|")[0]===id; }); }
+function empireDone(id){ return !!(store.empires && store.empires[id]); }
 function buildSelect(){
   var grid=$("animalGrid"); grid.innerHTML="";
   ANIMAUX.forEach(function(a){
-    var freed = animalFreed(a.id);                 // libéré (gagné au moins une fois, tous modes)
-    var jailed = !freed && animalTried(a.id);      // enfermé (déjà tenté, jamais gagné)
+    var ev = evasionDone(a.id), emp = empireDone(a.id), both = ev && emp;
     var card=document.createElement("div");
-    card.className="animal-card"+(freed?" done":"")+(jailed?" jailed":"")+(selectedAnimal===a.id?" selected":"");
+    card.className="animal-card"+(both?" done":"")+(selectedAnimal===a.id?" selected":"");
     card.appendChild(animalEl(a.id));
     var nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.name; card.appendChild(nm);
-    var m=document.createElement("div"); m.className="mission";
-    m.textContent = freed ? "✓" : (jailed ? "🔒" : "");
-    m.title = freed ? "Libéré ✓" : (jailed ? "Enfermé — gagne une aventure pour le libérer" : "");
-    card.appendChild(m);
-    if(store.empires && store.empires[a.id]){   // couronne : empire déjà bâti (jeu 2)
-      var cr=document.createElement("div"); cr.className="crown"; cr.textContent="👑"; cr.title="Empire bâti (jeu 2)";
-      card.appendChild(cr);
+    if(ev||emp){
+      var marks=document.createElement("div"); marks.className="marks";
+      var s="";
+      if(both){ s="✅"; marks.title="Aventure complétée dans les deux modes ✅"; }
+      else if(ev){ s="🕊️"; marks.title="La Grande Évasion réussie 🕊️"; }
+      else { s="💰"; marks.title="L'Empire des Évadés réussi 💰"; }
+      marks.textContent=s;
+      card.appendChild(marks);
     }
     card.onclick=function(){ Sound.click(); selectAnimal(a.id); };
     grid.appendChild(card);
@@ -1556,11 +1550,11 @@ function buildSelect(){
 function selectAnimal(id){
   selectedAnimal=id; buildSelect();
   var a=animalById(id);
-  var freed = animalFreed(id);
-  var jailed = !freed && animalTried(id);
-  $("traitBox").innerHTML = "<b>"+a.name+"</b> — "+a.trait +
-    (freed ? " <span style='color:var(--ok2)'>(libéré ✓)</span>"
-          : (jailed ? " <span style='color:var(--ink-soft)'>(enfermé 🔒 — gagne pour le libérer)</span>" : ""));
+  var ev=evasionDone(id), emp=empireDone(id);
+  var status = (ev&&emp) ? " <span style='color:var(--ok2)'>(complété 🕊️💰 ✅)</span>"
+    : (ev ? " <span style='color:var(--ok2)'>(Grande Évasion réussie 🕊️)</span>"
+    : (emp ? " <span style='color:#b8860b'>(Empire bâti 💰)</span>" : ""));
+  $("traitBox").innerHTML = "<b>"+a.name+"</b> — "+a.trait + status;
   refreshLocks();
 }
 function refreshLocks(){
