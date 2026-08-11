@@ -316,6 +316,19 @@
   .qhint{font-size:13px; font-weight:700; color:var(--accent2); background:rgba(242,193,78,.12);
     border:1px solid rgba(242,193,78,.35); border-radius:10px; padding:6px 10px; margin-bottom:10px; text-align:center;}
   .qhint:empty{display:none;}
+  /* Bouton « 中文 » + panneau d'énoncé traduit (aide apprenant chinois) */
+  .qzh-btn{flex:0 0 auto; border:0; background:linear-gradient(90deg,#e0472f,#ff7a3d); color:#fff;
+    font-family:var(--font); font-weight:800; font-size:12px; padding:5px 11px; border-radius:20px;
+    cursor:pointer; box-shadow:0 1px 3px rgba(224,71,47,.35);}
+  .qzh-btn:active{transform:translateY(1px);}
+  .qzh-btn.on{background:linear-gradient(90deg,#555,#777);}
+  .qzh-panel{display:none; margin-bottom:10px; background:rgba(224,71,47,.08);
+    border:1px solid rgba(224,71,47,.28); border-radius:10px; padding:8px 11px; text-align:center;}
+  .qzh-panel.open{display:block;}
+  .qzh-load{font-size:13px; color:var(--ink-soft);}
+  .qzh-phrase{font-size:16px; font-weight:800; color:var(--ink); line-height:1.5;}
+  .qzh-hint{font-size:13px; color:var(--accent2); font-weight:700; margin-top:5px;}
+  .qzh-tip{font-size:11px; color:var(--ink-soft); margin-top:6px;}
   .timer{height:8px; border-radius:6px; background:rgba(0,0,0,.35); overflow:hidden; margin-bottom:10px; display:none;}
   .timer > i{display:block; height:100%; width:100%; background:linear-gradient(90deg,var(--ko),var(--accent)); transition:width .1s linear;}
   .qtext{font-size:18px; line-height:1.5; margin:6px 2px 14px; text-align:center;}
@@ -795,8 +808,10 @@
         <div class="qhead">
           <span id="qBadge" class="badge">Catégorie</span>
           <span id="qContext" style="font-size:12px;color:var(--ink-soft)"></span>
+          <button id="qZhBtn" type="button" class="qzh-btn" title="用中文看题目">🇨🇳 中文</button>
         </div>
         <div id="qHint" class="qhint"></div>
+        <div id="qZhPanel" class="qzh-panel"></div>
         <div id="qTimer" class="timer"><i></i></div>
         <div id="qText" class="qtext"></div>
         <div id="qOpts" class="opts"></div>
@@ -860,6 +875,8 @@
           </div>
         </div>
         <div id="vsTimer" class="timer" style="display:block;"><i></i></div>
+        <div style="text-align:center;"><button id="vsZhBtn" type="button" class="qzh-btn" title="用中文看题目">🇨🇳 中文</button></div>
+        <div id="vsZhPanel" class="qzh-panel"></div>
         <div id="vsText" class="qtext"></div>
         <div id="vsOpts" class="opts"></div>
         <div id="vsResult" class="vs-result"></div>
@@ -1822,6 +1839,7 @@ function askQuestion(opts){
     $("qBadge").textContent=CAT_LABEL[realCat]; $("qBadge").style.background=CAT_COLOR[realCat];
     $("qContext").textContent=opts.contextLabel||"";
     $("qHint").textContent = q.hint ? ("👉 "+q.hint) : "";   // temps/notion attendu (lève l'ambiguïté)
+    wireZh(q, "qZhBtn", "qZhPanel");   // bouton « 中文 » (énoncé traduit)
     // phrase avec trou
     $("qText").innerHTML = q.phrase.replace("___","<span class='blank' id='blankSpot'>___</span>");
     var note=$("qNote"); note.textContent=""; note.className="qnote";
@@ -2035,6 +2053,7 @@ function runDuel(botIndex){
       if(over) return;
       var q=pickQuestion().q;
       if(typeof window!=="undefined") window.__q=q;   // (aide aux tests)
+      wireZh(q, "vsZhBtn", "vsZhPanel");   // bouton « 中文 » (énoncé traduit)
       $("vsText").innerHTML=q.phrase.replace("___","<span class='blank'>___</span>");
       var order=shuffle(q.options.map(function(_,i){return i;})), box=$("vsOpts"); box.innerHTML=""; answering=true;
       order.forEach(function(oi,k){
@@ -2578,6 +2597,39 @@ function fillTranslations(h, panel){
   });
 }
 
+/* --- Bouton « 中文 » sur CHAQUE question posée (aide l'apprenant chinois) --- */
+/*  Traduit l'énoncé (phrase + consigne) en chinois natif, sans dévoiler les   */
+/*  options (l'apprenant comprend l'attendu puis choisit la réponse française).*/
+function questionZhReset(btnId, panelId){
+  var btn=$(btnId), panel=$(panelId);
+  if(panel){ panel.classList.remove("open"); panel.innerHTML=""; panel.removeAttribute("data-loaded"); }
+  if(btn){ btn.textContent="🇨🇳 中文"; btn.classList.remove("on"); }
+}
+function wireZh(q, btnId, panelId){
+  questionZhReset(btnId, panelId);
+  var btn=$(btnId), panel=$(panelId);
+  if(!btn||!panel) return;
+  btn.onclick=function(ev){ if(ev) ev.stopPropagation();
+    var open=panel.classList.toggle("open");
+    btn.classList.toggle("on", open);
+    btn.textContent = open ? "✖ 关闭" : "🇨🇳 中文";
+    if(open && panel.getAttribute("data-loaded")!=="1"){
+      panel.setAttribute("data-loaded","1");
+      panel.innerHTML="<div class='qzh-load'>⏳ 翻译中…</div>";
+      var phraseSrc=String(q.phrase||"");   // on garde « ___ » : le moteur le conserve (pas de réponse dévoilée)
+      Promise.all([ trField(phraseSrc,"zh-CN"), trField(q.hint||"","zh-CN") ]).then(function(v){
+        var html="<div class='qzh-phrase'>"+escapeHtml(v[0])+"</div>";
+        if(v[1]) html+="<div class='qzh-hint'>📌 "+escapeHtml(v[1])+"</div>";
+        html+="<div class='qzh-tip'>看懂题目后，请选择正确的法语答案。</div>";
+        panel.innerHTML=html;
+      }).catch(function(){
+        panel.innerHTML="<div class='qzh-load'>⚠️ 需要联网翻译，请连网后重试。</div>";
+        panel.setAttribute("data-loaded","0");
+      });
+    }
+  };
+}
+
 var histFilter="all";   // "all" | "ok" | "ko" : filtre de l'historique (pastilles ✓/✗)
 function renderHistory(){
   var list=$("histList"); list.innerHTML="";
@@ -2702,6 +2754,7 @@ function presentQuestion(cat, sub, diff, contextLabel){
     $("qBadge").textContent=CAT_LABEL[realCat]; $("qBadge").style.background=CAT_COLOR[realCat]||"#888";
     $("qContext").textContent=contextLabel||"";
     $("qHint").textContent = q.hint ? ("👉 "+q.hint) : "";
+    wireZh(q, "qZhBtn", "qZhPanel");   // bouton « 中文 » (énoncé traduit)
     $("qText").innerHTML = q.phrase.replace("___","<span class='blank' id='blankSpot'>___</span>");
     var note=$("qNote"); note.textContent=""; note.className="qnote";
     $("qTimer").style.display="none";
