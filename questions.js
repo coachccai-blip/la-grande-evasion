@@ -1998,28 +1998,88 @@
     {d:4,ph:"On visite deux ___ magnifiques.",good:"châteaux",bad:["château","chateaux","châteaus"],note:"pluriel en -eaux"},
     {d:5,ph:"Les ___ de mer sont salés.",good:"coraux",bad:["corails","coreaux","coraus"],note:"pluriel en -aux"}
   ];
-  var MBP = [
-    {d:2,ph:"Une ___ éclaire la nuit.",good:"lampe",bad:["lanpe","lempe","lampé"],note:"m devant p"},
-    {d:3,ph:"Le blé pousse dans le ___.",good:"champ",bad:["chanp","cham","chemp"],note:"m devant p"},
-    {d:3,ph:"Il joue de la ___.",good:"trompette",bad:["tronpette","trempette","trompète"],note:"m devant p"},
-    {d:3,ph:"Le ___ sonne midi.",good:"tambour",bad:["tanbour","tembour","tambourg"],note:"m devant b"},
-    {d:4,ph:"Un nombre ___.",good:"important",bad:["inportant","emportant","importent"],note:"m devant p"},
-    {d:2,ph:"La ___ est bleue.",good:"jambe",bad:["janbe","jenbe","jambé"],note:"m devant b"},
-    {d:3,ph:"Je colle un ___ sur l'enveloppe.",good:"timbre",bad:["tinbre","timbré","timbe"],note:"m devant b"},
-    {d:4,ph:"Le fruit ___ par terre.",good:"tombe",bad:["tonbe","tumbe","tombé"],note:"m devant b"},
-    {d:4,ph:"Le ___ éteint le feu.",good:"pompier",bad:["ponpier","pompié","pumpier"],note:"m devant p"},
-    {d:4,ph:"On change l'___ grillée.",good:"ampoule",bad:["anpoule","empoule","ampoulle"],note:"m devant p"},
-    {d:5,ph:"Nous partons à la ___.",good:"campagne",bad:["canpagne","campane","cempagne"],note:"m devant p"},
-    {d:4,ph:"Elle range sa ___.",good:"chambre",bad:["chanbre","chambr","chembre"],note:"m devant b"},
-    {d:2,ph:"Le ___ pousse dans le jardin (long légume vert).",good:"concombre",bad:["conconbre","conconbré","concombr"],note:"m devant b"},
-    {d:3,ph:"Le vent fait ___ les feuilles.",good:"trembler",bad:["trenbler","tremblér","trambler"],note:"m devant b"},
-    {d:4,ph:"Le ___ souffle très fort aujourd'hui.",good:"tempête",bad:["tenpête","tempéte","tampête"],note:"m devant p"},
-    {d:3,ph:"L'arbre projette son ___ sur le sol.",good:"ombre",bad:["onbre","ombré","ambre"],note:"m devant b"},
-    {d:4,ph:"Écris le ___ vingt en chiffres.",good:"nombre",bad:["nonbre","nombré","nanbre"],note:"m devant b"},
-    {d:2,ph:"Il faut ___ à la corde à la récré.",good:"grimper",bad:["grinper","grimpér","grimpper"],note:"m devant p"},
-    {d:3,ph:"L'école recommence en ___.",good:"septembre",bad:["septenbre","septembré","septambre"],note:"m devant b"},
-    {d:4,ph:"Je cueille une ___ bien mûre (petit fruit rouge).",good:"framboise",bad:["franboise","framboisé","framboize"],note:"m devant b"}
+  /* --- m devant m, b, p : générateur PARTITIONNÉ --- */
+  var MBP_ITEMS = [
+    {ph:"Une ___ éclaire la nuit.",good:"lampe",bad:["lanpe","lempe","lampé"],note:"m devant p",d:1},
+    {ph:"La ___ est repliée sous la chaise.",good:"jambe",bad:["janbe","jenbe","jambé"],note:"m devant b",d:1},
+    {ph:"La ___ à vélo regonfle le pneu.",good:"pompe",bad:["ponpe","pumpe","pompé"],note:"m devant p",d:1},
+    {ph:"Je colle un ___ sur l'enveloppe.",good:"timbre",bad:["tinbre","timbré","timbe"],note:"m devant b",d:1},
+    {ph:"L'arbre projette son ___ sur le sol.",good:"ombre",bad:["onbre","ombré","ambre"],note:"m devant b",d:1},
+    {ph:"Attention à ne pas ___ dans l'escalier.",good:"tomber",bad:["tonber","tumber","tombér"],note:"m devant b",d:1},
+    {ph:"Il faut ___ à la corde à la récré.",good:"grimper",bad:["grinper","grimpér","grimpper"],note:"m devant p",d:1},
+    {ph:"Le ___ sonne midi dans la fanfare.",good:"tambour",bad:["tanbour","tembour","tambourg"],note:"m devant b",d:1},
+    {ph:"Le blé pousse dans le ___.",good:"champ",bad:["chanp","cham","chemp"],note:"m devant p",d:1},
+    {ph:"Elle range sa ___ avant de dormir.",good:"chambre",bad:["chanbre","chambr","chembre"],note:"m devant b",d:1},
+    {ph:"Il joue de la ___ dans l'orchestre.",good:"trompette",bad:["tronpette","trempette","trompète"],note:"m devant p",d:1},
+    {ph:"Le ___ éteint le feu.",good:"pompier",bad:["ponpier","pompié","pumpier"],note:"m devant p",d:1},
+    {ph:"La ___ explose dans le film.",good:"bombe",bad:["bonbe","boumbe","bombé"],note:"m devant b",d:1},
+    {ph:"C'est un événement très ___.",good:"important",bad:["inportant","emportant","importent"],note:"m devant p",d:2},
+    {ph:"Ce problème est vraiment ___.",good:"simple",bad:["sinple","cimple","simpe"],note:"m devant p",d:2},
+    {ph:"On change l'___ grillée.",good:"ampoule",bad:["anpoule","empoule","ampoulle"],note:"m devant p",d:2},
+    {ph:"Nous partons à la ___ ce week-end.",good:"campagne",bad:["canpagne","campane","cempagne"],note:"m devant p",d:2},
+    {ph:"L'école recommence en ___.",good:"septembre",bad:["septenbre","septembré","septambre"],note:"m devant b",d:2},
+    {ph:"Les feuilles tombent en ___.",good:"novembre",bad:["novenbre","novambre","novembr"],note:"m devant b",d:2},
+    {ph:"Noël arrive en ___.",good:"décembre",bad:["décenbre","décambre","décembr"],note:"m devant b",d:2},
+    {ph:"Écris le ___ vingt en chiffres.",good:"nombre",bad:["nonbre","nombré","nanbre"],note:"m devant b",d:2},
+    {ph:"Chaque ___ de la famille est présent.",good:"membre",bad:["menbre","mambre","membr"],note:"m devant b",d:2},
+    {ph:"Le ___ pousse dans le jardin (long légume vert).",good:"concombre",bad:["conconbre","conconbré","concombr"],note:"m devant b",d:2},
+    {ph:"Je cueille une ___ bien mûre (petit fruit rouge).",good:"framboise",bad:["franboise","framboisé","framboize"],note:"m devant b",d:2},
+    {ph:"Le vent fait ___ les feuilles.",good:"trembler",bad:["trenbler","tremblér","trambler"],note:"m devant b",d:2},
+    {ph:"La ___ souffle très fort aujourd'hui.",good:"tempête",bad:["tenpête","tempéte","tampête"],note:"m devant p",d:2},
+    {ph:"Il faut ___ un parapluie au cas où.",good:"emporter",bad:["enporter","amporter","emportér"],note:"m devant p",d:3},
+    {ph:"Papa va m'___ à l'école ce matin.",good:"emmener",bad:["enmener","ammener","emenér"],note:"m devant m",d:3},
+    {ph:"Je vais enfin ___ cette leçon difficile.",good:"comprendre",bad:["conprendre","comprandre","comprendr"],note:"m devant p",d:3},
+    {ph:"Je mange une ___ de pommes au dessert.",good:"compote",bad:["conpote","compoté","compotte"],note:"m devant p",d:3},
+    {ph:"Il faut ___ le verre d'eau à ras bord.",good:"remplir",bad:["renplir","ramplir","remplire"],note:"m devant p",d:3},
+    {ph:"La cave est ___ et humide.",good:"sombre",bad:["sonbre","sombré","sambre"],note:"m devant b",d:3},
+    {ph:"Je vais ___ ma grand-mère sur la joue.",good:"embrasser",bad:["enbrasser","ambrasser","embrassér"],note:"m devant b",d:3},
+    {ph:"Nous jouons tous ___ dans la cour.",good:"ensemble",bad:["ensenble","ensamble","ensembe"],note:"m devant b",d:3},
+    {ph:"Donne-moi un ___ pour bien comprendre.",good:"exemple",bad:["exenple","exampe","exempe"],note:"m devant p",d:3},
+    {ph:"Le ___ est nuageux ce matin.",good:"temps",bad:["tenps","tamps","temp"],note:"m devant p",d:3},
+    {ph:"Une tranche de ___ dans le sandwich.",good:"jambon",bad:["janbon","jembon","jambont"],note:"m devant b",d:3},
+    {ph:"La ___ est un oiseau symbole de paix.",good:"colombe",bad:["colonbe","colombé","coulombe"],note:"m devant b",d:3},
+    {ph:"Le panda mange des tiges de ___.",good:"bambou",bad:["banbou","bembou","bambout"],note:"m devant b",d:3},
+    {ph:"Le chat va ___ la pelote de laine.",good:"emmêler",bad:["enmêler","ammêler","emmélé"],note:"m devant m",d:4},
+    {ph:"Le désert du Sahara est ___.",good:"immense",bad:["inmense","imense","immanse"],note:"m devant m",d:4},
+    {ph:"Ils vont ___ dans leur nouvelle maison.",good:"emménager",bad:["enménager","amménager","emmenagér"],note:"m devant m",d:4},
+    {ph:"Pour la photo, reste bien ___ !",good:"immobile",bad:["inmobile","imobile","immobil"],note:"m devant m",d:4},
+    {ph:"Il faut ___ le trou avec du sable.",good:"combler",bad:["conbler","cambler","comblér"],note:"m devant b",d:4},
+    {ph:"La banque va me ___ ces frais.",good:"rembourser",bad:["renbourser","rambourser","remboursér"],note:"m devant b",d:4},
+    {ph:"Il faut ___ les pièces du meuble.",good:"assembler",bad:["assenbler","assamblér","assembe"],note:"m devant b",d:4},
+    {ph:"Je vais ___ la photo de vacances.",good:"imprimer",bad:["inprimer","amprimer","imprimér"],note:"m devant p",d:4},
+    {ph:"Je jette l'___ du cadeau à la poubelle.",good:"emballage",bad:["enballage","amballage","emballagé"],note:"m devant b",d:4},
+    {ph:"Le chien est un fidèle ___.",good:"compagnon",bad:["conpagnon","campagnon","compagnont"],note:"m devant p",d:4},
+    {ph:"Le ___ éclaire toute la rue le soir.",good:"lampadaire",bad:["lanpadaire","lempadaire","lampadère"],note:"m devant p",d:4},
+    {ph:"Il y a un énorme ___ sur l'autoroute.",good:"embouteillage",bad:["enbouteillage","ambouteillage","embouteillagé"],note:"m devant b",d:4},
+    {ph:"Le plongeur s'élance depuis le ___.",good:"tremplin",bad:["trenplin","tramplin","tremplan"],note:"m devant p",d:4},
+    {ph:"Dans la légende, le héros se croit ___.",good:"immortel",bad:["inmortel","imortel","immortèl"],note:"m devant m",d:5},
+    {ph:"Ce plat complètement brûlé est ___.",good:"immangeable",bad:["inmangeable","imangeable","immangéable"],note:"m devant m",d:5},
+    {ph:"La forêt vierge est presque ___.",good:"impénétrable",bad:["inpénétrable","empénétrable","impénétrabe"],note:"m devant p",d:5},
+    {ph:"Son écriture minuscule est ___.",good:"incompréhensible",bad:["inconpréhensible","incomprénsible","incompréensible"],note:"m devant p",d:5},
+    {ph:"La tour Eiffel est ___ de Paris.",good:"emblématique",bad:["enblématique","amblématique","emblematique"],note:"m devant b",d:5},
+    {ph:"Le bateau accoste au bout de l'___.",good:"embarcadère",bad:["enbarcadère","ambarcadère","embarcadere"],note:"m devant b",d:5},
+    {ph:"Ce matin, je presse un ___ pour le jus.",good:"pamplemousse",bad:["panplemousse","pemplemousse","pamplemouse"],note:"m devant p",d:5},
+    {ph:"Dans la fanfare, il joue du ___.",good:"trombone",bad:["tronbone","trambone","trombonne"],note:"m devant b",d:5},
+    {ph:"Le coucher de soleil est ___.",good:"flamboyant",bad:["flanboyant","flemboyant","flamboyent"],note:"m devant b",d:5},
+    {ph:"Le maître doit ___ tous les élèves.",good:"rassembler",bad:["rassenbler","rassamblér","rassembe"],note:"m devant b",d:5},
+    {ph:"Mon manteau de pluie est ___.",good:"imperméable",bad:["inperméable","amperméable","impermeable"],note:"m devant p",d:5},
+    {ph:"Une victoire aussi nette semblait ___.",good:"improbable",bad:["inprobable","amprobable","improbabe"],note:"m devant p",d:5},
+    {ph:"Les invités sont arrivés en ___ (trop nombreux).",good:"surnombre",bad:["surnonbre","surnambre","surnombr"],note:"m devant b",d:5},
+    {ph:"On raconte cette légende depuis un temps ___.",good:"immémorial",bad:["inmémorial","imémorial","immémoriel"],note:"m devant m",d:6},
+    {ph:"En hiver, il faut bien s'___ sous les couvertures.",good:"emmitoufler",bad:["enmitoufler","ammitoufler","emmitouflér"],note:"m devant m",d:6},
+    {ph:"Cette aventure invraisemblable est vraiment ___.",good:"rocambolesque",bad:["rocanbolesque","rocambolesqe","rocambolésque"],note:"m devant b",d:6},
+    {ph:"Face au danger, il reste ___.",good:"imperturbable",bad:["inperturbable","amperturbable","imperturbabe"],note:"m devant p",d:6},
+    {ph:"Il est arrivé à l'___ (à l'improviste, sans préparation).",good:"impromptu",bad:["inpromptu","amproptu","impromptü"],note:"m devant p",d:6},
+    {ph:"On admire le ___ des flammes dans la cheminée.",good:"flamboiement",bad:["flanboiement","flamboyement","flamboiemant"],note:"m devant b",d:6},
+    {ph:"La guerre entraîna le ___ de l'empire (sa division).",good:"démembrement",bad:["démenbrement","démambrement","démembremant"],note:"m devant b",d:6},
+    {ph:"Avec l'âge, il a pris de l'___ (de la rondeur).",good:"embonpoint",bad:["embompoint","enbonpoint","ambonpoint"],note:"Exception : « embonpoint » garde le n devant p (bon + point).",d:6},
+    {ph:"Il pleut ; ___, je sortirai (malgré cela).",good:"néanmoins",bad:["néammoins","néanmoin","néenmoins"],note:"Exception : « néanmoins » garde le n devant m.",d:6},
+    {ph:"On offre une jolie ___ pleine de chocolats.",good:"bonbonnière",bad:["bombonnière","bonbonière","banbonnière"],note:"Exception : « bonbon » et ses dérivés gardent le n.",d:6},
+    {ph:"Le violon assure le bel ___ musical (soutien du chant).",good:"accompagnement",bad:["acconpagnement","accompagnemant","accompagnment"],note:"m devant p",d:6},
+    {ph:"À la sortie du concert, l'___ des rues est total.",good:"encombrement",bad:["enconbrement","encombremant","encumbrement"],note:"m devant b",d:6},
+    {ph:"Sa décision reste ___ (qui ne change jamais).",good:"immuable",bad:["inmuable","imuable","immuabe"],note:"m devant m",d:6}
   ];
+  var MBP_FRAMES=["{PH}","Orthographe — {PH}","Écris correctement le mot : {PH}","Attention à la règle m/n : {PH}"];
   /* ---- Orthographe de niveau avancé (vers le C1) ---- */
   var HOMOG = [ // homophones GRAMMATICAUX avancés
     {d:4,ph:"Je me demande ___ heure il est.",good:"quelle",bad:["qu'elle","quel","quels"],note:"« quelle » = déterminant interrogatif (féminin) ; « qu'elle » = que + elle."},
@@ -2201,16 +2261,22 @@
       options:build(good,bad), answer:0 };
   }
 
+  function genMbp(diff,cat,sub){
+    var it=pick(bandFilter(MBP_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(MBP_FRAMES).replace("{PH}",it.ph), hint:"Règle m devant m, b, p",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genOrt(sub, diff, cat){
     var it, hint;
     if(sub==="Pluriels") return genPluriels(diff,cat,sub);
     if(sub==="Adverbes en -ment") return genAdverbes(diff,cat,sub);
     if(sub==="é ou er") return genErE(diff,cat,sub);
+    if(sub==="m devant m, b, p") return genMbp(diff,cat,sub);
     if(sub==="Homophones"){ it=pickByDiff(HOMOPH,diff); hint="Homophones ("+it.note+")"; }
     else if(sub==="é ou er"){ it=pickByDiff(ER_E,diff); hint="é (participe) ou er (infinitif) ?"; }
     else if(sub==="Accents"){ it=pickByDiff(ACCENTS,diff); hint="Orthographe : "+it.note; }
     else if(sub==="Pluriels"){ it=pickByDiff(PLUR,diff); hint="Écris le bon pluriel"; }
-    else if(sub==="m devant m, b, p"){ it=pickByDiff(MBP,diff); hint="Règle m devant m, b, p"; }
     else if(sub==="Homophones grammaticaux"){ it=pickByDiff(HOMOG,diff); hint="Homophones grammaticaux"; }
     else if(sub==="Adverbes en -ment"){ it=pickByDiff(ADVMENT,diff); hint="Forme l'adverbe en -ment"; }
     else { it=pickByDiff(HOMOPH,diff); hint="Orthographe"; }
