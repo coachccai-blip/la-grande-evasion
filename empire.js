@@ -9,6 +9,7 @@
   var EB=null;              // pont fourni par index.html
   var E=null;               // état de la partie en cours
   var busy=false;
+  var speed=1;              // ×2 pendant le tour des autres animaux (parties plus rapides)
 
   /* ----------------------------- DONNÉES ---------------------------------- */
   // 8 quartiers de 2 propriétés. Prix croissants (60 → 400 ₵).
@@ -97,7 +98,7 @@
   /* ----------------------------- HELPERS ---------------------------------- */
   function $(id){ return document.getElementById(id); }
   function el(tag,cls,txt){ var e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
-  function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, Math.round(ms/speed)); }); }
   function rint(n){ return Math.floor(Math.random()*n); }
   function me(){ return E.players[0]; }
   function alive(p){ return !p.bankrupt; }
@@ -647,13 +648,16 @@
 
   /* ------------------------------- BOTS ----------------------------------- */
   async function botsPhase(){
-    for(var i=1;i<E.players.length;i++){ if(E.over) return; var p=E.players[i]; if(p.bankrupt) continue;
-      say(EB.animalById(p.animalId).name+" joue…"); await sleep(350);
-      if(p.jail>0){ await jailTurn(i); if(p.jail>0){ continue; } }
-      await doRoll(i, false);
-      if(E.over) return;
-      await botBuild(i);
-    }
+    speed=2; // les tours des animaux défilent 2× plus vite
+    try{
+      for(var i=1;i<E.players.length;i++){ if(E.over) return; var p=E.players[i]; if(p.bankrupt) continue;
+        say(EB.animalById(p.animalId).name+" joue…"); await sleep(350);
+        if(p.jail>0){ await jailTurn(i); if(p.jail>0){ continue; } }
+        await doRoll(i, false);
+        if(E.over) return;
+        await botBuild(i);
+      }
+    } finally { speed=1; }
     // tour terminé : reset OPA
     E.players.forEach(function(p){ p.opaUsed=false; });
     checkVictory();
