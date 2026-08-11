@@ -1318,29 +1318,89 @@
     {d:4,a:"courageux",b:"peureux"}, {d:2,a:"jeune",b:"vieux"},
     {d:3,a:"tôt",b:"tard"}, {d:5,a:"généreux",b:"avare"}
   ];
-  var HOMO = [
-    {d:3,ph:"On se baigne dans la ___ (grande étendue d'eau salée).",good:"mer",bad:["mère","maire","mers"]},
-    {d:3,ph:"Ma ___ me lit une histoire (ma maman).",good:"mère",bad:["mer","maire","mères"]},
-    {d:3,ph:"Un ___ de terre creuse le sol (petit animal mou).",good:"ver",bad:["verre","vert","vers"]},
-    {d:3,ph:"Je bois de l'eau dans un ___ (récipient).",good:"verre",bad:["ver","vert","vers"]},
-    {d:3,ph:"Les élèves jouent dans la ___ de l'école (espace extérieur).",good:"cour",bad:["cours","court","courre"]},
-    {d:2,ph:"Le boulanger vend du ___ (aliment doré).",good:"pain",bad:["pin","peint","pains"]},
-    {d:4,ph:"On remplit le ___ d'eau (récipient à anse).",good:"seau",bad:["sceau","sot","saut"]},
-    {d:4,ph:"Le fermier laboure son ___ (grand terrain).",good:"champ",bad:["chant","champs","chants"]},
-    {d:4,ph:"Le soir, papa me lit un ___ de fées (histoire).",good:"conte",bad:["compte","comte","contes"]},
-    {d:3,ph:"Il était une ___, un lion rêvait de liberté (autrefois).",good:"fois",bad:["foi","foie","foies"]},
-    {d:2,ph:"La grenouille saute dans l'___ (liquide).",good:"eau",bad:["au","haut","oh"]},
-    {d:5,ph:"Le roi vit dans un ___ (grande demeure).",good:"palais",bad:["palet","palée","palaix"]},
-    {d:4,ph:"Il y a ___ élèves dans l'école (nombre 100).",good:"cent",bad:["sang","sans","s'en"]},
-    {d:3,ph:"L'oiseau bat des ___ (pour voler).",good:"ailes",bad:["elles","aile","ails"]},
-    {d:3,ph:"Le chat a mal à la ___ après le saut (partie du corps).",good:"patte",bad:["pâte","pate","pattes"]},
-    {d:4,ph:"On fait des crêpes avec de la ___ (mélange à cuire).",good:"pâte",bad:["patte","pate","pâtes"]},
-    {d:2,ph:"Le garçon lance le ___ à son chien (objet rond).",good:"ballon",bad:["balai","bâillon","ballons"]},
-    {d:3,ph:"Le chat guette la petite ___ grise (rongeur).",good:"souris",bad:["sourit","sourie","souri"]},
-    {d:4,ph:"Le prince épouse la belle ___ (fille du roi).",good:"reine",bad:["rêne","renne","reines"]},
-    {d:5,ph:"Le renne tire le traîneau grâce à sa ___ (lanière de cuir).",good:"rêne",bad:["reine","renne","rênes"]},
-    {d:4,ph:"Le chevalier porte une lourde ___ (protection de métal).",good:"armure",bad:["ramure","armurer","armures"]}
+  /* --- Homonymes : générateur PARTITIONNÉ (le sens entre parenthèses guide) --- */
+  var HOMO_ITEMS = [
+    {ph:"La grenouille saute dans l'___ (liquide transparent qu'on boit).",good:"eau",bad:["au","haut","oh"],d:1},
+    {ph:"Le boulanger vend du ___ (aliment doré du matin).",good:"pain",bad:["pin","peint","pains"],d:1},
+    {ph:"On se baigne dans la ___ (grande étendue d'eau salée).",good:"mer",bad:["mère","maire","mers"],d:1},
+    {ph:"Ma ___ me lit une histoire (la maman).",good:"mère",bad:["mer","maire","mères"],d:1},
+    {ph:"Un ___ de terre creuse le sol (petit animal mou).",good:"ver",bad:["verre","vert","vers"],d:1},
+    {ph:"Je bois de l'eau dans un ___ (récipient transparent).",good:"verre",bad:["ver","vert","vers"],d:1},
+    {ph:"L'écharpe se met autour du ___ (entre la tête et les épaules).",good:"cou",bad:["coup","coût","cous"],d:1},
+    {ph:"Cette ___ me fait mal quand je mange (dans la bouche).",good:"dent",bad:["dans","d'en","dents"],d:1},
+    {ph:"Je montre la lune avec le ___ (au bout de la main).",good:"doigt",bad:["doit","dois","doigts"],d:1},
+    {ph:"Grand-mère range la confiture dans un ___ (petit récipient).",good:"pot",bad:["peau","pots","port"],d:1},
+    {ph:"Le soleil brûle la ___ (elle recouvre le corps).",good:"peau",bad:["pot","peaux","pau"],d:1},
+    {ph:"À la cantine, on mange du ___ (petite céréale blanche).",good:"riz",bad:["ris","rit","rie"],d:1},
+    {ph:"Le clown a un gros ___ rouge (au milieu du visage, pour sentir).",good:"nez",bad:["né","nés","nées"],d:1},
+    {ph:"Papa me lit un ___ de fées (histoire pour enfants).",good:"conte",bad:["compte","comte","contes"],d:2},
+    {ph:"Le banquier vérifie mon ___ (total d'argent).",good:"compte",bad:["conte","comte","comptes"],d:2},
+    {ph:"Le blessé perd du ___ (liquide rouge des veines).",good:"sang",bad:["cent","sans","s'en"],d:2},
+    {ph:"Il y a ___ élèves dans l'école (le nombre 100).",good:"cent",bad:["sang","sans","s'en"],d:2},
+    {ph:"Dehors, le ___ est à la pluie (ce qu'il fait dans le ciel).",good:"temps",bad:["tant","tend","taon"],d:2},
+    {ph:"J'ai un peu ___ (croyance en quelque chose).",good:"foi",bad:["foie","fois","foies"],d:2},
+    {ph:"Le médecin ausculte mon ___ (organe qui filtre le sang).",good:"foie",bad:["foi","fois","foies"],d:2},
+    {ph:"Ma ___ est la sœur de maman (membre de la famille).",good:"tante",bad:["tente","tantes","temps"],d:2},
+    {ph:"On dort sous la ___ pendant le camping (abri de toile).",good:"tente",bad:["tante","tentes","temps"],d:2},
+    {ph:"Le renard se cache dans le ___ (grand terrain cultivé).",good:"champ",bad:["chant","champs","chants"],d:2},
+    {ph:"J'aime écouter le ___ des oiseaux (mélodie).",good:"chant",bad:["champ","chants","chan"],d:2},
+    {ph:"Je porte une ___ en or au cou (suite d'anneaux).",good:"chaîne",bad:["chêne","chaînes","chaine"],d:2},
+    {ph:"Le vieux ___ perd ses feuilles en automne (grand arbre).",good:"chêne",bad:["chaîne","chênes","chaine"],d:2},
+    {ph:"Les élèves jouent dans la ___ de l'école (espace extérieur).",good:"cour",bad:["cours","court","courre"],d:3},
+    {ph:"Le professeur donne un ___ de grammaire (leçon).",good:"cours",bad:["cour","court","courre"],d:3},
+    {ph:"Le chat guette la petite ___ grise (rongeur).",good:"souris",bad:["sourit","sourie","souri"],d:3},
+    {ph:"Il était une ___, un lion rêvait de liberté (autrefois).",good:"fois",bad:["foi","foie","foies"],d:3},
+    {ph:"Le chien lève la ___ avant de sauter (jambe d'un animal).",good:"patte",bad:["pâte","pate","pattes"],d:3},
+    {ph:"On étale la ___ pour faire une tarte (mélange à cuire).",good:"pâte",bad:["patte","pate","pâtes"],d:3},
+    {ph:"L'aigle déploie ses ___ pour voler (ce qui bat dans les airs).",good:"ailes",bad:["elles","aile","ails"],d:3},
+    {ph:"Le ___ de la ville a inauguré l'école (chef élu de la commune).",good:"maire",bad:["mer","mère","maires"],d:3},
+    {ph:"Ce vieux mur est vraiment ___ (le contraire de beau).",good:"laid",bad:["lait","les","laie"],d:3},
+    {ph:"Le veau boit le ___ de sa mère (boisson blanche).",good:"lait",bad:["laid","les","laie"],d:3},
+    {ph:"Le chercheur d'or plonge son ___ dans la rivière (récipient à anse).",good:"seau",bad:["sceau","sot","saut"],d:3},
+    {ph:"L'athlète réussit un beau ___ en longueur (bond).",good:"saut",bad:["seau","sceau","sot"],d:3},
+    {ph:"Le poète écrit des ___ qui riment (lignes d'un poème).",good:"vers",bad:["ver","verre","vert"],d:3},
+    {ph:"Le roi appose son ___ officiel sur la lettre (cachet qui scelle).",good:"sceau",bad:["seau","sot","saut"],d:4},
+    {ph:"La ___ salue son peuple depuis le balcon (épouse du roi).",good:"reine",bad:["rêne","renne","reines"],d:4},
+    {ph:"Le cavalier tient les ___ à deux mains (lanières pour diriger).",good:"rênes",bad:["reines","rennes","raines"],d:4},
+    {ph:"Le chevalier enfile sa lourde ___ (protection de métal).",good:"armure",bad:["ramure","armures","armurer"],d:4},
+    {ph:"Le comte habite un somptueux ___ (grande et riche demeure).",good:"palais",bad:["palet","palée","palaix"],d:4},
+    {ph:"Le ___ dirige son domaine (titre de noblesse).",good:"comte",bad:["conte","compte","comtes"],d:4},
+    {ph:"Un ___ tourne autour du cheval (grosse mouche qui pique).",good:"taon",bad:["temps","tant","tend"],d:4},
+    {ph:"Le ___ annonce l'arrivée du roi (messager officiel).",good:"héraut",bad:["héros","héraux","éraut"],d:4},
+    {ph:"Le pompier est le ___ du jour (personnage très courageux).",good:"héros",bad:["héraut","héro","héroï"],d:4},
+    {ph:"Un ___ glisse sur le lac gelé (grand oiseau blanc au long cou).",good:"cygne",bad:["signe","cygnes","singe"],d:4},
+    {ph:"Il me fait un ___ de la main (geste qui veut dire quelque chose).",good:"signe",bad:["cygne","singe","signes"],d:4},
+    {ph:"Le ___ retient les impuretés du café (il purifie).",good:"filtre",bad:["philtre","filtres","filtrer"],d:4},
+    {ph:"On joue au ___ sur un grand parcours à trous (sport à petite balle).",good:"golf",bad:["golfe","golfs","goffe"],d:4},
+    {ph:"Le ___ tire le traîneau du Père Noël (cervidé du Grand Nord).",good:"renne",bad:["reine","rêne","rennes"],d:5},
+    {ph:"La sorcière prépare un ___ d'amour (potion magique).",good:"philtre",bad:["filtre","philtres","philtree"],d:5},
+    {ph:"Les bateaux mouillent dans le ___ (grande baie dans la côte).",good:"golfe",bad:["golf","golfes","goffe"],d:5},
+    {ph:"L'enseignant, ancien ___ d'école, corrige les copies (celui qui instruit).",good:"maître",bad:["mètre","mettre","maîtres"],d:5},
+    {ph:"On range les provisions au frais dans le ___ (pièce fraîche de la maison).",good:"cellier",bad:["sellier","celliers","sélier"],d:5},
+    {ph:"Le ___ répare la selle du cheval (artisan du cuir).",good:"sellier",bad:["cellier","selliers","sélier"],d:5},
+    {ph:"Ce chevalier fut un ___ de sa cause (personne qui souffre pour sa foi).",good:"martyr",bad:["martyre","martyrs","martir"],d:5},
+    {ph:"L'ermite finit ses jours dans un ___ (maison qui accueille les vieillards).",good:"hospice",bad:["auspice","hospices","ospice"],d:5},
+    {ph:"Les bandits regagnent leur ___ secret (abri caché).",good:"repaire",bad:["repère","repaires","reperre"],d:5},
+    {ph:"Le marin prend un ___ sur la côte (marque pour se situer).",good:"repère",bad:["repaire","repères","reperre"],d:5},
+    {ph:"Le menuisier scie une planche d'un ___ (unité de longueur).",good:"mètre",bad:["maître","mettre","mètres"],d:5},
+    {ph:"Les enfants chantent en ___ à la fête (groupe de chanteurs).",good:"chœur",bad:["cœur","chœurs","cheur"],d:5},
+    {ph:"Le chasseur sonne du ___ dans la forêt (instrument à vent recourbé).",good:"cor",bad:["corps","cors","encor"],d:5},
+    {ph:"L'artiste trace un beau ___ au fusain (image faite au crayon).",good:"dessin",bad:["dessein","dessins","dessain"],d:6},
+    {ph:"Le stratège nourrit un ___ ambitieux (projet, intention).",good:"dessein",bad:["dessin","desseins","dessain"],d:6},
+    {ph:"La fée finit par ___ le vœu de l'enfant (le réaliser).",good:"exaucer",bad:["exhausser","exaucé","exocer"],d:6},
+    {ph:"Les ouvriers vont ___ la digue d'un mètre (la surélever).",good:"exhausser",bad:["exaucer","exhaussé","exocer"],d:6},
+    {ph:"Nul n'est ___ ignorer la loi (supposé, réputé).",good:"censé",bad:["sensé","censés","cencé"],d:6},
+    {ph:"Voilà enfin un choix ___ (plein de bon sens).",good:"sensé",bad:["censé","sensés","cencé"],d:6},
+    {ph:"Il y a une ___ d'encre sur la nappe (marque de saleté).",good:"tache",bad:["tâche","taches","tasche"],d:6},
+    {ph:"Chacun accomplit sa ___ du jour (travail à faire).",good:"tâche",bad:["tache","tâches","tasche"],d:6},
+    {ph:"L'orateur marque une ___ avant de conclure (arrêt momentané).",good:"pause",bad:["pose","pauses","pôse"],d:6},
+    {ph:"Le modèle prend la ___ devant l'objectif (attitude pour la photo).",good:"pose",bad:["pause","poses","pôse"],d:6},
+    {ph:"Ce vieil homme paraît bien ___ (usé par la vieillesse).",good:"décrépit",bad:["décrépi","décrépits","decrépit"],d:6},
+    {ph:"Le mur ___ laisse voir ses briques (dont le crépi tombe).",good:"décrépi",bad:["décrépit","décrépis","decrépi"],d:6},
+    {ph:"Le vinaigre a un goût ___ (relatif à l'acide du vinaigre).",good:"acétique",bad:["ascétique","acétiques","assétique"],d:6},
+    {ph:"Le moine mène une vie ___ (austère, faite de privations).",good:"ascétique",bad:["acétique","ascétiques","assétique"],d:6}
   ];
+  var HOMO_FRAMES=["{PH}","Le bon homonyme — {PH}","Complète avec le bon homonyme : {PH}","Choisis le mot juste : {PH}"];
   var FAMILLE = [
     {d:2,ph:"Un petit jardin est un ___.",good:"jardinet",bad:["jardinier","jardinage","jardiner"]},
     {d:3,ph:"Celui qui s'occupe du jardin est le ___.",good:"jardinier",bad:["jardinet","jardinage","jardin"]},
@@ -1607,10 +1667,17 @@
       options:build(it.good,it.bad.slice()), answer:0 };
   }
 
+  function genHomonymes(diff,cat,sub){
+    var it=pick(bandFilter(HOMO_ITEMS,diff,"d"));
+    return { cat:cat, sub:sub, phrase:pick(HOMO_FRAMES).replace("{PH}",it.ph), hint:"Choisis le bon homonyme",
+      note:"Des homonymes se prononcent pareil mais s'écrivent différemment et n'ont pas le même sens ; l'indice entre parenthèses lève le doute.",
+      options:build(it.good,it.bad.slice()), answer:0 };
+  }
+
   function genVoc(sub, diff, cat){
     if(sub==="Synonymes") return genSynonymes(diff,cat,sub);
     if(sub==="Contraires") return genContraires(diff,cat,sub);
-    if(sub==="Homonymes") return fromGood(pickByDiff(HOMO,diff),"Choisis le bon homonyme",cat,sub);
+    if(sub==="Homonymes") return genHomonymes(diff,cat,sub);
     if(sub==="Familles de mots") return genFamilles(diff,cat,sub);
     if(sub==="Expressions idiomatiques") return fromGood(pickByDiff(IDIOM,diff),"Complète l'expression imagée",cat,sub);
     if(sub==="Registres de langue") return fromGood(pickByDiff(REGISTRE,diff),"Registre de langue",cat,sub);
