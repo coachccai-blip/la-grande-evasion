@@ -1037,6 +1037,71 @@
       options:build(good,bad), answer:0 };
   }
 
+  /* --- Accord du participe passé : générateur PARTITIONNÉ (être = accord sujet ; avoir = invariable si COD après) --- */
+  var PPA_ITEMS=[
+    // d1
+    {k:"e",s:"Léa",g:"f",n:"s",pp:"parti",inf:"partir",d:1},{k:"e",s:"Paul",g:"m",n:"s",pp:"tombé",inf:"tomber",d:1},
+    {k:"e",s:"les filles",g:"f",n:"p",pp:"arrivé",inf:"arriver",d:1},{k:"e",s:"les garçons",g:"m",n:"p",pp:"resté",inf:"rester",d:1},
+    {k:"e",s:"ma sœur",g:"f",n:"s",pp:"monté",inf:"monter",d:1},{k:"e",s:"mon frère",g:"m",n:"s",pp:"venu",inf:"venir",d:1},{k:"e",s:"Emma",g:"f",n:"s",pp:"entré",inf:"entrer",d:1},
+    {k:"a",s:"le chien",n:"s",pp:"mangé",inf:"manger",cod:"un os",d:1},{k:"a",s:"les enfants",n:"p",pp:"chanté",inf:"chanter",cod:"une chanson",d:1},
+    {k:"a",s:"Tom",n:"s",pp:"fermé",inf:"fermer",cod:"la porte",d:1},{k:"a",s:"maman",n:"s",pp:"préparé",inf:"préparer",cod:"le repas",d:1},
+    {k:"a",s:"les élèves",n:"p",pp:"écouté",inf:"écouter",cod:"la maîtresse",d:1},{k:"a",s:"le chat",n:"s",pp:"attrapé",inf:"attraper",cod:"la souris",d:1},
+    // d2
+    {k:"e",s:"Chloé",g:"f",n:"s",pp:"sorti",inf:"sortir",d:2},{k:"e",s:"les touristes",g:"m",n:"p",pp:"descendu",inf:"descendre",d:2},
+    {k:"e",s:"le facteur",g:"m",n:"s",pp:"passé",inf:"passer",d:2},{k:"e",s:"mes cousines",g:"f",n:"p",pp:"reparti",inf:"repartir",d:2},
+    {k:"e",s:"les feuilles",g:"f",n:"p",pp:"tombé",inf:"tomber",d:2},{k:"e",s:"Marie",g:"f",n:"s",pp:"rentré",inf:"rentrer",d:2},{k:"e",s:"le voisin",g:"m",n:"s",pp:"revenu",inf:"revenir",d:2},
+    {k:"a",s:"le boulanger",n:"s",pp:"vendu",inf:"vendre",cod:"tout le pain",d:2},{k:"a",s:"les joueurs",n:"p",pp:"gagné",inf:"gagner",cod:"le match",d:2},
+    {k:"a",s:"la classe",n:"s",pp:"visité",inf:"visiter",cod:"le musée",d:2},{k:"a",s:"les ouvriers",n:"p",pp:"terminé",inf:"terminer",cod:"le travail",d:2},
+    {k:"a",s:"le peintre",n:"s",pp:"repeint",inf:"repeindre",cod:"le mur",d:2},{k:"a",s:"les jardiniers",n:"p",pp:"ramassé",inf:"ramasser",cod:"les feuilles",d:2},
+    // d3
+    {k:"e",s:"les alpinistes",g:"m",n:"p",pp:"parvenu",inf:"parvenir",d:3},{k:"e",s:"la rivière",g:"f",n:"s",pp:"débordé",inf:"déborder",d:3},
+    {k:"e",s:"mes grands-parents",g:"m",n:"p",pp:"revenu",inf:"revenir",d:3},{k:"e",s:"la lune",g:"f",n:"s",pp:"apparu",inf:"apparaître",d:3},
+    {k:"e",s:"le héros",g:"m",n:"s",pp:"devenu",inf:"devenir",d:3},{k:"e",s:"les jumelles",g:"f",n:"p",pp:"né",inf:"naître",d:3},{k:"e",s:"le train",g:"m",n:"s",pp:"reparti",inf:"repartir",d:3},
+    {k:"a",s:"les savants",n:"p",pp:"découvert",inf:"découvrir",cod:"un fossile",d:3},{k:"a",s:"le jury",n:"s",pp:"choisi",inf:"choisir",cod:"le gagnant",d:3},
+    {k:"a",s:"les pompiers",n:"p",pp:"éteint",inf:"éteindre",cod:"l'incendie",d:3},{k:"a",s:"la cuisinière",n:"s",pp:"réussi",inf:"réussir",cod:"le plat",d:3},
+    {k:"a",s:"les élèves",n:"p",pp:"résolu",inf:"résoudre",cod:"le problème",d:3},{k:"a",s:"le guide",n:"s",pp:"conduit",inf:"conduire",cod:"les visiteurs",d:3},
+    // d4
+    {k:"e",s:"les explorateurs",g:"m",n:"p",pp:"parvenu",inf:"parvenir",d:4},{k:"e",s:"la délégation",g:"f",n:"s",pp:"reparti",inf:"repartir",d:4},
+    {k:"e",s:"les survivantes",g:"f",n:"p",pp:"réchappé",inf:"réchapper",d:4},{k:"e",s:"le patient",g:"m",n:"s",pp:"décédé",inf:"décéder",d:4},
+    {k:"e",s:"les naufragés",g:"m",n:"p",pp:"disparu",inf:"disparaître",d:4},{k:"e",s:"la championne",g:"f",n:"s",pp:"monté",inf:"monter",d:4},{k:"e",s:"les feuilles mortes",g:"f",n:"p",pp:"retombé",inf:"retomber",d:4},
+    {k:"a",s:"le tribunal",n:"s",pp:"acquitté",inf:"acquitter",cod:"l'accusé",d:4},{k:"a",s:"les chercheurs",n:"p",pp:"publié",inf:"publier",cod:"leurs résultats",d:4},
+    {k:"a",s:"la commission",n:"s",pp:"approuvé",inf:"approuver",cod:"le budget",d:4},{k:"a",s:"les jurés",n:"p",pp:"rendu",inf:"rendre",cod:"leur verdict",d:4},
+    {k:"a",s:"l'architecte",n:"s",pp:"conçu",inf:"concevoir",cod:"le plan",d:4},{k:"a",s:"les bénévoles",n:"p",pp:"distribué",inf:"distribuer",cod:"les repas",d:4},
+    // d5
+    {k:"e",s:"les ambassadeurs",g:"m",n:"p",pp:"convenu",inf:"convenir",d:5},{k:"e",s:"la souveraine",g:"f",n:"s",pp:"intervenu",inf:"intervenir",d:5},
+    {k:"e",s:"les délégués",g:"m",n:"p",pp:"parvenu",inf:"parvenir",d:5},{k:"e",s:"la comète",g:"f",n:"s",pp:"réapparu",inf:"réapparaître",d:5},
+    {k:"e",s:"le vieux chêne",g:"m",n:"s",pp:"tombé",inf:"tomber",d:5},{k:"e",s:"les héroïnes",g:"f",n:"p",pp:"devenu",inf:"devenir",d:5},{k:"e",s:"la troupe",g:"f",n:"s",pp:"reparti",inf:"repartir",d:5},
+    {k:"a",s:"le monarque",n:"s",pp:"gracié",inf:"gracier",cod:"les prisonniers",d:5},{k:"a",s:"les historiens",n:"p",pp:"établi",inf:"établir",cod:"la chronologie",d:5},
+    {k:"a",s:"la cour",n:"s",pp:"prononcé",inf:"prononcer",cod:"la sentence",d:5},{k:"a",s:"les diplomates",n:"p",pp:"conclu",inf:"conclure",cod:"un accord",d:5},
+    {k:"a",s:"le chirurgien",n:"s",pp:"pratiqué",inf:"pratiquer",cod:"l'opération",d:5},{k:"a",s:"les experts",n:"p",pp:"restauré",inf:"restaurer",cod:"la toile",d:5},
+    // d6
+    {k:"e",s:"la crise",g:"f",n:"s",pp:"survenu",inf:"survenir",d:6},{k:"e",s:"les délégations",g:"f",n:"p",pp:"reparti",inf:"repartir",d:6},
+    {k:"e",s:"le souverain",g:"m",n:"s",pp:"parvenu",inf:"parvenir",d:6},{k:"e",s:"les colonies",g:"f",n:"p",pp:"devenu",inf:"devenir",d:6},
+    {k:"e",s:"l'expédition",g:"f",n:"s",pp:"parti",inf:"partir",d:6},{k:"e",s:"les pionniers",g:"m",n:"p",pp:"revenu",inf:"revenir",d:6},{k:"e",s:"la reine",g:"f",n:"s",pp:"intervenu",inf:"intervenir",d:6},
+    {k:"a",s:"le concile",n:"s",pp:"proscrit",inf:"proscrire",cod:"l'hérésie",d:6},{k:"a",s:"les monarques",n:"p",pp:"aboli",inf:"abolir",cod:"les privilèges",d:6},
+    {k:"a",s:"l'assemblée",n:"s",pp:"promulgué",inf:"promulguer",cod:"la loi",d:6},{k:"a",s:"les érudits",n:"p",pp:"traduit",inf:"traduire",cod:"le traité",d:6},
+    {k:"a",s:"le régime",n:"s",pp:"instauré",inf:"instaurer",cod:"le couvre-feu",d:6},{k:"a",s:"les bâtisseurs",n:"p",pp:"érigé",inf:"ériger",cod:"la cathédrale",d:6}
+  ];
+  var PPA_ETRE_FR=["{S} {X} ___.","Hier, {S} {X} ___.","{S} {X} déjà ___.","Ce matin, {S} {X} ___."];
+  var PPA_AVOIR_FR=["{S} {X} ___ {C}.","Hier, {S} {X} ___ {C}.","{S} {X} bien ___ {C}.","Ce matin, {S} {X} ___ {C}."];
+  function genAccordPP(diff,cat,sub){
+    var it=pick(bandFilter(PPA_ITEMS,diff,"d")), F=ppForms(it.pp);
+    if(it.k==="e"){
+      var good=ppAgree(it.pp,it.g,it.n), aux=(it.n==="s"?"est":"sont");
+      var bad=[F.ms,F.fs,F.mp,F.fp,it.inf].filter(function(x){return x!==good;});
+      return { cat:cat, sub:sub, phrase:cap(pick(PPA_ETRE_FR).replace("{S}",it.s).replace("{X}",aux)),
+        hint:"Accorde le participe passé (auxiliaire être)",
+        note:"Avec l'auxiliaire ÊTRE, le participe passé s'accorde en genre et en nombre avec le SUJET.",
+        options:build(good,bad), answer:0 };
+    }
+    var g2=it.pp, aux2=(it.n==="s"?"a":"ont");
+    var bad2=[F.fs,F.mp,F.fp,it.inf].filter(function(x){return x!==g2;});
+    return { cat:cat, sub:sub, phrase:cap(pick(PPA_AVOIR_FR).replace("{S}",it.s).replace("{X}",aux2).replace("{C}",it.cod)),
+      hint:"Accorde le participe passé (auxiliaire avoir)",
+      note:"Avec l'auxiliaire AVOIR, si le COD est placé APRÈS le verbe, le participe reste INVARIABLE.",
+      options:build(g2,bad2), answer:0 };
+  }
+
   function genGram(sub, diff, cat){
     if(sub==="Nature des mots") return genNature(diff,cat,sub);
     if(sub==="Déterminants") return genDeterminants(diff,cat,sub);
@@ -1044,7 +1109,7 @@
     if(sub==="Prépositions") return fromGood(pickByDiff(PREP,diff),"Choisis la bonne préposition",cat,sub);
     if(sub==="Accords") return genAccords(diff,cat,sub);
     if(sub==="Types de phrases") return fromGood(pickByDiff(TYPES,diff),"Quel type de phrase ?",cat,sub);
-    if(sub==="Accord du participe passé") return fromGood(pickByDiff(PP_ACC,diff),"Accorde le participe passé",cat,sub);
+    if(sub==="Accord du participe passé") return genAccordPP(diff,cat,sub);
     if(sub==="Connecteurs logiques") return fromGood(pickByDiff(CONNECT,diff),"Choisis le bon connecteur logique",cat,sub);
     if(sub==="Voix passive") return genVoixPassive(diff,cat,sub);
     return fromGood(pickByDiff(DET,diff),"Grammaire",cat,sub);
