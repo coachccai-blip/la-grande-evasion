@@ -984,6 +984,59 @@
       options:build(good,bad), answer:0 };
   }
 
+  /* --- Accord du participe passé (formes accordées calculées par règle) --- */
+  function ppForms(pp){ return { ms:pp, fs:pp+"e", mp:/s$/.test(pp)?pp:pp+"s", fp:pp+"es" }; }
+  function ppAgree(pp,g,n){ var F=ppForms(pp); return (n==="s")?(g==="m"?F.ms:F.fs):(g==="m"?F.mp:F.fp); }
+
+  /* --- Voix passive : générateur PARTITIONNÉ par difficulté --- */
+  var PASSIVE_ITEMS=[
+    {s:"la souris",g:"f",n:"s",pp:"mangé",inf:"manger",ag:"le chat",d:1},{s:"le ballon",g:"m",n:"s",pp:"lancé",inf:"lancer",ag:"l'enfant",d:1},
+    {s:"les fleurs",g:"f",n:"p",pp:"arrosé",inf:"arroser",ag:"le jardinier",d:1},{s:"la voiture",g:"f",n:"s",pp:"lavé",inf:"laver",ag:"mon père",d:1},
+    {s:"le gâteau",g:"m",n:"s",pp:"préparé",inf:"préparer",ag:"la cuisinière",d:1},{s:"les jouets",g:"m",n:"p",pp:"rangé",inf:"ranger",ag:"les enfants",d:1},
+    {s:"le dessin",g:"m",n:"s",pp:"colorié",inf:"colorier",ag:"Tom",d:1},{s:"la chanson",g:"f",n:"s",pp:"chanté",inf:"chanter",ag:"la chorale",d:1},
+    {s:"les carottes",g:"f",n:"p",pp:"coupé",inf:"couper",ag:"le cuisinier",d:1},{s:"le chien",g:"m",n:"s",pp:"promené",inf:"promener",ag:"la voisine",d:1},
+    {s:"la table",g:"f",n:"s",pp:"nettoyé",inf:"nettoyer",ag:"maman",d:1},{s:"les cadeaux",g:"m",n:"p",pp:"emballé",inf:"emballer",ag:"le vendeur",d:1},{s:"le jardin",g:"m",n:"s",pp:"planté",inf:"planter",ag:"le grand-père",d:1},
+    {s:"la maison",g:"f",n:"s",pp:"construit",inf:"construire",ag:"les ouvriers",d:2},{s:"la fenêtre",g:"f",n:"s",pp:"cassé",inf:"casser",ag:"le vent",d:2},
+    {s:"les élèves",g:"m",n:"p",pp:"félicité",inf:"féliciter",ag:"le directeur",d:2},{s:"le voleur",g:"m",n:"s",pp:"arrêté",inf:"arrêter",ag:"la police",d:2},
+    {s:"la lettre",g:"f",n:"s",pp:"écrit",inf:"écrire",ag:"Léa",d:2},{s:"le mur",g:"m",n:"s",pp:"peint",inf:"peindre",ag:"le peintre",d:2},
+    {s:"les livres",g:"m",n:"p",pp:"lu",inf:"lire",ag:"les enfants",d:2},{s:"la porte",g:"f",n:"s",pp:"ouvert",inf:"ouvrir",ag:"le concierge",d:2},
+    {s:"le repas",g:"m",n:"s",pp:"servi",inf:"servir",ag:"le serveur",d:2},{s:"les photos",g:"f",n:"p",pp:"pris",inf:"prendre",ag:"le photographe",d:2},
+    {s:"la leçon",g:"f",n:"s",pp:"appris",inf:"apprendre",ag:"les élèves",d:2},{s:"le pont",g:"m",n:"s",pp:"détruit",inf:"détruire",ag:"la tempête",d:2},{s:"les champs",g:"m",n:"p",pp:"labouré",inf:"labourer",ag:"le fermier",d:2},
+    {s:"la forêt",g:"f",n:"s",pp:"traversé",inf:"traverser",ag:"les randonneurs",d:3},{s:"le château",g:"m",n:"s",pp:"visité",inf:"visiter",ag:"les touristes",d:3},
+    {s:"les fenêtres",g:"f",n:"p",pp:"ouvert",inf:"ouvrir",ag:"le vent",d:3},{s:"la pièce",g:"f",n:"s",pp:"éclairé",inf:"éclairer",ag:"une lampe",d:3},
+    {s:"le message",g:"m",n:"s",pp:"envoyé",inf:"envoyer",ag:"le facteur",d:3},{s:"les bagages",g:"m",n:"p",pp:"transporté",inf:"transporter",ag:"le porteur",d:3},
+    {s:"la vérité",g:"f",n:"s",pp:"révélé",inf:"révéler",ag:"le témoin",d:3},{s:"le trésor",g:"m",n:"s",pp:"caché",inf:"cacher",ag:"les pirates",d:3},
+    {s:"les fautes",g:"f",n:"p",pp:"corrigé",inf:"corriger",ag:"le professeur",d:3},{s:"la statue",g:"f",n:"s",pp:"sculpté",inf:"sculpter",ag:"l'artiste",d:3},
+    {s:"le film",g:"m",n:"s",pp:"tourné",inf:"tourner",ag:"le réalisateur",d:3},{s:"les invités",g:"m",n:"p",pp:"accueilli",inf:"accueillir",ag:"les hôtes",d:3},{s:"la mélodie",g:"f",n:"s",pp:"composé",inf:"composer",ag:"le musicien",d:3},
+    {s:"la loi",g:"f",n:"s",pp:"voté",inf:"voter",ag:"le Parlement",d:4},{s:"les décisions",g:"f",n:"p",pp:"pris",inf:"prendre",ag:"le conseil",d:4},
+    {s:"le tableau",g:"m",n:"s",pp:"peint",inf:"peindre",ag:"un grand maître",d:4},{s:"la ville",g:"f",n:"s",pp:"détruit",inf:"détruire",ag:"le séisme",d:4},
+    {s:"les documents",g:"m",n:"p",pp:"signé",inf:"signer",ag:"le directeur",d:4},{s:"la découverte",g:"f",n:"s",pp:"annoncé",inf:"annoncer",ag:"les chercheurs",d:4},
+    {s:"le projet",g:"m",n:"s",pp:"approuvé",inf:"approuver",ag:"le jury",d:4},{s:"les récoltes",g:"f",n:"p",pp:"détruit",inf:"détruire",ag:"la grêle",d:4},
+    {s:"la salle",g:"f",n:"s",pp:"rempli",inf:"remplir",ag:"la foule",d:4},{s:"le coupable",g:"m",n:"s",pp:"condamné",inf:"condamner",ag:"le juge",d:4},
+    {s:"les patients",g:"m",n:"p",pp:"soigné",inf:"soigner",ag:"les infirmières",d:4},{s:"la propriété",g:"f",n:"s",pp:"vendu",inf:"vendre",ag:"l'agence",d:4},{s:"le record",g:"m",n:"s",pp:"battu",inf:"battre",ag:"l'athlète",d:4},
+    {s:"la cité",g:"f",n:"s",pp:"assiégé",inf:"assiéger",ag:"l'ennemi",d:5},{s:"les manuscrits",g:"m",n:"p",pp:"conservé",inf:"conserver",ag:"le musée",d:5},
+    {s:"la sentence",g:"f",n:"s",pp:"prononcé",inf:"prononcer",ag:"le tribunal",d:5},{s:"le domaine",g:"m",n:"s",pp:"légué",inf:"léguer",ag:"le comte",d:5},
+    {s:"les négociations",g:"f",n:"p",pp:"mené",inf:"mener",ag:"les diplomates",d:5},{s:"la fresque",g:"f",n:"s",pp:"restauré",inf:"restaurer",ag:"les experts",d:5},
+    {s:"le traité",g:"m",n:"s",pp:"ratifié",inf:"ratifier",ag:"les nations",d:5},{s:"les terres",g:"f",n:"p",pp:"cultivé",inf:"cultiver",ag:"les paysans",d:5},
+    {s:"la révolte",g:"f",n:"s",pp:"réprimé",inf:"réprimer",ag:"la garde",d:5},{s:"le monument",g:"m",n:"s",pp:"admiré",inf:"admirer",ag:"les visiteurs",d:5},
+    {s:"les frontières",g:"f",n:"p",pp:"franchi",inf:"franchir",ag:"les explorateurs",d:5},{s:"la théorie",g:"f",n:"s",pp:"réfuté",inf:"réfuter",ag:"le savant",d:5},{s:"le palais",g:"m",n:"s",pp:"édifié",inf:"édifier",ag:"le roi",d:5},
+    {s:"la constitution",g:"f",n:"s",pp:"promulgué",inf:"promulguer",ag:"l'assemblée",d:6},{s:"les vestiges",g:"m",n:"p",pp:"exhumé",inf:"exhumer",ag:"les archéologues",d:6},
+    {s:"la doctrine",g:"f",n:"s",pp:"prôné",inf:"prôner",ag:"le philosophe",d:6},{s:"le monarque",g:"m",n:"s",pp:"destitué",inf:"destituer",ag:"le peuple",d:6},
+    {s:"les hérésies",g:"f",n:"p",pp:"condamné",inf:"condamner",ag:"le concile",d:6},{s:"la contrée",g:"f",n:"s",pp:"anéanti",inf:"anéantir",ag:"le cataclysme",d:6},
+    {s:"le manuscrit",g:"m",n:"s",pp:"enluminé",inf:"enluminer",ag:"le moine",d:6},{s:"les remparts",g:"m",n:"p",pp:"érigé",inf:"ériger",ag:"les bâtisseurs",d:6},
+    {s:"la relique",g:"f",n:"s",pp:"vénéré",inf:"vénérer",ag:"les fidèles",d:6},{s:"le complot",g:"m",n:"s",pp:"déjoué",inf:"déjouer",ag:"les gardes",d:6},
+    {s:"les privilèges",g:"m",n:"p",pp:"aboli",inf:"abolir",ag:"la révolution",d:6},{s:"la province",g:"f",n:"s",pp:"colonisé",inf:"coloniser",ag:"l'empire",d:6},{s:"le souverain",g:"m",n:"s",pp:"couronné",inf:"couronner",ag:"l'archevêque",d:6}
+  ];
+  var PASS_FRAMES=[{s:"est",p:"sont"},{s:"a été",p:"ont été"},{s:"sera",p:"seront"},{s:"était",p:"étaient"}];
+  function genVoixPassive(diff,cat,sub){
+    var it=pick(bandFilter(PASSIVE_ITEMS,diff,"d")), F=ppForms(it.pp);
+    var good=ppAgree(it.pp,it.g,it.n), fr=pick(PASS_FRAMES), aux=(it.n==="s"?fr.s:fr.p);
+    var bad=[F.ms,F.fs,F.mp,F.fp,it.inf].filter(function(x){return x!==good;});
+    return { cat:cat, sub:sub, phrase:cap(it.s+" "+aux+" ___ par "+it.ag+"."), hint:"Accorde le participe (voix passive)",
+      note:"Voix passive : « être » (au temps voulu) + participe passé accordé avec le SUJET (Le chat mange la souris → La souris est mangée par le chat).",
+      options:build(good,bad), answer:0 };
+  }
+
   function genGram(sub, diff, cat){
     if(sub==="Nature des mots") return genNature(diff,cat,sub);
     if(sub==="Déterminants") return genDeterminants(diff,cat,sub);
@@ -993,7 +1046,7 @@
     if(sub==="Types de phrases") return fromGood(pickByDiff(TYPES,diff),"Quel type de phrase ?",cat,sub);
     if(sub==="Accord du participe passé") return fromGood(pickByDiff(PP_ACC,diff),"Accorde le participe passé",cat,sub);
     if(sub==="Connecteurs logiques") return fromGood(pickByDiff(CONNECT,diff),"Choisis le bon connecteur logique",cat,sub);
-    if(sub==="Voix passive") return fromGood(pickByDiff(PASSIVE,diff),"Accorde le participe (voix passive)",cat,sub);
+    if(sub==="Voix passive") return genVoixPassive(diff,cat,sub);
     return fromGood(pickByDiff(DET,diff),"Grammaire",cat,sub);
   }
 
