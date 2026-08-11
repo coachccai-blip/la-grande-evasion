@@ -987,16 +987,15 @@
     {w:"le lampadaire",g:"m",nb:"s",d:6},{w:"les obstacles",g:"m",nb:"p",d:6},{w:"le candélabre",g:"m",nb:"s",d:6},{w:"la mappemonde",g:"f",nb:"s",d:6},{w:"les engrenages",g:"m",nb:"p",d:6}
   ];
   /* Adjectifs à 4 formes DISTINCTES (ms/fs/mp/fp) : indispensable pour avoir
-     toujours 3 distracteurs distincts (on évite gros/doux/vieux dont ms=mp). */
+     toujours 3 distracteurs distincts (on évite gros/doux/vieux dont ms=mp).
+     On se limite à des adjectifs GRADABLES et UNIVERSELS qui restent naturels
+     avec « très / vraiment » devant n'importe quel nom concret (objet ou animal) :
+     on évite couleurs/température/forme (« la maison est très chaude »,
+     « le vélo est très vert » n'étaient pas cohérents). */
   var ADJ_ACC=[
     {ms:"grand",fs:"grande",mp:"grands",fp:"grandes"},{ms:"petit",fs:"petite",mp:"petits",fp:"petites"},
-    {ms:"bleu",fs:"bleue",mp:"bleus",fp:"bleues"},{ms:"joli",fs:"jolie",mp:"jolis",fp:"jolies"},
-    {ms:"beau",fs:"belle",mp:"beaux",fp:"belles"},{ms:"vert",fs:"verte",mp:"verts",fp:"vertes"},
-    {ms:"noir",fs:"noire",mp:"noirs",fp:"noires"},{ms:"blanc",fs:"blanche",mp:"blancs",fp:"blanches"},
-    {ms:"rond",fs:"ronde",mp:"ronds",fp:"rondes"},{ms:"lourd",fs:"lourde",mp:"lourds",fp:"lourdes"},
-    {ms:"léger",fs:"légère",mp:"légers",fp:"légères"},{ms:"long",fs:"longue",mp:"longs",fp:"longues"},
-    {ms:"chaud",fs:"chaude",mp:"chauds",fp:"chaudes"},{ms:"doré",fs:"dorée",mp:"dorés",fp:"dorées"},
-    {ms:"brillant",fs:"brillante",mp:"brillants",fp:"brillantes"}
+    {ms:"joli",fs:"jolie",mp:"jolis",fp:"jolies"},{ms:"beau",fs:"belle",mp:"beaux",fp:"belles"},
+    {ms:"élégant",fs:"élégante",mp:"élégants",fp:"élégantes"},{ms:"coloré",fs:"colorée",mp:"colorés",fp:"colorées"}
   ];
   var ACC_FRAMES=["{W} {V} ___.","{W} {V} très ___.","On dirait que {W} {V} ___.","{W} {V} vraiment ___."];
   function genAccords(diff,cat,sub){

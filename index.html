@@ -510,6 +510,12 @@
   .emp-card{max-width:360px; text-align:center;}
   .emp-card .emp-card-t{font-size:16px; font-weight:900; color:var(--accent2); margin-bottom:8px;}
   .emp-card .emp-card-x{font-size:15px; line-height:1.5;}
+  /* Panneau des règles (bouton ?) */
+  .emp-rules{max-width:420px; text-align:left;}
+  .emp-rules-t{font-size:18px; font-weight:900; color:var(--accent2); text-align:center; margin-bottom:10px;}
+  .emp-rules-body{max-height:60vh; overflow-y:auto; font-size:13.5px; line-height:1.5; -webkit-overflow-scrolling:touch;}
+  .emp-rules-body p{margin:0 0 10px;}
+  .emp-rules-body b{color:var(--accent);}
   /* Carte illustrée « case où l'on arrive » */
   #empCaseOv .emp-casecard{width:100%; max-width:330px; background:var(--panel); border-radius:20px;
     overflow:hidden; box-shadow:0 18px 48px rgba(0,0,0,.42); text-align:center;
@@ -695,6 +701,22 @@
         <div id="empEndMsg" style="font-size:14px;margin:8px 0 14px;"></div>
         <button id="empEndAgain" class="btn wide">Rejouer</button>
         <button id="empEndMenu" class="btn secondary wide" style="margin-top:8px;">Menu</button>
+      </div>
+    </div>
+    <!-- Règles de l'Empire (bouton ?) -->
+    <div id="empRulesOv" class="overlay">
+      <div class="card emp-rules">
+        <div class="emp-rules-t">📜 Règles de l'Empire</div>
+        <div class="emp-rules-body">
+          <p><b>🎯 But du jeu</b><br>Sois le dernier animal solvable : ruine tous les bots pour couronner ton empire.</p>
+          <p><b>🎲 Se déplacer</b><br>Lance les dés et avance sur l'anneau. Repasser par le Grand Baobab 🌳 rapporte ₵200.</p>
+          <p><b>🏠 Acheter</b><br>En tombant sur un terrain libre, tu peux l'acheter. Sur un terrain adverse, tu paies un loyer.</p>
+          <p><b>🏗️ Construire</b><br>Tu ne peux construire que si tu possèdes <b>tout un quartier</b> : les <b>deux cases de la même couleur</b>. Chaque niveau (Stand → Boutique → Grand Magasin → Palais) fait grimper les loyers. Le bouton <b>« 🏗️ Construire »</b> reste affiché, mais il ne propose un chantier que si un quartier est complet.</p>
+          <p><b>⚔️ OPA</b><br>Sur un terrain adverse, tu peux tenter une <b>OPA</b> (rachat forcé) : réponds à 3 questions pour l'arracher à son propriétaire. Une seule OPA par tour.</p>
+          <p><b>🔒 Fourrière</b><br>Deux doubles de suite, ou la case Gardien 🚓, t'envoient à la Fourrière. Tu en sors en payant ou en répondant juste.</p>
+          <p><b>❓ Questions</b><br>La plupart des actions (achats, OPA, sortie de Fourrière) se gagnent en répondant correctement aux questions de français.</p>
+        </div>
+        <button id="empRulesOk" class="btn wide" style="margin-top:12px;">J'ai compris</button>
       </div>
     </div>
 

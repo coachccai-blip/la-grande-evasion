@@ -265,8 +265,23 @@
     var roll=el("button","emp-btn primary","🎲 Lancer les dés"); roll.id="empRoll";
     roll.onclick=function(){ if(!busy) playerTurn(); };
     pn.appendChild(roll);
+    // « Construire » : affiché dès le départ. Ne propose un chantier que si un
+    // quartier complet (toutes les cases d'une même couleur) est possédé.
+    var build=el("button","emp-btn","🏗️ Construire"); build.id="empManage";
+    build.title="Disponible uniquement si tu possèdes tout un quartier (même couleur)";
+    build.onclick=async function(){ if(busy)return; busy=true; setRoll(false); await buildFlow(0); busy=false; if(!E.over){ renderPanel(); setRoll(true);} };
+    pn.appendChild(build);
+    // « ? » : rappel des règles.
+    var help=el("button","emp-btn ghost","❓ Règles"); help.id="empHelp";
+    help.onclick=function(){ showRules(); };
+    pn.appendChild(help);
     var ab=el("button","emp-btn ghost","Abandonner"); ab.onclick=quit;
     pn.appendChild(ab);
+  }
+  function showRules(){
+    var ov=$("empRulesOv"); if(!ov) return;
+    ov.classList.add("show"); EB.Sound.step&&EB.Sound.step();
+    var ok=$("empRulesOk"); if(ok) ok.onclick=function(){ ov.classList.remove("show"); };
   }
   function setRoll(on){ var b=$("empRoll"); if(b) b.disabled=!on; }
 
@@ -473,7 +488,13 @@
   }
   async function buildFlow(pi){
     var opts=buildableQuartiers(pi);
-    if(!opts.length){ say("Aucun quartier complet à construire."); return; }
+    if(!opts.length){
+      // Explique clairement la règle plutôt qu'un simple refus.
+      var owned=quartiersOwned(pi);
+      if(owned) say("Pour construire, il faut posséder TOUT un quartier (les 2 cases de la même couleur). Il te manque encore des cases pour compléter un quartier.");
+      else say("Tu ne peux construire que si tu possèdes tout un quartier : les 2 cases de la même couleur. Achète-les d'abord !");
+      await sleep(200); return;
+    }
     // choisir un quartier (menu simple)
     var choice=await chooseFrom("Construire dans quel quartier ?", opts.map(function(o){
       return {label:QUARTIERS[o.q].name+" → "+BUILD_LABEL[o.level]+" (₵"+QUARTIERS[o.q].build+")", val:o.q, cost:QUARTIERS[o.q].build}; }));
@@ -492,6 +513,8 @@
     renderTokens(); renderCenter(); await sleep(400);
   }
   function levelsOf(pi,q){ var a=[]; E.board.forEach(function(c){ if(c.type==="prop"&&c.q===q&&c.owner===pi) a.push(c.level); }); return a; }
+  // Le joueur possède-t-il au moins une propriété de quartier ?
+  function quartiersOwned(pi){ var n=0; E.board.forEach(function(c){ if(c.type==="prop"&&c.owner===pi) n++; }); return n>0; }
 
   /* ------------------------------ CARTES ---------------------------------- */
   async function drawCard(pi, deck, title, human){
