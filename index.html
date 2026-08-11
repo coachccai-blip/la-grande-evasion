@@ -965,8 +965,9 @@ var Sound=(function(){
    mémorisée durablement (localStorage) avec un numéro d'ordre. À chaque tirage,
    on retient EN PRIORITÉ une question jamais vue à la difficulté choisie. Si le
    réservoir de cette difficulté est ÉPUISÉ, on va d'abord chercher une question
-   inédite dans les NIVEAUX INFÉRIEURS du même thème (difficulté − 1, − 2, …),
-   AVANT de reboucler. Quand la difficulté cible ET tous les niveaux inférieurs
+   inédite dans les NIVEAUX INFÉRIEURS du même thème, mais seulement jusqu'à
+   « difficulté − 2 » AU PLUS (au-delà, les questions seraient trop simples),
+   AVANT de reboucler. Quand la difficulté cible et ces niveaux inférieurs
    sont épuisés, on ressort la question vue le plus ANCIENNEMENT (ordre LRU) à la
    difficulté cible : une même question ne revient donc qu'en tout dernier recours.
    Résultat : les répétitions sont drastiquement réduites et le contenu tourne. */
@@ -984,10 +985,12 @@ function pickQuestion(){
     return {q:q, cat:q.cat};
   }
 
-  // 1) Question JAMAIS VUE, en descendant de la difficulté cible vers 1 :
-  //    si le réservoir de la difficulté visée est épuisé, on va puiser dans le
-  //    niveau INFÉRIEUR (même thème) AVANT de reboucler.
-  for(var d=target; d>=1; d--){
+  // 1) Question JAMAIS VUE, en descendant de la difficulté cible jusqu'à
+  //    « cible − 2 » AU PLUS (pas en dessous, pour ne pas rendre le jeu trop
+  //    facile) : si le réservoir de la difficulté visée est épuisé, on va puiser
+  //    dans le niveau INFÉRIEUR (même thème) AVANT de reboucler.
+  var floor=Math.max(1, target-2);
+  for(var d=target; d>=floor; d--){
     for(var t=0;t<TRIES;t++){
       var q=Questions.generate(cat, sub, d);
       var k=q.phrase+"§"+q.options[q.answer];
