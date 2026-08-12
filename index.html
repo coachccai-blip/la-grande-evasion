@@ -652,22 +652,23 @@
   .emp-cell .emp-cc{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
     justify-content:center; text-align:center; gap:1px; padding:2px;}
   /* bande de quartier orientée vers l'INTÉRIEUR du plateau (façon Monopoly) */
-  .emp-cell.isprop.top .emp-cc{padding-bottom:36%;}
-  .emp-cell.isprop.bottom .emp-cc{padding-top:36%;}
-  .emp-cell.isprop.left .emp-cc{padding-right:36%;}
-  .emp-cell.isprop.right .emp-cc{padding-left:36%;}
+  .emp-cell.isprop.top .emp-cc{padding-bottom:22%;}
+  .emp-cell.isprop.bottom .emp-cc{padding-top:22%;}
+  .emp-cell.isprop.left .emp-cc{padding-right:22%;}
+  .emp-cell.isprop.right .emp-cc{padding-left:22%;}
   .emp-band{position:absolute; background:var(--qcol,#ccc); display:flex; align-items:center;
     justify-content:center; z-index:2; box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);}
-  .top .emp-band{left:0; right:0; bottom:0; height:34%;}
-  .bottom .emp-band{left:0; right:0; top:0; height:34%;}
-  .left .emp-band{top:0; bottom:0; right:0; width:34%;}
-  .right .emp-band{top:0; bottom:0; left:0; width:34%;}
+  .top .emp-band{left:0; right:0; bottom:0; height:20%;}
+  .bottom .emp-band{left:0; right:0; top:0; height:20%;}
+  .left .emp-band{top:0; bottom:0; right:0; width:20%;}
+  .right .emp-band{top:0; bottom:0; left:0; width:20%;}
   .emp-blds{display:flex; gap:1px; align-items:flex-end; justify-content:center; flex-wrap:wrap; padding:1px;}
   .left .emp-blds, .right .emp-blds{flex-direction:column; align-items:center;}
   .emp-bld{width:11px; height:10px; filter:drop-shadow(0 1px 0 rgba(0,0,0,.2));}
   .emp-bld.emp-pal{width:19px; height:14px;}
-  .emp-nm{font-size:7.5px; line-height:1.06; font-weight:800; color:#4a3a1e; max-height:24px; overflow:hidden;}
-  .emp-pr{font-size:8px; font-weight:900; color:#2c7a4a;}
+  .emp-nm{font-size:9.5px; line-height:1.1; font-weight:800; color:#3a2e18; max-height:28px; overflow:hidden;
+    padding:0 1px; word-break:break-word;}
+  .emp-pr{font-size:9px; font-weight:900; color:#2c7a4a;}
   .emp-ico{font-size:18px; line-height:1;}
   /* coins & cases repères */
   .emp-cornerc{gap:2px;}
@@ -1245,6 +1246,7 @@
 <script src="animaux.js"></script>
 <script src="sprites.js"></script>
 <script src="emp_i18n.js"></script>
+<script src="emp_i18n_log.js"></script>
 <script src="empire.js"></script>
 <script src="vocabdata.js"></script>
 <script src="vocab.js"></script>
