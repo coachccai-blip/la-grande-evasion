@@ -201,11 +201,17 @@
 
   function header(){
     var h=el("div","vk-head");
+    // Bouton « maison » : revient au tableau de bord (calendrier), même en pleine session.
+    var home=el("button","vk-home","🏠"); home.title=T("home_title");
+    home.onclick=function(){
+      try{ if(B.Sound){ B.Sound.resume&&B.Sound.resume(); B.Sound.click&&B.Sound.click(); } }catch(e){}
+      SESS=null; renderVocab();
+    };
     var lvl=el("button","vk-level"); lvl.innerHTML="🎓 <b>"+esc(DATA.levelLabel[S.settings.level])+"</b> ▾";
     lvl.onclick=openLevelSheet;
     var streak=el("div","vk-streak"); streak.innerHTML="🔥 <b>"+(S.streak||0)+"</b> "+T("unit_days");
     var gear=el("button","vk-gear","⚙️"); gear.onclick=openSettings;
-    h.appendChild(lvl); h.appendChild(streak); h.appendChild(gear);
+    h.appendChild(home); h.appendChild(lvl); h.appendChild(streak); h.appendChild(gear);
     return h;
   }
 

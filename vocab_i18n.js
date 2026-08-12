@@ -5,6 +5,7 @@
 window.VOCAB_I18N = {
   /* En-tête */
   unit_days:      {fr:"j",   en:"d",   zh:"天"},
+  home_title:     {fr:"Accueil du vocabulaire", en:"Vocabulary home", zh:"词汇首页"},
   /* Tableau de bord — objectif du jour */
   goal_done:      {fr:"✅ Objectif du jour atteint · {n} jours d'affilée 🔥", en:"✅ Daily goal done · {n}-day streak 🔥", zh:"✅ 今日已完成打卡 · 连续 {n} 天 🔥"},
   goal_todo:      {fr:"🎯 Objectif du jour · fais une série pour valider ta journée", en:"🎯 Daily goal · finish one set to check in today", zh:"🎯 今日目标 · 学一组即可完成打卡（连续 {n} 天）"},
