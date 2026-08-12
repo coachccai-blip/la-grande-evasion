@@ -57,6 +57,11 @@
     background:linear-gradient(180deg,var(--blue-deep),var(--blue6));
     box-shadow:0 3px 12px rgba(2,60,101,.35); z-index:5;
   }
+  .lang-switch{position:absolute; top:10px; left:10px; display:flex; gap:3px; z-index:6;}
+  .lang-switch button{border:1px solid rgba(255,255,255,.55); background:rgba(255,255,255,.14); color:#fff;
+    font-family:var(--font); font-weight:800; font-size:11px; padding:4px 7px; border-radius:8px; cursor:pointer; line-height:1;}
+  .lang-switch button.on{background:#fff; color:var(--blue-deep); border-color:#fff;}
+  .lang-switch button:active{transform:scale(.94);}
   #soundBtn{
     position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:11px;
     border:1px solid var(--line); background:var(--panel); color:var(--ink); font-size:19px;
@@ -931,8 +936,11 @@
 <body>
 <div id="app">
   <header>
+    <div id="langSwitch" class="lang-switch" aria-label="Langue">
+      <button data-lang="fr">FR</button><button data-lang="en">EN</button><button data-lang="zh">中</button>
+    </div>
     <h1>跟克莱蒙学法语</h1>
-    <div class="sub">Apprends le français avec Clément</div>
+    <div class="sub" data-i18n="tagline">Apprends le français avec Clément</div>
     <button id="soundBtn" title="Activer / couper le son" aria-label="Son">🔊</button>
     <button id="installBtn" title="Installer l'application" aria-label="Installer">📲</button>
   </header>
@@ -942,25 +950,25 @@
     <section id="selectScreen" class="screen active">
       <div class="scroll">
         <div class="setup-step" id="stepGame">
-          <div class="step-title"><span class="num">1</span> Choisis ton jeu</div>
+          <div class="step-title"><span class="num">1</span> <span data-i18n="stepGame">Choisis ton jeu</span></div>
           <div id="gameChoices" class="chips"></div>
         </div>
         <div class="setup-step locked" id="stepCat">
-          <div class="step-title"><span class="num">2</span> Choisis ta matière</div>
+          <div class="step-title"><span class="num">2</span> <span data-i18n="stepCat">Choisis ta matière</span></div>
           <div id="catChoices" class="chips"></div>
         </div>
         <div class="setup-step locked" id="stepSub">
-          <div class="step-title"><span class="num">3</span> Choisis le thème</div>
+          <div class="step-title"><span class="num">3</span> <span data-i18n="stepSub">Choisis le thème</span></div>
           <div id="subChoices" class="chips"></div>
         </div>
         <div class="setup-step locked" id="stepDiff">
-          <div class="step-title"><span class="num">4</span> Choisis la difficulté</div>
+          <div class="step-title"><span class="num">4</span> <span data-i18n="stepDiff">Choisis la difficulté</span></div>
           <div id="diffChoices" class="chips"></div>
         </div>
         <div class="setup-step locked" id="stepAnimal">
-          <div class="step-title"><span class="num">5</span> Choisis ton animal</div>
+          <div class="step-title"><span class="num">5</span> <span data-i18n="stepAnimal">Choisis ton animal</span></div>
           <div id="animalGrid" class="grid"></div>
-          <div id="traitBox" class="trait-box">Touche un animal pour découvrir son caractère.</div>
+          <div id="traitBox" class="trait-box" data-i18n="traitHint">Touche un animal pour découvrir son caractère.</div>
         </div>
         <div id="missionProgress" class="progress"></div>
         <div style="margin:12px 0 24px;">
@@ -988,8 +996,8 @@
       <div class="scroll">
         <!-- Sous-onglets : questions du Jeu / mots du Vocabulaire -->
         <div class="hist-subtabs">
-          <button id="histSubJeu" class="hist-subtab sel">🎮 Jeu</button>
-          <button id="histSubVoc" class="hist-subtab">📚 Vocabulaire</button>
+          <button id="histSubJeu" class="hist-subtab sel"><span data-i18n="histTabGame">🎮 Jeu</span></button>
+          <button id="histSubVoc" class="hist-subtab"><span data-i18n="histTabVoc">📚 Vocabulaire</span></button>
         </div>
         <!-- Vue « Jeu » : historique des questions -->
         <div id="histViewJeu">
@@ -998,7 +1006,7 @@
               <span class="chip ok filterable" id="statOk" title="Afficher seulement les réussites">✓ 0</span>
               <span class="chip ko filterable" id="statKo" title="Afficher seulement les questions ratées">✗ 0</span>
             </div>
-            <button id="clearHist" class="btn secondary small">Effacer</button>
+            <button id="clearHist" class="btn secondary small" data-i18n="clear">Effacer</button>
           </div>
           <div id="histList"></div>
         </div>
@@ -1009,7 +1017,7 @@
               <span class="chip ok filterable" id="statVocOk" title="Mots réussis en dernier">✓ 0</span>
               <span class="chip ko filterable" id="statVocKo" title="Mots ratés en dernier">✗ 0</span>
             </div>
-            <button id="clearHistVoc" class="btn secondary small">Effacer</button>
+            <button id="clearHistVoc" class="btn secondary small" data-i18n="clear">Effacer</button>
           </div>
           <div id="histVocList"></div>
         </div>
@@ -1058,8 +1066,8 @@
         <div id="empEndTitle" class="win" style="font-size:24px;font-weight:900;letter-spacing:1px;margin:6px 0;"></div>
         <div id="empEndBubble"></div>
         <div id="empEndMsg" style="font-size:14px;margin:8px 0 14px;"></div>
-        <button id="empEndAgain" class="btn wide">Rejouer</button>
-        <button id="empEndMenu" class="btn secondary wide" style="margin-top:8px;">Menu</button>
+        <button id="empEndAgain" class="btn wide" data-i18n="replay">Rejouer</button>
+        <button id="empEndMenu" class="btn secondary wide" style="margin-top:8px;" data-i18n="menu">Menu</button>
       </div>
     </div>
     <!-- Règles de l'Empire (bouton ?) -->
@@ -1095,7 +1103,7 @@
       <div class="scroll">
         <div class="badges-head">
           <div id="badgesCount" class="badges-count">🏅 Badges débloqués : <b>0 / 0</b></div>
-          <div id="badgesSub" class="badges-sub">Relève tous les défis pour tous les débloquer !</div>
+          <div id="badgesSub" class="badges-sub" data-i18n="badgesSub">Relève tous les défis pour tous les débloquer !</div>
           <div id="badgeLangSw" class="badge-lang">
             <button type="button" data-lang="fr" class="on">🇫🇷 FR</button>
             <button type="button" data-lang="en">🇬🇧 EN</button>
@@ -1149,8 +1157,8 @@
         <div id="endTitle"></div>
         <div id="endBubbleWrap"></div>
         <div id="endMsg" style="font-size:14px;color:var(--ink-soft);margin-bottom:14px;"></div>
-        <button id="rematchBtn" class="btn wide">Rejouer</button>
-        <button id="backSelectBtn" class="btn secondary wide" style="margin-top:8px;">Changer d'animal</button>
+        <button id="rematchBtn" class="btn wide" data-i18n="replay">Rejouer</button>
+        <button id="backSelectBtn" class="btn secondary wide" style="margin-top:8px;" data-i18n="changeAnimal">Changer d'animal</button>
       </div>
     </div>
 
@@ -1233,11 +1241,11 @@
   </main>
 
   <nav>
-    <button id="tabGame" class="active"><span class="ic">🎲</span>Jeu</button>
-    <button id="tabHist"><span class="ic">📜</span>Historique</button>
-    <button id="tabBadges"><span class="ic">🏅</span>Badges</button>
-    <button id="tabVocab"><span class="ic">🥖</span>Vocabulaire</button>
-    <button id="tabDict"><span class="ic">⭐</span>Favoris</button>
+    <button id="tabGame" class="active"><span class="ic">🎲</span><span data-i18n="tabGame">Jeu</span></button>
+    <button id="tabHist"><span class="ic">📜</span><span data-i18n="tabHist">Historique</span></button>
+    <button id="tabBadges"><span class="ic">🏅</span><span data-i18n="tabBadges">Badges</span></button>
+    <button id="tabVocab"><span class="ic">🥖</span><span data-i18n="tabVocab">Vocabulaire</span></button>
+    <button id="tabDict"><span class="ic">⭐</span><span data-i18n="tabDict">Favoris</span></button>
   </nav>
   <div id="badgeToast"></div>
 </div>
@@ -1301,6 +1309,54 @@ var DIFFS = [
 ];
 function diffByKey(k){ for(var i=0;i<DIFFS.length;i++){ if(DIFFS[i].key===k) return DIFFS[i]; } return DIFFS[2]; }
 
+/* ===================== Langue globale de l'interface ===================== */
+/* Les QUESTIONS restent en français (contenu d'apprentissage) ; c'est l'interface
+   qui se traduit. Le sélecteur (en haut à gauche) pilote aussi l'Empire & les badges. */
+var APP_I18N={
+  en:{ tagline:"Learn French with Clément",
+    stepGame:"Choose your game", stepCat:"Choose a subject", stepSub:"Choose a theme",
+    stepDiff:"Choose the difficulty", stepAnimal:"Choose your animal",
+    traitHint:"Tap an animal to discover its character.",
+    tabGame:"Play", tabHist:"History", tabBadges:"Badges", tabVocab:"Vocabulary", tabDict:"Favorites",
+    histTabGame:"🎮 Game", histTabVoc:"📚 Vocabulary",
+    clear:"Clear", replay:"Play again", menu:"Menu", changeAnimal:"Change animal",
+    badgesSub:"Take on every challenge to unlock them all!",
+    startEvasion:"Let's go!", startEmpire:"👑 Launch my empire!",
+    diffEasy:"⬅ Very easy", diffHard:"Extreme ➡", diffPrefix:"Difficulty:",
+    diffNote:"All difficulties can appear — more often around this level (bell curve).",
+    chooseCatFirst:"Choose a subject first." },
+  zh:{ tagline:"跟克莱蒙一起学法语",
+    stepGame:"选择你的游戏", stepCat:"选择科目", stepSub:"选择主题",
+    stepDiff:"选择难度", stepAnimal:"选择你的动物",
+    traitHint:"点一只动物，了解它的性格。",
+    tabGame:"游戏", tabHist:"历史", tabBadges:"徽章", tabVocab:"词汇", tabDict:"收藏",
+    histTabGame:"🎮 游戏", histTabVoc:"📚 词汇",
+    clear:"清除", replay:"再玩一次", menu:"菜单", changeAnimal:"更换动物",
+    badgesSub:"挑战所有关卡，解锁全部徽章！",
+    startEvasion:"开始！", startEmpire:"👑 建立我的帝国！",
+    diffEasy:"⬅ 很简单", diffHard:"极难 ➡", diffPrefix:"难度：",
+    diffNote:"所有难度都可能出现 —— 在所选难度附近概率更高（钟形分布）。",
+    chooseCatFirst:"请先选择科目。" }
+};
+var appLang="fr";
+var _frI18n=null;
+function t(key, fr){ if(appLang==="fr") return fr; var m=APP_I18N[appLang]; return (m&&m[key]!=null)?m[key]:fr; }
+function applyLang(lang){
+  appLang=(lang==="en"||lang==="zh")?lang:"fr";
+  store.appLang=appLang;
+  if(!_frI18n){ _frI18n={}; Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"),function(el){ _frI18n[el.getAttribute("data-i18n")]=el.textContent; }); }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"),function(el){
+    var k=el.getAttribute("data-i18n"), fr=(_frI18n[k]!=null?_frI18n[k]:el.textContent);
+    el.textContent=(appLang==="fr")?fr:((APP_I18N[appLang]&&APP_I18N[appLang][k]!=null)?APP_I18N[appLang][k]:fr);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#langSwitch button"),function(b){ b.classList.toggle("on", b.getAttribute("data-lang")===appLang); });
+  // Unifie les sous-modules déjà traduits : Empire + badges suivent la langue globale.
+  try{ if(window.Empire&&Empire.setLang) Empire.setLang(appLang); }catch(e){}
+  try{ if(typeof setBadgeLang==="function"){ setBadgeLang(appLang); if($("badgesScreen")&&$("badgesScreen").classList.contains("active")) renderBadges(); } }catch(e){}
+  try{ buildSetup(); }catch(e){}
+  persist();
+}
+
 /* Cases spéciales (§4.2) — nombreuses et variées pour plus de fun. */
 var SPECIALS = {
   2:"cadeau", 3:"banane", 5:"ressort", 6:"gardien", 8:"piege", 9:"mystere",
@@ -1341,6 +1397,7 @@ function loadSave(){
       store.empires = o.empires||{}; store.empireGame = o.empireGame||null;
       store.badgeLang = o.badgeLang || "fr";
       store.empLang = o.empLang || "fr";
+      store.appLang = o.appLang || "fr";
       store.vocab = o.vocab || null;
       // complète les champs de stats manquants (compat. anciennes sauvegardes)
       var d={bestStreak:0,curStreak:0,duelWins:0,flawless:0,errViewed:0,errSigs:{}};
@@ -1632,7 +1689,7 @@ function buildSubChoices(){
   // Jeu 2 (Empire) : pas de thème — on joue sur toutes les questions de la matière.
   if(setup.game==="empire"){ setup.sub="Tout"; $("stepSub").style.display="none"; return; }
   $("stepSub").style.display="";
-  if(!setup.cat){ box.innerHTML="<span style='font-size:13px;color:var(--ink-soft)'>Choisis d'abord une matière.</span>"; return; }
+  if(!setup.cat){ box.innerHTML="<span style='font-size:13px;color:var(--ink-soft)'>"+t("chooseCatFirst","Choisis d'abord une matière.")+"</span>"; return; }
   var subs;
   if(setup.cat==="tout"){ subs=["Tout"]; if(!setup.sub) setup.sub="Tout"; }
   else { subs=["Tout"].concat(SUBCATS[setup.cat]||[]); }
@@ -1650,8 +1707,8 @@ function buildDiffChoices(){
   var idx=0; for(var i=0;i<DIFFS.length;i++){ if(DIFFS[i].key===setup.diff){ idx=i; break; } }
   var wrap=document.createElement("div"); wrap.className="diffslider";
   var ends=document.createElement("div"); ends.className="diffslider-ends";
-  var l=document.createElement("span"); l.textContent="⬅ Très facile";
-  var r=document.createElement("span"); r.textContent="Extrême ➡";
+  var l=document.createElement("span"); l.textContent=t("diffEasy","⬅ Très facile");
+  var r=document.createElement("span"); r.textContent=t("diffHard","Extrême ➡");
   ends.appendChild(l); ends.appendChild(r); wrap.appendChild(ends);
   var input=document.createElement("input");
   input.type="range"; input.min="1"; input.max=String(DIFFS.length); input.step="1";
@@ -1662,7 +1719,7 @@ function buildDiffChoices(){
   box.appendChild(wrap);
   function refl(){
     var d=DIFFS[parseInt(input.value,10)-1];
-    cur.innerHTML="Difficulté : <b>"+d.name+"</b><div class='diffslider-note'>Toutes les difficultés peuvent tomber — plus souvent autour de ce niveau (répartition en cloche).</div>";
+    cur.innerHTML=t("diffPrefix","Difficulté :")+" <b>"+d.name+"</b><div class='diffslider-note'>"+t("diffNote","Toutes les difficultés peuvent tomber — plus souvent autour de ce niveau (répartition en cloche).")+"</div>";
   }
   refl();
   input.oninput=function(){ setup.diff=DIFFS[parseInt(input.value,10)-1].key; refl(); };
@@ -1722,7 +1779,7 @@ function refreshLocks(){
   $("stepAnimal").classList.toggle("locked", !(setup.cat && (empire || setup.sub) && setup.diff));
   var ready = setup.game && setup.cat && (empire || setup.sub) && setup.diff && selectedAnimal;
   $("startBtn").disabled = !ready;
-  $("startBtn").textContent = empire ? "👑 Lancer mon empire !" : "C'est parti !";
+  $("startBtn").textContent = empire ? t("startEmpire","👑 Lancer mon empire !") : t("startEvasion","C'est parti !");
 }
 function updateMissionProgress(){
   var done=Object.keys(store.missions).length;
@@ -3451,6 +3508,13 @@ function init(){
     btn.onclick=function(){ try{ Sound.click(); }catch(e){} setBadgeLang(btn.getAttribute("data-lang")); };
     btn.classList.toggle("on", btn.getAttribute("data-lang")===badgeLang);
   }); }
+
+  // Sélecteur de langue GLOBAL (en haut à gauche) : pilote menus + jeux + badges.
+  var _lsw=$("langSwitch");
+  if(_lsw){ Array.prototype.forEach.call(_lsw.querySelectorAll("button"), function(btn){
+    btn.onclick=function(){ try{ Sound.click(); }catch(e){} applyLang(btn.getAttribute("data-lang")); };
+  }); }
+  applyLang((store.appLang==="en"||store.appLang==="zh")?store.appLang:"fr");
 
   $("startBtn").onclick=function(){ Sound.click(); if(!selectedAnimal) return;
     if(setup.game==="empire") launchEmpire(selectedAnimal); else startGame(selectedAnimal); };

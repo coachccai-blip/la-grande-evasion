@@ -1193,6 +1193,13 @@
 
   window.Empire={
     init:function(bridge){ EB=bridge; if(EB&&EB.store&&(EB.store.empLang==="en"||EB.store.empLang==="zh")) empLang=EB.store.empLang; },
+    // Change la langue depuis le sélecteur global (sûr même hors partie).
+    setLang:function(l){
+      empLang=(l==="en"||l==="zh")?l:"fr";
+      if(EB&&EB.store){ EB.store.empLang=empLang; }
+      var ov=$("empRulesOv"); if(ov&&ov.classList.contains("show")) fillRules();
+      if(E&&!E.over){ renderPanel(); renderCenter(); }
+    },
     start:function(setup){ newGame(setup); mount(); attachManage(); saveState(); },
     resume:function(){ var s=EB.store.empireGame; if(!s) return false; deserialize(s); mount(); attachManage(); return true; },
     hasSave:function(){ return !!EB.store.empireGame; },
