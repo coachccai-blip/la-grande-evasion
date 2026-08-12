@@ -163,11 +163,13 @@
   function countType(pi, type){ var n=0; E.board.forEach(function(c){ if(c.type===type&&c.owner===pi&&!c.mortgaged) n++; }); return n; }
   function rentOf(c, diceTotal){
     if(c.owner<0||c.mortgaged) return 0;
-    if(c.type==="transport"){ var n=countType(c.owner,"transport"); return [0,100,200,300,400][n]||400; }
-    if(c.type==="service"){ var n2=countType(c.owner,"service"); return diceTotal*(n2>=2?20:10)||diceTotal*10; }
-    // prop
-    if(c.level>0) return c.rentBase*RENT_MULT[c.level-1];
-    return quartierComplete(c.owner,c.q)? c.rentBase*2 : c.rentBase;
+    var base;
+    if(c.type==="transport"){ var n=countType(c.owner,"transport"); base=[0,100,200,300,400][n]||400; }
+    else if(c.type==="service"){ var n2=countType(c.owner,"service"); base=diceTotal*(n2>=2?20:10)||diceTotal*10; }
+    else if(c.level>0) base=c.rentBase*RENT_MULT[c.level-1];
+    else base=quartierComplete(c.owner,c.q)? c.rentBase*2 : c.rentBase;
+    // Inflation : +50 % tous les deux tours (multiplicateur global).
+    return Math.round(base*(E.rentMult||1));
   }
 
   /* ============================ RENDER ==================================== */
@@ -373,6 +375,7 @@
     var c=$("empCenter"); if(!c) return; c.innerHTML=SCENE_SVG;
     var cover=el("div","emp-cover");
     cover.appendChild(el("div","emp-title","👑 L'Empire des Évadés"));
+    if((E.rentMult||1)>1){ cover.appendChild(el("div","emp-inflation","📈 Loyers ×"+E.rentMult)); }
     // Récapitulatif « qui mène » : chaque animal, son nombre de propriétés, son solde.
     var lead=leaderIndex();
     var hud=el("div","emp-hud");
@@ -468,6 +471,13 @@
   /* ============================ TOUR JOUEUR =============================== */
   async function playerTurn(){
     if(busy||E.over) return; busy=true; setRoll(false);
+    // Nouveau tour du joueur : inflation des loyers +50 % tous les deux tours.
+    E.round=(E.round||0)+1;
+    if(E.round>=3 && (E.round%2)===1){
+      E.rentMult=Math.round((E.rentMult||1)*1.5*100)/100;
+      say("📈 Inflation ! Tous les loyers grimpent de +50 % (×"+E.rentMult+").");
+      EB.Sound.special&&EB.Sound.special(); renderCenter();
+    }
     var p=me();
     // Fourrière ?
     if(p.jail>0){ await jailTurn(0); if(E.over){busy=false;return;} await botsPhase(); busy=false; setRoll(true); return; }
@@ -540,7 +550,7 @@
         +"<div class='emp-caserow'><span>🏷️ "+tUI("loyerNu","Loyer terrain nu")+"</span><b>₵"+rb+"</b> <span class='emp-casemut'>(₵"+(rb*2)+" "+tUI("quartierComplet","quartier complet")+")</span></div>"
         +"<div class='emp-caserent'>🏠 "+lvls+"</div>"
         +"</div>"
-        +(c.level>0?"<div class='emp-casenow'>"+tUI("niveauActuel","Niveau actuel")+" : <b>"+tBuildLbl(c.level-1)+"</b> → "+tUI("loyerDu","loyer dû")+" <b>₵"+(rb*RENT_MULT[c.level-1])+"</b></div>"
+        +(c.level>0?"<div class='emp-casenow'>"+tUI("niveauActuel","Niveau actuel")+" : <b>"+tBuildLbl(c.level-1)+"</b> → "+tUI("loyerDu","loyer dû")+" <b>₵"+(c.owner>=0?rentOf(c,7):Math.round(rb*RENT_MULT[c.level-1]*(E.rentMult||1)))+"</b></div>"
                    :"<div class='emp-casenow'>"+tUI("terrainNu","Terrain nu (aucun bâtiment)")+"</div>");
     } else if(c.type==="transport"){ bg="linear-gradient(160deg,#cfe0ff,#fff)";
       desc=tType("transport","<b>Route migratoire</b> — Transport à acheter (<b>₵200</b>).<br>Le loyer grimpe avec le nombre de lignes possédées (100 → 400 ₵)."); }
@@ -1117,11 +1127,13 @@
   }
   function serialize(){
     return { cat:E.cat, sub:E.sub, diffVal:E.diffVal, botSuccess:E.botSuccess, lastDice:E.lastDice, d1:E.d1||null, d2:E.d2||null,
+      rentMult:E.rentMult||1, round:E.round||0,
       players:E.players.map(function(p){ return {animalId:p.animalId,pos:p.pos,cash:p.cash,jail:p.jail,bot:p.bot,bankrupt:p.bankrupt,dbl:p.dbl||0}; }),
       board:E.board.map(function(c){ return isProp(c)?{owner:c.owner,level:c.level||0,mortgaged:!!c.mortgaged}:null; }) };
   }
   function deserialize(s){
     E={ cat:s.cat, sub:s.sub, diffVal:s.diffVal, botSuccess:s.botSuccess, lastDice:s.lastDice||7, d1:s.d1||null, d2:s.d2||null, over:false, _log:[], _deltas:[],
+      rentMult:s.rentMult||1, round:s.round||0,
       board:buildBoard(),
       players:s.players.map(function(p){ return {animalId:p.animalId,pos:p.pos,cash:p.cash,jail:p.jail||0,bot:p.bot,bankrupt:!!p.bankrupt,dbl:p.dbl||0,opaUsed:false}; }) };
     s.board.forEach(function(sc,i){ if(sc&&isProp(E.board[i])){ E.board[i].owner=sc.owner; E.board[i].level=sc.level; E.board[i].mortgaged=sc.mortgaged; } });
@@ -1135,6 +1147,7 @@
     var bots=others.slice(0,3);
     E={ cat:setup.cat, sub:setup.sub||"Tout", diffVal:setup.diffVal, botSuccess:setup.botSuccess||0.55,
       lastDice:7, d1:null, d2:null, over:false, _log:[], _deltas:[], board:buildBoard(),
+      rentMult:1, round:0,   // inflation des loyers : +50 % tous les deux tours
       players:[{animalId:meId,pos:0,cash:1500,jail:0,bot:false,bankrupt:false,dbl:0,opaUsed:false}]
         .concat(bots.map(function(b){ return {animalId:b,pos:0,cash:1500,jail:0,bot:true,bankrupt:false,dbl:0,opaUsed:false}; })) };
   }
