@@ -65,9 +65,10 @@
     return q;
   }
   // Idem pour les frames grammaire/vocab/ortho : squelette FR + slots {clé: valeurFR}.
-  function attachFrame(q, frameFR, slots){
+  // keepKeys : clés de slots « mot-cible » à laisser en français (ex. ['W']).
+  function attachFrame(q, frameFR, slots, keepKeys){
     var P = global.PHRASE_PARTS; if(!P || !P.frame) return q;
-    var en = P.frame(frameFR, slots, "en"), zh = P.frame(frameFR, slots, "zh");
+    var en = P.frame(frameFR, slots, "en", keepKeys), zh = P.frame(frameFR, slots, "zh", keepKeys);
     if(en || zh){ q.tr = {}; if(en) q.tr.en = en; if(zh) q.tr.zh = zh; }
     return q;
   }
@@ -991,7 +992,7 @@
     return attachFrame({ cat:cat, sub:sub, phrase:_nf.replace("{W}",it.w).replace("{A}",art),
       hint:"Donne la nature (classe) du mot",
       note:"La nature d'un mot : nom, verbe, adjectif, adverbe, déterminant, pronom, préposition ou conjonction.",
-      options:build(it.n,bad), answer:0 }, _nf, {W:it.w, A:art});
+      options:build(it.n,bad), answer:0 }, _nf, {W:it.w, A:art}, ['W']);
   }
 
   /* --- Accords : générateur PARTITIONNÉ par difficulté (noms partitionnés) --- */
@@ -2542,7 +2543,7 @@
     var _plf=pick(PLUR_FRAMES);
     return attachFrame({ cat:cat, sub:sub, phrase:_plf.replace("{S}",it.s), hint:"Écris le bon pluriel",
       note:"Pluriels : -al→-aux, -eau/-eu→-x, -ou→-s (sauf bijou, caillou, chou, genou, hibou, joujou, pou → -x), -ail→-ails (sauf travail, vitrail, corail… → -aux).",
-      options:build(it.p, bad), answer:0 }, _plf, {S:it.s});
+      options:build(it.p, bad), answer:0 }, _plf, {S:it.s}, ['S']);
   }
 
   /* --- Adverbes en -ment : générateur PARTITIONNÉ par difficulté --- */
@@ -2598,7 +2599,7 @@
     var _avf=pick(ADV_FRAMES);
     return attachFrame({ cat:cat, sub:sub, phrase:_avf.replace("{A}",it.a), hint:"Forme l'adverbe en -ment",
       note:"Adverbe en -ment : adjectif au féminin + -ment (lente→lentement). En -ant → -amment, en -ent → -emment, terminé par une voyelle → + -ment (vrai→vraiment).",
-      options:build(it.v, bad), answer:0 }, _avf, {A:it.a});
+      options:build(it.v, bad), answer:0 }, _avf, {A:it.a}, ['A']);
   }
 
   /* --- « é ou er » : générateur PARTITIONNÉ (verbe + complément par difficulté) --- */
@@ -2630,7 +2631,7 @@
   ];
   var ERE_PART=["{S} a ___ {O}.","Hier, {S} a ___ {O}.","{S} a bien ___ {O}."];
   var ERE_INF=["{S} va ___ {O}.","{S} doit ___ {O}.","{S} veut ___ {O}."];
-  var ERE_SUBJ=["il","elle","on","Léa","Paul","Tom"];
+  var ERE_SUBJ=["il","elle","Léa","Paul","Tom"];
   function genErE(diff,cat,sub){
     var it=pick(bandFilter(ER_ITEMS,diff,"d")), base=it.inf.slice(0,-2);
     var forms={er:it.inf, part:base+"é", ez:base+"ez", ait:base+"ait"};

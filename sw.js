@@ -1,5 +1,5 @@
 /* La Grande Évasion — service worker (offline, standalone PWA) */
-const CACHE = 'evasion-v63';
+const CACHE = 'evasion-v64';
 
 /* Tout ce qu'il faut pour jouer 100 % hors-ligne. */
 const ASSETS = [
