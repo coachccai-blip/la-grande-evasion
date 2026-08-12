@@ -167,6 +167,7 @@
   .vk-imgopt:active{transform:translateY(1px);}
   .vk-opts{display:flex; flex-direction:column; gap:8px;}
   .vk-opt{border:2px solid var(--line); background:var(--panel2); color:var(--ink); font-family:var(--font); font-weight:700; font-size:17px; padding:14px; border-radius:12px; cursor:pointer; text-align:center;}
+  .vk-opt.bi{font-size:15px; line-height:1.35;}
   .vk-opt:active{transform:translateY(1px);}
   .vk-imgopt.ok,.vk-opt.ok{border-color:var(--ok2); background:rgba(63,174,90,.22);}
   .vk-imgopt.ko,.vk-opt.ko{border-color:var(--ko2); background:rgba(224,87,74,.22);}
@@ -712,9 +713,23 @@
   .emp-btn.primary{background:var(--accent); color:#3a2c10;}
   .emp-btn.warn{background:#e0574a; color:#fff;}
   .emp-btn.ghost{background:transparent; box-shadow:none; color:var(--ink-soft); font-weight:700;}
+  /* Sélecteur de langue des cartes & règles (FR / EN / 中) */
+  .emp-langsw{display:flex; gap:5px; justify-content:center; margin:2px 0;}
+  .emp-langbtn{border:1.5px solid var(--blue4); background:var(--panel); color:var(--blue7);
+    font-family:var(--font); font-weight:800; font-size:12px; padding:5px 12px; border-radius:9px; cursor:pointer;}
+  .emp-langbtn.on{background:linear-gradient(180deg,var(--blue5),var(--blue6)); color:#fff; border-color:var(--blue6);}
+  .emp-langbtn:active{transform:scale(.96);}
   .emp-choice{width:100%;}
   .emp-ctext{font-size:13px; text-align:center; margin-bottom:8px; line-height:1.4;}
   .emp-crow{display:flex; gap:6px; flex-wrap:wrap; justify-content:center;}
+  /* Compteur de construction (nombre de maisons) */
+  .emp-counter{display:flex; align-items:center; justify-content:center; gap:16px; margin:6px 0 4px;}
+  .emp-cbtn{width:44px; height:44px; border-radius:12px; border:0; background:var(--accent); color:#3a2c10;
+    font-size:24px; font-weight:900; cursor:pointer; line-height:1;}
+  .emp-cbtn:active{transform:translateY(1px);}
+  .emp-cnum{min-width:52px; text-align:center; font-size:26px; font-weight:900; color:var(--ink);}
+  .emp-cest{text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:8px;}
+  .emp-cest b{color:var(--ink); font-size:15px;}
   .emp-card{max-width:360px; text-align:center;}
   .emp-card .emp-card-t{font-size:16px; font-weight:900; color:var(--accent2); margin-bottom:8px;}
   .emp-card .emp-card-x{font-size:15px; line-height:1.5;}
@@ -747,7 +762,54 @@
   .emp-casename{font-size:20px; font-weight:900; color:var(--ink); padding:0 16px;}
   .emp-casedesc{font-size:13.5px; line-height:1.5; color:var(--ink-soft); padding:9px 20px 2px;}
   .emp-casedesc b{color:var(--ink);}
+  /* Fiche loyer d'une propriété (clic sur une case) */
+  .emp-caseinfo{margin:10px 14px 4px; padding:9px 12px; border-radius:12px;
+    background:rgba(1,114,176,.07); border:1px solid rgba(1,114,176,.18); text-align:left;}
+  .emp-caserow{display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-size:12.5px; padding:2px 0; color:var(--ink);}
+  .emp-caserow span{color:var(--ink-soft);}
+  .emp-caserow b{color:var(--ink);}
+  .emp-casemut{font-size:11px; color:var(--ink-soft) !important;}
+  .emp-caserent{margin-top:6px; padding-top:6px; border-top:1px dashed rgba(1,114,176,.25);
+    font-size:12px; line-height:1.7; color:var(--ink-soft);}
+  .emp-caserent b{color:var(--blue7);}
+  .emp-casenow{font-size:12px; color:var(--ink); margin:8px 18px 2px; font-weight:600;}
   .emp-casehint{font-size:11px; color:var(--ink-soft); opacity:.7; padding:12px 0 15px;}
+  .emp-caseactions{padding:6px 16px 2px; display:flex; flex-direction:column; gap:7px;}
+  .emp-caseactions:empty{display:none;}
+  .emp-caseactions .emp-btn{width:100%;}
+  /* Portefeuille d'un joueur (clic sur une ligne du HUD central) */
+  .emp-p.clik{cursor:pointer; transition:transform .08s, box-shadow .12s;}
+  .emp-p.clik:active{transform:scale(.97);}
+  #empHoldOv .emp-holdcard{position:relative; width:100%; max-width:360px; background:var(--panel);
+    border-radius:20px; overflow:hidden; box-shadow:0 18px 48px rgba(0,0,0,.45);
+    max-height:82vh; display:flex; flex-direction:column;
+    animation:empCasePop .3s cubic-bezier(.2,1.35,.5,1);}
+  .emp-hold-x{position:absolute; top:9px; right:11px; z-index:2; border:0; background:rgba(0,0,0,.12);
+    color:var(--ink); width:28px; height:28px; border-radius:50%; font-size:14px; font-weight:900; cursor:pointer;}
+  .emp-hold-head{display:flex; align-items:center; gap:12px; padding:18px 18px 12px;
+    background:linear-gradient(180deg,var(--blue-deep),var(--blue6)); color:#fff;}
+  .emp-hold-emoji{font-size:40px; width:58px; height:58px; border-radius:50%; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,.25);}
+  .emp-hold-id{flex:1; min-width:0; text-align:left;}
+  .emp-hold-name{font-size:18px; font-weight:900; line-height:1.15;}
+  .emp-hold-meta{font-size:11.5px; opacity:.95; margin-top:4px; line-height:1.5;}
+  .emp-hold-meta b{color:#fff;}
+  .emp-hold-ko{color:#ffd0c8; font-weight:800;}
+  .emp-hold-body{padding:12px 14px 4px; overflow-y:auto; text-align:left;}
+  .emp-hold-empty{text-align:center; color:var(--ink-soft); font-size:13.5px; padding:26px 10px;}
+  .emp-hold-grp{display:flex; align-items:center; gap:7px; margin:10px 2px 5px; font-weight:800;
+    font-size:12.5px; color:var(--ink);}
+  .emp-hold-grp:first-child{margin-top:2px;}
+  .emp-hold-dot{width:12px; height:12px; border-radius:50%; flex:0 0 auto; box-shadow:0 0 0 2px rgba(0,0,0,.08) inset;}
+  .emp-hold-item{background:rgba(1,114,176,.06); border:1px solid rgba(1,114,176,.16);
+    border-radius:11px; padding:8px 11px; margin-bottom:7px;}
+  .emp-hold-item.mort{opacity:.6;}
+  .emp-hold-item.clik{cursor:pointer; transition:transform .07s;}
+  .emp-hold-item.clik:active{transform:scale(.98);}
+  .emp-hold-iname{font-size:13.5px; font-weight:800; color:var(--ink);}
+  .emp-hold-isub{font-size:11.5px; color:var(--ink-soft); margin-top:2px; line-height:1.4;}
+  .emp-casehint{font-size:11px; color:var(--ink-soft); opacity:.7; padding:12px 0 15px; text-align:center;}
 
   /* ============================= Nav du bas ========================== */
   nav{
@@ -947,7 +1009,8 @@
         <div id="empCaseArt" class="emp-caseart"></div>
         <div id="empCaseName" class="emp-casename"></div>
         <div id="empCaseDesc" class="emp-casedesc"></div>
-        <div class="emp-casehint">👆 Touche pour continuer</div>
+        <div id="empCaseActions" class="emp-caseactions"></div>
+        <div id="empCaseHint" class="emp-casehint">👆 Touche pour continuer</div>
       </div>
     </div>
     <!-- Carte événement (Coup de Patte / Cagnotte) -->
@@ -956,6 +1019,21 @@
         <div id="empCardTitle" class="emp-card-t">Coup de Patte</div>
         <div id="empCardText" class="emp-card-x"></div>
         <button id="empCardOk" class="btn wide" style="margin-top:12px;">Continuer</button>
+      </div>
+    </div>
+    <!-- Portefeuille d'un joueur : ses propriétés (clic sur le HUD central) -->
+    <div id="empHoldOv" class="overlay">
+      <div class="emp-holdcard">
+        <button id="empHoldClose" class="emp-hold-x" aria-label="Fermer">✕</button>
+        <div class="emp-hold-head">
+          <span id="empHoldEmoji" class="emp-hold-emoji"></span>
+          <div class="emp-hold-id">
+            <div id="empHoldName" class="emp-hold-name"></div>
+            <div id="empHoldMeta" class="emp-hold-meta"></div>
+          </div>
+        </div>
+        <div id="empHoldBody" class="emp-hold-body"></div>
+        <div class="emp-casehint">👆 Touche en dehors pour fermer</div>
       </div>
     </div>
     <!-- Fin de partie Empire -->
@@ -978,10 +1056,11 @@
           <p><b>🎲 Se déplacer</b><br>Lance les dés et avance sur l'anneau. Repasser par le Grand Baobab 🌳 rapporte ₵200.</p>
           <p><b>🏠 Acheter</b><br>En tombant sur un terrain libre, tu peux l'acheter. Sur un terrain adverse, tu paies un loyer.</p>
           <p><b>🏗️ Construire</b><br>Tu ne peux construire que si tu possèdes <b>tout un quartier</b> : les <b>deux cases de la même couleur</b>. Chaque niveau (Stand → Boutique → Grand Magasin → Palais) fait grimper les loyers. Le bouton <b>« 🏗️ Construire »</b> reste affiché, mais il ne propose un chantier que si un quartier est complet.</p>
-          <p><b>💰 Loyer &amp; négociation</b><br>Sur un terrain adverse, tu paies un loyer. Tu peux <b>négocier ÷2</b> en réussissant <b>3 questions</b>. Les animaux peuvent aussi te réclamer une négociation : défends ton plein tarif avec <b>3 bonnes réponses</b>.</p>
-          <p><b>⚔️ OPA</b><br>Sur un terrain adverse, tu peux tenter une <b>OPA</b> (rachat forcé) : réussis <b>5 questions</b> pour l'arracher à son propriétaire. Une seule OPA par tour. Attention : un animal peut lancer une <b>OPA hostile contre toi</b> — défends-toi avec <b>5 bonnes réponses</b> pour garder ta propriété.</p>
+          <p><b>💰 Loyer &amp; négociation</b><br>Sur un terrain adverse, tu paies un loyer. Tu peux <b>négocier ÷2</b> en réussissant <b>1 question</b> — mais si tu la rates, le <b>loyer est triplé</b> ! Les animaux peuvent aussi te réclamer une négociation : défends ton plein tarif avec <b>1 bonne réponse</b>.</p>
+          <p><b>⚔️ OPA</b><br>Sur un terrain adverse, tu peux tenter une <b>OPA</b> (rachat forcé) : réussis <b>3 questions</b> pour l'arracher à son propriétaire. <b>Gros risque :</b> si tu rates une seule question, l'OPA échoue et tu paies <b>5 fois le loyer</b>. Une seule OPA par tour. Attention : un animal peut lancer une <b>OPA hostile contre toi</b> — défends-toi avec <b>3 bonnes réponses</b> pour garder ta propriété.</p>
           <p><b>🔒 Fourrière</b><br>Deux doubles de suite, ou la case Gardien 🚓, t'envoient à la Fourrière. Tu en sors en payant ou en répondant juste.</p>
           <p><b>❓ Questions</b><br>La plupart des actions (achats, OPA, sortie de Fourrière) se gagnent en répondant correctement aux questions de français.</p>
+          <p><b>🤝 Offre d'achat</b><br>Depuis la fiche d'un bien adverse, propose un prix de rachat. Plus ton offre est basse, plus il faut enchaîner de bonnes réponses (jusqu'à la moitié du prix d'origine). Une offre généreuse est plus facile à faire accepter.</p>
         </div>
         <button id="empRulesOk" class="btn wide" style="margin-top:12px;">J'ai compris</button>
       </div>
@@ -1151,6 +1230,7 @@
 <script src="questions.js"></script>
 <script src="animaux.js"></script>
 <script src="sprites.js"></script>
+<script src="emp_i18n.js"></script>
 <script src="empire.js"></script>
 <script src="vocabdata.js"></script>
 <script src="vocab.js"></script>
@@ -1244,6 +1324,7 @@ function loadSave(){
       store.stats = o.stats||store.stats; store.badges = o.badges||{};
       store.empires = o.empires||{}; store.empireGame = o.empireGame||null;
       store.badgeLang = o.badgeLang || "fr";
+      store.empLang = o.empLang || "fr";
       store.vocab = o.vocab || null;
       // complète les champs de stats manquants (compat. anciennes sauvegardes)
       var d={bestStreak:0,curStreak:0,duelWins:0,flawless:0,errViewed:0,errSigs:{}};
