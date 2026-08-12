@@ -509,6 +509,22 @@
     border:10px solid transparent; border-top-color:#fff;}
 
   /* ============================= Historique ========================== */
+  /* Sous-onglets : Jeu / Vocabulaire */
+  .hist-subtabs{display:flex; gap:8px; margin-bottom:12px;}
+  .hist-subtab{flex:1; font-family:var(--font); font-weight:800; font-size:13.5px; cursor:pointer;
+    padding:9px 6px; border-radius:11px; border:1.5px solid var(--blue4);
+    background:var(--panel); color:var(--blue7);}
+  .hist-subtab.sel{background:linear-gradient(180deg,var(--blue5),var(--blue6)); color:#fff; border-color:var(--blue6);}
+  .hist-subtab:active{transform:scale(.97);}
+  /* Carte « mot de vocabulaire » dans l'historique */
+  .voc-hist-item{display:flex; gap:10px; align-items:center; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; padding:10px; margin-bottom:8px;}
+  .voc-hist-main{flex:1; font-size:14px;}
+  .voc-hist-word{font-weight:800; font-size:15px;}
+  .voc-hist-tr{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .voc-hist-lvl{font-size:10px; font-weight:800; color:#fff; background:var(--blue6);
+    padding:2px 7px; border-radius:10px; margin-left:6px;}
+  .voc-hist-sc{font-size:11px; color:var(--ink-soft); margin-top:3px;}
   .hist-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
   .stat{display:flex; gap:10px;}
   .chip{font-size:12px; font-weight:800; padding:5px 9px; border-radius:20px;}
@@ -893,14 +909,33 @@
     <!-- ==================== Écran : Historique ==================== -->
     <section id="histScreen" class="screen">
       <div class="scroll">
-        <div class="hist-head">
-          <div class="stat">
-            <span class="chip ok filterable" id="statOk" title="Afficher seulement les réussites">✓ 0</span>
-            <span class="chip ko filterable" id="statKo" title="Afficher seulement les questions ratées">✗ 0</span>
-          </div>
-          <button id="clearHist" class="btn secondary small">Effacer</button>
+        <!-- Sous-onglets : questions du Jeu / mots du Vocabulaire -->
+        <div class="hist-subtabs">
+          <button id="histSubJeu" class="hist-subtab sel">🎮 Jeu</button>
+          <button id="histSubVoc" class="hist-subtab">📚 Vocabulaire</button>
         </div>
-        <div id="histList"></div>
+        <!-- Vue « Jeu » : historique des questions -->
+        <div id="histViewJeu">
+          <div class="hist-head">
+            <div class="stat">
+              <span class="chip ok filterable" id="statOk" title="Afficher seulement les réussites">✓ 0</span>
+              <span class="chip ko filterable" id="statKo" title="Afficher seulement les questions ratées">✗ 0</span>
+            </div>
+            <button id="clearHist" class="btn secondary small">Effacer</button>
+          </div>
+          <div id="histList"></div>
+        </div>
+        <!-- Vue « Vocabulaire » : historique des mots étudiés -->
+        <div id="histViewVoc" style="display:none">
+          <div class="hist-head">
+            <div class="stat">
+              <span class="chip ok filterable" id="statVocOk" title="Mots réussis en dernier">✓ 0</span>
+              <span class="chip ko filterable" id="statVocKo" title="Mots ratés en dernier">✗ 0</span>
+            </div>
+            <button id="clearHistVoc" class="btn secondary small">Effacer</button>
+          </div>
+          <div id="histVocList"></div>
+        </div>
       </div>
     </section>
 
@@ -2824,7 +2859,72 @@ function wireZh(q, btnId, panelId){
   };
 }
 
-var histFilter="all";   // "all" | "ok" | "ko" : filtre de l'historique (pastilles ✓/✗)
+var histFilter="all";   // "all" | "ok" | "ko" : filtre de l'historique JEU (pastilles ✓/✗)
+var vocFilter="all";    // "all" | "ok" | "ko" : filtre de l'historique VOCABULAIRE
+var histSubTab="jeu";   // "jeu" | "voc" : sous-onglet actif de l'écran Historique
+/* Bascule entre les sous-onglets « Jeu » et « Vocabulaire » de l'Historique. */
+function setHistSub(which){
+  histSubTab=which;
+  var jeu=which==="jeu";
+  $("histViewJeu").style.display = jeu?"":"none";
+  $("histViewVoc").style.display = jeu?"none":"";
+  $("histSubJeu").classList.toggle("sel", jeu);
+  $("histSubVoc").classList.toggle("sel", !jeu);
+  if(jeu) renderHistory(); else renderVocabHistory();
+}
+/* Historique des mots de vocabulaire : chaque mot déjà étudié, avec son
+   dernier résultat (✓ / ✗), filtrable comme l'historique du jeu. */
+function renderVocabHistory(){
+  var list=$("histVocList"); if(!list) return; list.innerHTML="";
+  var voc=(store.vocab&&store.vocab.prog)||{};
+  var DATA=(typeof VOCAB_DATA==="object"&&VOCAB_DATA&&VOCAB_DATA.words)?VOCAB_DATA:(window.VOCAB_DATA||null);
+  var byId={}; if(DATA){ DATA.words.forEach(function(w){ byId[w.id]=w; }); }
+  // mots réellement tentés (horodatage présent), triés du plus récent au plus ancien
+  var rows=[];
+  for(var id in voc){ var p=voc[id]; if(p&&p.ts&&byId[id]) rows.push({wd:byId[id], p:p}); }
+  rows.sort(function(a,b){ return (b.p.ts||0)-(a.p.ts||0); });
+  var ok=0, ko=0;
+  rows.forEach(function(r){ if(r.p.last) ok++; else ko++; });
+  $("statVocOk").textContent="✓ "+ok; $("statVocKo").textContent="✗ "+ko;
+  $("statVocOk").classList.toggle("on", vocFilter==="ok");
+  $("statVocKo").classList.toggle("on", vocFilter==="ko");
+  if(rows.length===0){ list.innerHTML="<div class='empty'>Aucun mot étudié pour l'instant.<br>Va dans l'onglet « Vocabulaire » pour commencer !</div>"; return; }
+  if(vocFilter!=="all"){
+    var note=document.createElement("div"); note.className="hist-filter-note";
+    note.textContent = vocFilter==="ko"
+      ? "🔴 Filtre actif : mots ratés en dernier — touche « ✗ » pour tout revoir."
+      : "🟢 Filtre actif : mots réussis en dernier — touche « ✓ » pour tout revoir.";
+    list.appendChild(note);
+  }
+  var shown=rows.filter(function(r){ return vocFilter==="all" || (vocFilter==="ko" ? !r.p.last : !!r.p.last); });
+  if(shown.length===0){
+    var e=document.createElement("div"); e.className="empty";
+    e.innerHTML = vocFilter==="ko" ? "Aucun mot raté. Bravo ! 🎉" : "Aucun mot réussi pour l'instant.";
+    list.appendChild(e); return;
+  }
+  var LV=(DATA&&DATA.levelLabel)||{};
+  shown.forEach(function(r){
+    var wd=r.wd, p=r.p;
+    var it=document.createElement("div"); it.className="voc-hist-item";
+    var res=document.createElement("div"); res.className="hist-res "+(p.last?"ok":"ko"); res.textContent=p.last?"✓":"✗";
+    var main=document.createElement("div"); main.className="voc-hist-main";
+    var wline=document.createElement("div"); wline.className="voc-hist-word";
+    wline.textContent=wd.word;
+    if(wd.emoji){ wline.textContent=wd.emoji+" "+wd.word; }
+    var lvl=document.createElement("span"); lvl.className="voc-hist-lvl"; lvl.textContent=(LV[wd.level]||wd.level||"");
+    wline.appendChild(lvl);
+    main.appendChild(wline);
+    var tr=document.createElement("div"); tr.className="voc-hist-tr";
+    var zh=(wd.zh&&wd.zh.length)?wd.zh.join(" / "):"";
+    var en=(wd.en&&wd.en.length)?wd.en.join(" / "):"";
+    tr.textContent=[zh,en].filter(Boolean).join("  ·  ");
+    main.appendChild(tr);
+    var sc=document.createElement("div"); sc.className="voc-hist-sc";
+    sc.textContent="✓ "+(p.succ||0)+"   ✗ "+(p.fail||0)+(p.fav?"   ⭐":"");
+    main.appendChild(sc);
+    it.appendChild(res); it.appendChild(main); list.appendChild(it);
+  });
+}
 function renderHistory(){
   var list=$("histList"); list.innerHTML="";
   var ok=0, ko=0;
@@ -3064,19 +3164,18 @@ function badgeDefs(){
   if(voc.prog){ for(var vk in voc.prog){ if(voc.prog[vk]&&voc.prog[vk].fav) favCount++; } }
   return [
     {id:"first_free", ic:"🔓", t:"Première évasion",        d:"Libérer un animal",                       v:nFreed,           g:1},
-    {id:"all_free",   ic:"🏅", t:"Grande libération",        d:"Libérer les 10 animaux au moins une fois", v:nFreed,           g:10},
-    {id:"zoo_empty",  ic:"🌈", t:"Zoo au grand complet",     d:"Avoir les 10 animaux libres en même temps",v:nFreed,           g:10},
+    {id:"all_free",   ic:"🏅", t:"Grande libération",        d:"Libère tous les animaux du zoo",          v:nFreed,           g:10},
     {id:"flawless",   ic:"💯", t:"Sans faute",               d:"Finir une aventure sans aucune erreur",   v:s.flawless||0,    g:1},
-    {id:"streak5",    ic:"🔥", t:"En feu",                   d:"5 bonnes réponses d'affilée",             v:s.bestStreak||0,  g:5},
-    {id:"streak20",   ic:"🔥", t:"Série impressionnante",    d:"20 bonnes réponses d'affilée",            v:s.bestStreak||0,  g:20},
-    {id:"streak100",  ic:"⚡", t:"Centurion",                d:"100 bonnes réponses d'affilée",           v:s.bestStreak||0,  g:100},
-    {id:"streak250",  ic:"⚡", t:"Machine à réponses",       d:"250 bonnes réponses d'affilée",           v:s.bestStreak||0,  g:250},
-    {id:"streak500",  ic:"🌟", t:"Légende vivante",          d:"500 bonnes réponses d'affilée",           v:s.bestStreak||0,  g:500},
+    {id:"streak5",    ic:"🔥", t:"En feu",                   d:"5 bonnes réponses d'affilée (mode Jeu)",  v:s.bestStreak||0,  g:5},
+    {id:"streak20",   ic:"🔥", t:"Série impressionnante",    d:"20 bonnes réponses d'affilée (mode Jeu)", v:s.bestStreak||0,  g:20},
+    {id:"streak100",  ic:"⚡", t:"Centurion",                d:"100 bonnes réponses d'affilée (mode Jeu)",v:s.bestStreak||0,  g:100},
+    {id:"streak250",  ic:"⚡", t:"Machine à réponses",       d:"250 bonnes réponses d'affilée (mode Jeu)",v:s.bestStreak||0,  g:250},
+    {id:"streak500",  ic:"🌟", t:"Légende vivante",          d:"500 bonnes réponses d'affilée (mode Jeu)",v:s.bestStreak||0,  g:500},
     {id:"errors5",    ic:"🔍", t:"Réviser ses erreurs",      d:"Consulter 5 erreurs commises",            v:s.errViewed||0,   g:5},
-    {id:"duel1",      ic:"⚔️", t:"Premier duel gagné",       d:"Gagner 1 duel",                           v:s.duelWins||0,    g:1},
-    {id:"duel10",     ic:"⚔️", t:"Duelliste",               d:"Gagner 10 duels",                         v:s.duelWins||0,    g:10},
-    {id:"duel50",     ic:"🏆", t:"Maître du duel",           d:"Gagner 50 duels",                         v:s.duelWins||0,    g:50},
-    {id:"duel100",    ic:"👑", t:"Champion incontesté",      d:"Gagner 100 duels",                        v:s.duelWins||0,    g:100},
+    {id:"duel1",      ic:"⚔️", t:"Premier duel gagné",       d:"Gagner 1 duel (mode Jeu)",                v:s.duelWins||0,    g:1},
+    {id:"duel10",     ic:"⚔️", t:"Duelliste",               d:"Gagner 10 duels (mode Jeu)",              v:s.duelWins||0,    g:10},
+    {id:"duel50",     ic:"🏆", t:"Maître du duel",           d:"Gagner 50 duels (mode Jeu)",              v:s.duelWins||0,    g:50},
+    {id:"duel100",    ic:"👑", t:"Champion incontesté",      d:"Gagner 100 duels (mode Jeu)",             v:s.duelWins||0,    g:100},
     {id:"adv10",      ic:"🎯", t:"Grand aventurier",         d:"Réussir 10 aventures",                    v:adv,              g:10},
     {id:"escape_guards",ic:"🚓",t:"Plus rapide que les gardiens", d:"Gagner une partie malgré les gardiens", v:s.guardEscapes||0, g:1},
     /* --- Vocabulaire : jours de calendrier joués d'affilée --- */
@@ -3098,19 +3197,18 @@ function badgeDefs(){
    main pour une qualité irréprochable et disponible hors-ligne. */
 var BADGE_I18N={
   first_free:{ en:{t:"First Escape",d:"Free one animal"}, zh:{t:"首次越狱",d:"解救一只动物"} },
-  all_free:{ en:{t:"Grand Liberation",d:"Free all 10 animals at least once"}, zh:{t:"大解放",d:"至少各解救全部10只动物一次"} },
-  zoo_empty:{ en:{t:"Full House",d:"Have all 10 animals free at the same time"}, zh:{t:"全员自由",d:"同时让10只动物都获得自由"} },
+  all_free:{ en:{t:"Grand Liberation",d:"Free every animal in the zoo"}, zh:{t:"大解放",d:"解救动物园里所有动物"} },
   flawless:{ en:{t:"Flawless",d:"Finish an adventure with no mistakes"}, zh:{t:"完美无误",d:"零失误完成一次冒险"} },
-  streak5:{ en:{t:"On Fire",d:"5 correct answers in a row"}, zh:{t:"火力全开",d:"连续答对5题"} },
-  streak20:{ en:{t:"Impressive Streak",d:"20 correct answers in a row"}, zh:{t:"惊人连胜",d:"连续答对20题"} },
-  streak100:{ en:{t:"Centurion",d:"100 correct answers in a row"}, zh:{t:"百题达人",d:"连续答对100题"} },
-  streak250:{ en:{t:"Answer Machine",d:"250 correct answers in a row"}, zh:{t:"答题机器",d:"连续答对250题"} },
-  streak500:{ en:{t:"Living Legend",d:"500 correct answers in a row"}, zh:{t:"活着的传奇",d:"连续答对500题"} },
+  streak5:{ en:{t:"On Fire",d:"5 correct answers in a row (Game mode)"}, zh:{t:"火力全开",d:"连续答对5题（游戏模式）"} },
+  streak20:{ en:{t:"Impressive Streak",d:"20 correct answers in a row (Game mode)"}, zh:{t:"惊人连胜",d:"连续答对20题（游戏模式）"} },
+  streak100:{ en:{t:"Centurion",d:"100 correct answers in a row (Game mode)"}, zh:{t:"百题达人",d:"连续答对100题（游戏模式）"} },
+  streak250:{ en:{t:"Answer Machine",d:"250 correct answers in a row (Game mode)"}, zh:{t:"答题机器",d:"连续答对250题（游戏模式）"} },
+  streak500:{ en:{t:"Living Legend",d:"500 correct answers in a row (Game mode)"}, zh:{t:"活着的传奇",d:"连续答对500题（游戏模式）"} },
   errors5:{ en:{t:"Review Your Mistakes",d:"Review 5 of your mistakes"}, zh:{t:"复习错误",d:"查看5个做错的题"} },
-  duel1:{ en:{t:"First Duel Won",d:"Win 1 duel"}, zh:{t:"首胜对决",d:"赢得1场对决"} },
-  duel10:{ en:{t:"Duelist",d:"Win 10 duels"}, zh:{t:"决斗者",d:"赢得10场对决"} },
-  duel50:{ en:{t:"Duel Master",d:"Win 50 duels"}, zh:{t:"对决大师",d:"赢得50场对决"} },
-  duel100:{ en:{t:"Undisputed Champion",d:"Win 100 duels"}, zh:{t:"无可争议的冠军",d:"赢得100场对决"} },
+  duel1:{ en:{t:"First Duel Won",d:"Win 1 duel (Game mode)"}, zh:{t:"首胜对决",d:"赢得1场对决（游戏模式）"} },
+  duel10:{ en:{t:"Duelist",d:"Win 10 duels (Game mode)"}, zh:{t:"决斗者",d:"赢得10场对决（游戏模式）"} },
+  duel50:{ en:{t:"Duel Master",d:"Win 50 duels (Game mode)"}, zh:{t:"对决大师",d:"赢得50场对决（游戏模式）"} },
+  duel100:{ en:{t:"Undisputed Champion",d:"Win 100 duels (Game mode)"}, zh:{t:"无可争议的冠军",d:"赢得100场对决（游戏模式）"} },
   adv10:{ en:{t:"Great Adventurer",d:"Complete 10 adventures"}, zh:{t:"伟大冒险家",d:"完成10次冒险"} },
   escape_guards:{ en:{t:"Faster Than the Guards",d:"Win a game despite the guards"}, zh:{t:"比看守更快",d:"在看守出动的情况下赢得一局"} },
   vstreak3:{ en:{t:"Diligent",d:"Play vocabulary 3 days in a row"}, zh:{t:"勤奋",d:"连续3天学习词汇"} },
@@ -3255,12 +3353,16 @@ function init(){
     else if(G){ showScreen("game"); drawBoard(); }
     else showScreen("select");
   };
-  $("tabHist").onclick=function(){ Sound.click(); setTab("hist"); showScreen("hist"); renderHistory(); };
+  $("tabHist").onclick=function(){ Sound.click(); setTab("hist"); showScreen("hist"); setHistSub(histSubTab); };
   $("tabBadges").onclick=function(){ Sound.click(); setTab("badges"); showScreen("badges"); renderBadges(); };
   if($("tabVocab")) $("tabVocab").onclick=function(){ Sound.click(); setTab("vocab"); showScreen("vocab"); if(window.Vocab) Vocab.renderVocab(); };
   if($("tabDict")) $("tabDict").onclick=function(){ Sound.click(); setTab("dict"); showScreen("dict"); if(window.Vocab) Vocab.renderDict(); };
   // Permet au dictionnaire de basculer vers l'onglet Vocabulaire (ex. « réviser mon carnet »).
   window.__gotoVocab=function(){ setTab("vocab"); showScreen("vocab"); };
+
+  // Sous-onglets Historique : Jeu / Vocabulaire
+  $("histSubJeu").onclick=function(){ Sound.click(); setHistSub("jeu"); };
+  $("histSubVoc").onclick=function(){ Sound.click(); setHistSub("voc"); };
 
   $("clearHist").onclick=function(){
     Sound.click();
@@ -3268,9 +3370,22 @@ function init(){
       store.history=[]; persist(); renderHistory();
     }
   };
-  // Pastilles ✓ / ✗ : filtrent l'historique (clic pour activer, re-clic pour tout revoir)
+  // Pastilles ✓ / ✗ : filtrent l'historique du JEU (clic pour activer, re-clic pour tout revoir)
   $("statKo").onclick=function(){ Sound.click(); histFilter = (histFilter==="ko"?"all":"ko"); renderHistory(); };
   $("statOk").onclick=function(){ Sound.click(); histFilter = (histFilter==="ok"?"all":"ok"); renderHistory(); };
+
+  // Historique VOCABULAIRE : filtres ✓ / ✗ + effacement
+  $("statVocKo").onclick=function(){ Sound.click(); vocFilter = (vocFilter==="ko"?"all":"ko"); renderVocabHistory(); };
+  $("statVocOk").onclick=function(){ Sound.click(); vocFilter = (vocFilter==="ok"?"all":"ok"); renderVocabHistory(); };
+  $("clearHistVoc").onclick=function(){
+    Sound.click();
+    var voc=(store.vocab&&store.vocab.prog)||{};
+    var any=false; for(var k in voc){ if(voc[k]&&voc[k].ts){ any=true; break; } }
+    if(any && confirm("Effacer l'historique des mots étudiés ? (ta progression et tes favoris sont conservés)")){
+      for(var id in voc){ if(voc[id]){ voc[id].ts=0; voc[id].last=undefined; } }
+      persist(); renderVocabHistory();
+    }
+  };
 
   $("rematchBtn").onclick=function(){ Sound.click(); $("endScreen").classList.remove("show"); startGame(G? G.animalId : selectedAnimal); };
   $("backSelectBtn").onclick=function(){
