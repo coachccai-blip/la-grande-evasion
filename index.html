@@ -2312,8 +2312,7 @@ function askQuestion(opts){
     var ov=$("questionOverlay");
     $("qBadge").textContent=CAT_LABEL[realCat]; $("qBadge").style.background=CAT_COLOR[realCat];
     $("qContext").textContent=opts.contextLabel||"";
-    $("qHint").textContent = q.hint ? ("👉 "+q.hint) : "";   // temps/notion attendu (lève l'ambiguïté)
-    wireZh(q, "qZhBtn", "qZhPanel");   // bouton « 中文 » (énoncé traduit)
+    applyQuestionLang(q, realCat);   // énoncé posé dans la langue choisie (FR / EN / 中)
     // phrase avec trou
     $("qText").innerHTML = q.phrase.replace("___","<span class='blank' id='blankSpot'>___</span>");
     var note=$("qNote"); note.textContent=""; note.className="qnote";
@@ -3110,6 +3109,47 @@ function wireZh(q, btnId, panelId){
   };
 }
 
+// Libellé de catégorie dans la langue globale (badge de la carte question).
+function catLabelLang(cat){
+  if(appLang==="en") return CAT_EN[cat]||CAT_LABEL[cat]||cat;
+  if(appLang==="zh") return CAT_ZH[cat]||CAT_LABEL[cat]||cat;
+  return CAT_LABEL[cat]||cat;
+}
+/* Pose l'énoncé de la question dans la langue choisie.
+   - FR : comportement d'origine (consigne FR + bouton « 中文 » à la demande).
+   - EN / 中 : la CONSIGNE est traduite automatiquement, et la phrase traduite
+     s'affiche sous l'énoncé. Les OPTIONS restent en français (c'est la réponse
+     à apprendre). Traduction en ligne, mise en cache (offline ensuite). */
+function applyQuestionLang(q, realCat){
+  var badge=$("qBadge"); if(badge) badge.textContent=catLabelLang(realCat);
+  var btn=$("qZhBtn"), panel=$("qZhPanel");
+  var hintFR = q.hint ? ("👉 "+q.hint) : "";
+  if(appLang==="fr"){
+    if(btn) btn.style.display="";
+    $("qHint").textContent = hintFR;
+    wireZh(q, "qZhBtn", "qZhPanel");
+    return;
+  }
+  if(btn){ btn.style.display="none"; btn.onclick=null; btn.classList.remove("on"); }
+  var tl = (appLang==="zh") ? "zh-CN" : "en";
+  $("qHint").textContent = hintFR;   // repli FR le temps de charger la traduction
+  if(panel){ panel.classList.add("open"); panel.setAttribute("data-loaded","1");
+    panel.innerHTML="<div class='qzh-load'>⏳ …</div>"; }
+  Promise.all([ trField(q.hint||"", tl), trField(String(q.phrase||""), tl) ]).then(function(v){
+    if(v[0]) $("qHint").textContent = "👉 "+v[0];
+    if(panel){
+      var tip=(appLang==="zh") ? "看懂题目后，请选择正确的法语答案。" : "Read the sentence, then choose the correct French answer.";
+      var html="";
+      if(v[1]) html+="<div class='qzh-phrase'>"+escapeHtml(v[1])+"</div>";
+      html+="<div class='qzh-tip'>"+tip+"</div>";
+      panel.innerHTML=html;
+    }
+  }).catch(function(){
+    if(panel){ var msg=(appLang==="zh") ? "⚠️ 需要联网翻译，请连网后重试。" : "⚠️ Translation needs an Internet connection.";
+      panel.innerHTML="<div class='qzh-load'>"+msg+"</div>"; }
+  });
+}
+
 var histFilter="all";   // "all" | "ok" | "ko" : filtre de l'historique JEU (pastilles ✓/✗)
 var vocFilter="all";    // "all" | "ok" | "ko" : filtre de l'historique VOCABULAIRE
 var histSubTab="jeu";   // "jeu" | "voc" : sous-onglet actif de l'écran Historique
@@ -3320,8 +3360,7 @@ function presentQuestion(cat, sub, diff, contextLabel){
     var ov=$("questionOverlay");
     $("qBadge").textContent=CAT_LABEL[realCat]; $("qBadge").style.background=CAT_COLOR[realCat]||"#888";
     $("qContext").textContent=contextLabel||"";
-    $("qHint").textContent = q.hint ? ("👉 "+q.hint) : "";
-    wireZh(q, "qZhBtn", "qZhPanel");   // bouton « 中文 » (énoncé traduit)
+    applyQuestionLang(q, realCat);   // énoncé posé dans la langue choisie (FR / EN / 中)
     $("qText").innerHTML = q.phrase.replace("___","<span class='blank' id='blankSpot'>___</span>");
     var note=$("qNote"); note.textContent=""; note.className="qnote";
     $("qTimer").style.display="none";
