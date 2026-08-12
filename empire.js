@@ -42,6 +42,9 @@
   }
   // Libellé de bouton traduit : B(clé, repli FR).
   function B(key, fr){ var I=LZ(); return (I&&I.btn&&I.btn[empLang]&&I.btn[empLang][key])||fr; }
+  // Chaîne d'interface traduite MAINTENANT (pour les dialogues : prompts, boutons,
+  // contexte des questions). Utilise le même dictionnaire .log + interpolation {clé}.
+  function TS(key, p, fr){ return SLfill(SL(key, p, fr)); }
   function setEmpLang(lang){
     empLang=(lang==="en"||lang==="zh")?lang:"fr";
     if(EB&&EB.store){ EB.store.empLang=empLang; EB.persist&&EB.persist(); }
@@ -483,7 +486,7 @@
       }
     });
     if(!rivals.length){ say(SL("negoNoRival",null,"Aucun adversaire ne possède de bien à négocier pour l'instant.")); return; }
-    var pick=await chooseFrom("Négocier avec quel animal ?", rivals);
+    var pick=await chooseFrom(TS("uiNegoWho",null,"Négocier avec quel animal ?"), rivals);
     if(pick==null) return;
     showHoldings(pick);
   }
@@ -625,7 +628,7 @@
     var act=$("empCaseActions"); if(act) act.innerHTML="";
     if(act && c && (c.type==="prop"||c.type==="transport"||c.type==="service")
        && c.owner>0 && !busy && !E.over && alive(E.players[0])){
-      var b=el("button","emp-btn primary","💰 Faire une offre d'achat");
+      var b=el("button","emp-btn primary",B("offer","💰 Faire une offre d'achat"));
       b.onclick=function(e){ e.stopPropagation(); close(); makeOfferTurn(i); };
       act.appendChild(b);
     }
@@ -645,23 +648,23 @@
     if(!c || !(c.owner>0)) return;
     var owner=c.owner, base=c.price, cash=E.players[0].cash;
     var tiers=[
-      {mult:1.5,  q:2, lbl:"Offre généreuse (×1,5)"},
-      {mult:1.0,  q:3, lbl:"Prix d'origine"},
-      {mult:0.75, q:4, lbl:"Offre basse (¾)"},
-      {mult:0.5,  q:5, lbl:"Offre plancher (½)"}
+      {mult:1.5,  q:2, lbl:TS("offerTierGenerous",null,"Offre généreuse (×1,5)")},
+      {mult:1.0,  q:3, lbl:TS("offerTierOrigin",null,"Prix d'origine")},
+      {mult:0.75, q:4, lbl:TS("offerTierLow",null,"Offre basse (¾)")},
+      {mult:0.5,  q:5, lbl:TS("offerTierFloor",null,"Offre plancher (½)")}
     ];
     var opts=[];
     tiers.forEach(function(t){
       var price=Math.round(base*t.mult);
-      if(cash>=price) opts.push({ label:t.lbl+" — ₵"+price+" · "+t.q+" bonne"+(t.q>1?"s":"")+" réponse"+(t.q>1?"s":""), val:{price:price,q:t.q} });
+      if(cash>=price) opts.push({ label:t.lbl+" — ₵"+price+" · "+TS("offerAnswers",{q:t.q},"{q} bonnes réponses"), val:{price:price,q:t.q} });
     });
     if(!opts.length){ say(SL("offerNoFunds",{min:Math.round(base*0.5),prop:c.name},"Fonds insuffisants : il faut au moins ₵{min} pour tenter une offre sur « {prop} ».")); await sleep(400); return; }
-    var choice=await chooseFrom("Offre d'achat sur « "+c.name+" » (à "+ownerName(c)+", prix d'origine ₵"+base+"). Plus l'offre est basse, plus il faut de bonnes réponses :", opts);
+    var choice=await chooseFrom(TS("uiOfferPrompt",{prop:c.name,owner:ownerName(c),base:base},"Offre d'achat sur « {prop} » (à {owner}, prix d'origine ₵{base}). Plus l'offre est basse, plus il faut de bonnes réponses :"), opts);
     if(!choice) return; // annulé
     say(SL("offerMake",{price:choice.price,owner:ownerName(c),prop:c.name,q:choice.q},"Offre de ₵{price} à {owner} pour « {prop} » : {q} bonnes réponses à enchaîner !"));
     EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(400);
     for(var n=0;n<choice.q;n++){
-      var ok=await ask("Négociation d'achat "+(n+1)+"/"+choice.q+" — « "+c.name+" » pour ₵"+choice.price);
+      var ok=await ask(TS("uiOfferAsk",{n:n+1,q:choice.q,prop:c.name,price:choice.price},"Négociation d'achat {n}/{q} — « {prop} » pour ₵{price}"));
       if(!ok){ say(SL("offerRefused",{owner:ownerName(c),prop:c.name},"Offre refusée : {owner} garde « {prop} ».")); EB.Sound.bad&&EB.Sound.bad(); await sleep(300); return; }
       EB.Sound.lock&&EB.Sound.lock();
     }
@@ -755,14 +758,14 @@
   /* ------------------------------ LOYER ----------------------------------- */
   async function rentFlow(pi, diceTotal){
     var c=cell(E.players[pi].pos), rent=rentOf(c, diceTotal), owner=c.owner;
-    var choice=await threeWay("« "+c.name+" » appartient à "+ownerName(c)+". Loyer à payer : ₵"+rent+".",
-      "Négocier ÷2 (1 question — raté = loyer ×3)","OPA : rachat forcé (3 réponses — raté = loyer ×5)","Payer ₵"+rent);
+    var choice=await threeWay(TS("uiRentPrompt",{prop:c.name,owner:ownerName(c),rent:rent},"« {prop} » appartient à {owner}. Loyer à payer : ₵{rent}."),
+      TS("uiBtnNego",null,"Négocier ÷2 (1 question — raté = loyer ×3)"),TS("uiBtnOpa",null,"OPA : rachat forcé (3 réponses — raté = loyer ×5)"),TS("uiBtnPay",{rent:rent},"Payer ₵{rent}"));
     if(choice==="pay"){ transfer(pi,owner,rent); say(SL("rentPaid",{name:pName(pi),amount:rent,owner:ownerName(c)},"{name} a payé ₵{amount} de loyer à {owner}.")); EB.Sound.bad&&EB.Sound.bad(); }
     else if(choice==="negotiate"){
       // 1 question : réussie → loyer ÷2 ; ratée → loyer ×3.
       say(SL("negoInstr",null,"Négociation : réussis 1 question pour diviser le loyer par 2 (raté = loyer ×3)."));
       await sleep(200);
-      var ok=await ask("Négociation — loyer ÷2 sur « "+c.name+" » (raté : loyer ×3)");
+      var ok=await ask(TS("uiNegoAsk",{prop:c.name},"Négociation — loyer ÷2 sur « {prop} » (raté : loyer ×3)"));
       var due=ok?Math.round(rent/2):rent*3;
       transfer(pi,owner,due); say(ok?SL("negoWin",{name:pName(pi),amount:due,owner:ownerName(c)},"{name} négocie : loyer ÷2, il paie ₵{amount} à {owner}."):SL("negoLose",{name:pName(pi),amount:due,owner:ownerName(c)},"{name} rate la négociation : loyer ×3, ₵{amount} à {owner}."));
     } else { // OPA
@@ -776,7 +779,7 @@
     say(SL("opaInstr",{prop:c.name},"OPA sauvage (rachat forcé) sur « {prop} » : réussis 3 questions d'affilée !"));
     EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(500);
     for(var n=0;n<3;n++){
-      var ok=await ask("OPA "+(n+1)+"/3 — rachat forcé de « "+c.name+" »");
+      var ok=await ask(TS("uiOpaAsk",{n:n+1,prop:c.name},"OPA {n}/3 — rachat forcé de « {prop} »"));
       if(!ok){ // échec : loyer ×5 (lourde pénalité du rachat forcé raté)
         transfer(pi,owner,rent*5); say(SL("opaFail",{amount:rent*5},"OPA ratée ! Loyer ×5 : −₵{amount}."));
         E.players[pi].opaUsed=true; return;
@@ -823,7 +826,7 @@
       plus.onclick=function(){ if(n<maxN){ n++; upd(); EB.Sound.click&&EB.Sound.click(); } };
       var row=el("div","emp-crow");
       var go=el("button","emp-btn primary","Construire"); go.onclick=function(){ renderPanel(); resolve(n); };
-      var cancel=el("button","emp-btn ghost","Annuler"); cancel.onclick=function(){ renderPanel(); resolve(0); };
+      var cancel=el("button","emp-btn ghost",B("cancel","Annuler")); cancel.onclick=function(){ renderPanel(); resolve(0); };
       row.appendChild(go); row.appendChild(cancel); box.appendChild(row);
       pn.appendChild(box);
     });
@@ -972,14 +975,14 @@
   async function defenseFlow(attacker, c){
     var rent=rentOf(c,E.lastDice), price150=Math.round(c.price*1.5), aname=EB.animalById(E.players[attacker].animalId).name;
     await showChallenge(attacker, c, {
-      banner:"⚔️ OPA HOSTILE !",
-      html:"<b>"+aname+"</b> lance une <b>OPA hostile</b> pour t'arracher <b>« "+c.name+" »</b> !<br>Défends-toi : <b>3 bonnes réponses</b> et l'attaque échoue.",
-      btn:"🛡️ Me défendre" });
+      banner:TS("uiOpaBanner",null,"⚔️ OPA HOSTILE !"),
+      html:TS("uiOpaHtml",{name:aname,prop:c.name},"<b>{name}</b> lance une <b>OPA hostile</b> pour t'arracher <b>« {prop} »</b> !<br>Défends-toi : <b>3 bonnes réponses</b> et l'attaque échoue."),
+      btn:TS("uiBtnDefend",null,"🛡️ Me défendre") });
     say(SL("defenseOpaInstr",{prop:c.name},"Défense OPA : réussis 3 questions pour conserver « {prop} »."));
     EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(300);
     var defended=true;
     for(var n=0;n<3;n++){
-      var ok=await ask("🛡️ Défense OPA "+(n+1)+"/3 — protège « "+c.name+" »");
+      var ok=await ask(TS("uiOpaDefAsk",{n:n+1,prop:c.name},"🛡️ Défense OPA {n}/3 — protège « {prop} »"));
       if(!ok){ defended=false; break; }
       EB.Sound.lock&&EB.Sound.lock();
     }
@@ -1000,15 +1003,15 @@
     var aname=EB.animalById(E.players[attacker].animalId).name, half=Math.round(rent/2);
     // Le joueur peut ACCEPTER le rabais tout de suite, ou TENIR BON (1 question) pour le plein tarif.
     var defend=await confirmAction(
-      aname+" veut négocier un loyer ÷2 sur « "+c.name+" » (₵"+rent+" → ₵"+half+"). Tenir bon (1 bonne réponse) pour le plein tarif, ou accepter le rabais ?",
-      "🛡️ Tenir bon", "🤝 Accepter le ÷2");
+      TS("uiVsNegoPrompt",{name:aname,prop:c.name,rent:rent,half:half},"{name} veut négocier un loyer ÷2 sur « {prop} » (₵{rent} → ₵{half}). Tenir bon (1 bonne réponse) pour le plein tarif, ou accepter le rabais ?"),
+      TS("uiBtnHold",null,"🛡️ Tenir bon"), TS("uiBtnAcceptHalf",null,"🤝 Accepter le ÷2"));
     if(!defend){ // le joueur accepte le rabais
       transfer(attacker,0,half); say(SL("acceptDiscount",{name:aname,amount:half},"Tu acceptes le rabais : {name} te paie ₵{amount} (loyer ÷2).")); EB.Sound.coin&&EB.Sound.coin();
       await sleep(300); return;
     }
     say(SL("defendNegoInstr",null,"Négociation : réussis 1 question pour lui faire payer le plein tarif."));
     await sleep(200);
-    var held=await ask("🤝 Négociation — tiens ton loyer sur « "+c.name+" »");
+    var held=await ask(TS("uiVsNegoAsk",{prop:c.name},"🤝 Négociation — tiens ton loyer sur « {prop} »"));
     if(held){ transfer(attacker,0,rent); say(SL("negoRefused",{name:aname,amount:rent},"Négociation refusée ! {name} paie le plein tarif : +₵{amount}.")); EB.Sound.coin&&EB.Sound.coin(); }
     else { transfer(attacker,0,half); say(SL("negoAccepted",{name:aname,amount:half},"{name} négocie : loyer ÷2, tu ne touches que ₵{amount}.")); EB.Sound.bad&&EB.Sound.bad(); }
     await sleep(400);
@@ -1091,7 +1094,7 @@
     saveState();
   }
   function quit(){
-    if(!confirm("Abandonner l'empire en cours ?")) return;
+    if(!confirm(TS("uiQuitConfirm",null,"Abandonner l'empire en cours ?"))) return;
     E.over=true; EB.store.empireGame=null; EB.persist();
     EB.exitEmpire();
   }
@@ -1118,7 +1121,7 @@
       var box=el("div","emp-choice"); box.appendChild(el("div","emp-ctext",text));
       var row=el("div","emp-crow");
       var ba=el("button","emp-btn",a); ba.onclick=function(){ renderPanel(); resolve("negotiate"); };
-      var bb=el("button","emp-btn warn",b); if(me().opaUsed){ bb.disabled=true; bb.title="OPA déjà tentée ce tour"; } bb.onclick=function(){ renderPanel(); resolve("opa"); };
+      var bb=el("button","emp-btn warn",b); if(me().opaUsed){ bb.disabled=true; bb.title=TS("uiOpaUsed",null,"OPA déjà tentée ce tour"); } bb.onclick=function(){ renderPanel(); resolve("opa"); };
       var bc=el("button","emp-btn primary",c); bc.onclick=function(){ renderPanel(); resolve("pay"); };
       row.appendChild(bc); row.appendChild(ba); row.appendChild(bb); box.appendChild(row); pn.appendChild(box);
     });
@@ -1128,7 +1131,7 @@
       var pn=$("empPanel"); pn.innerHTML="";
       var box=el("div","emp-choice"); box.appendChild(el("div","emp-ctext",text));
       options.forEach(function(o){ var b=el("button","emp-btn",o.label); b.onclick=function(){ renderPanel(); resolve(o.val); }; box.appendChild(b); });
-      var cancel=el("button","emp-btn ghost","Annuler"); cancel.onclick=function(){ renderPanel(); resolve(null); }; box.appendChild(cancel);
+      var cancel=el("button","emp-btn ghost",B("cancel","Annuler")); cancel.onclick=function(){ renderPanel(); resolve(null); }; box.appendChild(cancel);
       pn.appendChild(box);
     });
   }

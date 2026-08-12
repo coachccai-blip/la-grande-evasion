@@ -1729,7 +1729,7 @@ function buildDiffChoices(){
   box.appendChild(wrap);
   function refl(){
     var d=DIFFS[parseInt(input.value,10)-1];
-    cur.innerHTML=t("diffPrefix","Difficulté :")+" <b>"+tr(d.name)+"</b><div class='diffslider-note'>"+t("diffNote","Toutes les difficultés peuvent tomber — plus souvent autour de ce niveau (répartition en cloche).")+"</div>";
+    cur.innerHTML=t("diffPrefix","Difficulté :")+" <b>"+tr(d.name)+"</b>";
   }
   refl();
   input.oninput=function(){ setup.diff=DIFFS[parseInt(input.value,10)-1].key; refl(); };
