@@ -532,8 +532,8 @@
     cursor:pointer; box-shadow:0 1px 3px rgba(224,71,47,.35);}
   .qzh-btn:active{transform:translateY(1px);}
   .qzh-btn.on{background:linear-gradient(90deg,#555,#777);}
-  .qzh-panel{display:none; margin-bottom:10px; background:rgba(224,71,47,.08);
-    border:1px solid rgba(224,71,47,.28); border-radius:10px; padding:8px 11px; text-align:center;}
+  .qzh-panel{display:none; margin-bottom:10px; background:rgba(1,114,176,.09);
+    border:1px solid rgba(1,114,176,.30); border-radius:10px; padding:8px 11px; text-align:center;}
   .qzh-panel.open{display:block;}
   .qzh-load{font-size:14px; color:var(--ink-soft);}
   .qzh-phrase{font-size:19px; font-weight:800; color:var(--ink); line-height:1.55;}
@@ -1312,6 +1312,7 @@
 <script src="sprites.js"></script>
 <script src="app_l10n.js"></script>
 <script src="hint_i18n.js"></script>
+<script src="phrase_i18n.js"></script>
 <script src="emp_i18n.js"></script>
 <script src="emp_i18n_log.js"></script>
 <script src="empire.js"></script>
@@ -3160,15 +3161,22 @@ function applyQuestionLang(q, realCat){
   else if(q.hint){ $("qHint").textContent = hintFR;   // motif inconnu : repli FR puis tente en ligne
     trField(q.hint, tl).then(function(t){ if(t) $("qHint").textContent = "👉 "+t; }).catch(function(){}); }
   else { $("qHint").textContent = ""; }
-  // 2) PHRASE — bonus en ligne (mise en cache) ; panneau masqué si indisponible
+  // 2) PHRASE — traduction affichée en aide. Garde-fous :
+  //   • on saute les sous-thèmes « à mot-cible » (le mot serait dévoilé) ;
+  //   • cache HORS-LIGNE d'abord (PHRASE_TR), repli en ligne sinon ;
+  //   • on n'affiche que si le trou « ___ » a survécu à la traduction.
+  var SKIP_PHRASE={"Synonymes":1,"Contraires":1,"Paronymes":1,"Homonymes":1,"Familles de mots":1};
   if(panel){ panel.classList.remove("open"); panel.innerHTML=""; panel.removeAttribute("data-loaded"); }
-  trField(String(q.phrase||""), tl).then(function(t){
-    if(panel && t){
-      var tip=(appLang==="zh") ? "看懂题目后，请选择正确的法语答案。" : "Read the sentence, then choose the correct French answer.";
-      panel.innerHTML="<div class='qzh-phrase'>"+escapeHtml(t)+"</div><div class='qzh-tip'>"+tip+"</div>";
-      panel.classList.add("open");
-    }
-  }).catch(function(){ /* hors-ligne : la consigne traduite suffit */ });
+  if(!SKIP_PHRASE[q.sub]){
+    var frP=String(q.phrase||"");
+    var tip=(appLang==="zh") ? "看懂题目后，请选择正确的法语答案。" : "Read the sentence, then choose the correct French answer.";
+    var showP=function(t){ if(panel && t && /_{2,}/.test(t)){
+        panel.innerHTML="<div class='qzh-phrase'>"+escapeHtml(t)+"</div><div class='qzh-tip'>"+tip+"</div>";
+        panel.classList.add("open"); } };
+    var cached=(window.PHRASE_TR && window.PHRASE_TR[frP]) ? window.PHRASE_TR[frP][appLang] : null;
+    if(cached){ showP(cached); }
+    else { trField(frP, tl).then(showP).catch(function(){ /* hors-ligne : la consigne suffit */ }); }
+  }
 }
 
 var histFilter="all";   // "all" | "ok" | "ko" : filtre de l'historique JEU (pastilles ✓/✗)
