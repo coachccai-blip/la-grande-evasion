@@ -338,6 +338,9 @@
           }
           var sb=el("div","emp-hold-isub", (c.mortgaged?"⚠️ Hypothéquée · ":"")+sub);
           it.appendChild(nm); it.appendChild(sb);
+          // Clic sur un bien → ouvre sa carte détaillée (comme un clic sur le plateau).
+          it.classList.add("clik");
+          (function(idx){ it.onclick=function(){ ov.classList.remove("show"); inspectCase(idx); }; })(E.board.indexOf(c));
           body.appendChild(it);
         });
       });
@@ -520,13 +523,61 @@
   // Consultation libre d'une case (clic du joueur) : même belle carte, tap pour fermer.
   function inspectCase(i){
     var ov=$("empCaseOv"); if(!ov || ov.classList.contains("show")) return;
-    var info=caseInfo(cell(i));
+    var c=cell(i), info=caseInfo(c);
     $("empCaseArt").textContent=info.big; $("empCaseArt").style.background=info.bg;
     $("empCaseName").textContent=info.name; $("empCaseDesc").innerHTML=info.desc;
-    ov.classList.add("show"); EB.Sound.click&&EB.Sound.click();
+    var hint=$("empCaseHint"); if(hint) hint.textContent="👆 Touche en dehors pour fermer";
     var done=false;
     function close(){ if(done) return; done=true; ov.onclick=null; ov.classList.remove("show"); }
-    ov.onclick=close;
+    // Action « Faire une offre d'achat » : uniquement sur un bien détenu par un adversaire,
+    // pendant le tour du joueur (hors animation), et si le joueur n'est pas ruiné.
+    var act=$("empCaseActions"); if(act) act.innerHTML="";
+    if(act && c && (c.type==="prop"||c.type==="transport"||c.type==="service")
+       && c.owner>0 && !busy && !E.over && alive(E.players[0])){
+      var b=el("button","emp-btn primary","💰 Faire une offre d'achat");
+      b.onclick=function(e){ e.stopPropagation(); close(); makeOfferTurn(i); };
+      act.appendChild(b);
+    }
+    ov.classList.add("show"); EB.Sound.click&&EB.Sound.click();
+    ov.onclick=function(e){ if(e.target===ov) close(); };
+  }
+  // Lance le tour « offre d'achat » (verrou de tour comme la construction).
+  async function makeOfferTurn(i){
+    if(busy||E.over) return; busy=true; setRoll(false);
+    await makeOffer(cell(i));
+    busy=false; if(!E.over){ renderPanel(); setRoll(true); }
+  }
+  // Système d'offre : le joueur propose un prix pour racheter le bien d'un adversaire.
+  // Plus l'offre est basse (défavorable au vendeur), plus il faut de bonnes réponses.
+  // Plancher : la moitié du prix d'origine. Offre haute = négociation plus facile.
+  async function makeOffer(c){
+    if(!c || !(c.owner>0)) return;
+    var owner=c.owner, base=c.price, cash=E.players[0].cash;
+    var tiers=[
+      {mult:1.5,  q:2, lbl:"Offre généreuse (×1,5)"},
+      {mult:1.0,  q:3, lbl:"Prix d'origine"},
+      {mult:0.75, q:4, lbl:"Offre basse (¾)"},
+      {mult:0.5,  q:5, lbl:"Offre plancher (½)"}
+    ];
+    var opts=[];
+    tiers.forEach(function(t){
+      var price=Math.round(base*t.mult);
+      if(cash>=price) opts.push({ label:t.lbl+" — ₵"+price+" · "+t.q+" bonne"+(t.q>1?"s":"")+" réponse"+(t.q>1?"s":""), val:{price:price,q:t.q} });
+    });
+    if(!opts.length){ say("Fonds insuffisants : il faut au moins ₵"+Math.round(base*0.5)+" pour tenter une offre sur « "+c.name+" »."); await sleep(400); return; }
+    var choice=await chooseFrom("Offre d'achat sur « "+c.name+" » (à "+ownerName(c)+", prix d'origine ₵"+base+"). Plus l'offre est basse, plus il faut de bonnes réponses :", opts);
+    if(!choice) return; // annulé
+    say("Offre de ₵"+choice.price+" à "+ownerName(c)+" pour « "+c.name+" » : enchaîne "+choice.q+" bonne"+(choice.q>1?"s":"")+" réponse"+(choice.q>1?"s":"")+" !");
+    EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(400);
+    for(var n=0;n<choice.q;n++){
+      var ok=await ask("Négociation d'achat "+(n+1)+"/"+choice.q+" — « "+c.name+" » pour ₵"+choice.price);
+      if(!ok){ say("Offre refusée : "+ownerName(c)+" garde « "+c.name+" »."); EB.Sound.bad&&EB.Sound.bad(); await sleep(300); return; }
+      EB.Sound.lock&&EB.Sound.lock();
+    }
+    transfer(0, owner, choice.price); c.owner=0; c.level=0;
+    say("Affaire conclue ! « "+c.name+" » t'appartient pour ₵"+choice.price+"."); EB.Sound.win&&EB.Sound.win();
+    paintBuy(0); renderTokens(); renderCenter(); await sleep(400);
+    await checkSolvency(0);
   }
   function showCaseCard(i){
     return new Promise(function(res){
@@ -534,6 +585,8 @@
       var info=caseInfo(cell(i));
       $("empCaseArt").textContent=info.big; $("empCaseArt").style.background=info.bg;
       $("empCaseName").textContent=info.name; $("empCaseDesc").innerHTML=info.desc;
+      var act=$("empCaseActions"); if(act) act.innerHTML="";   // pas d'action à l'arrivée
+      var hint=$("empCaseHint"); if(hint) hint.textContent="👆 Touche pour continuer";
       ov.classList.add("show"); EB.Sound.whoosh&&EB.Sound.whoosh();
       // La carte reste affichée tant que le joueur ne touche pas l'écran (pas de fermeture auto).
       var done=false;
