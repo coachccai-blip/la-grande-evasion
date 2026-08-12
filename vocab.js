@@ -150,13 +150,13 @@
   function startSession(favMode, size){
     SESS=buildSession(favMode, size);
     if(!SESS.queue.length){ SESS=null; renderVocab(); toast(favMode?T("fav_empty2"):T("none_learn")); return; }
-    SESS.phase = SESS.queue[0].isNew?"discover":"quiz";
+    SESS.phase = "discover";   // fiche du mot (page 1) d'abord, puis exercice — pour TOUS les mots
     renderVocab();
   }
   function nextCard(){
     SESS.idx++;
     if(SESS.idx>=SESS.queue.length){ endSession(); return; }
-    SESS.phase = SESS.queue[SESS.idx].isNew?"discover":"quiz";
+    SESS.phase = "discover";   // chaque mot commence par sa fiche (nouveau OU révision)
     renderVocab();
   }
   function endSession(){
@@ -326,7 +326,7 @@
     if(!words||!words.length){ toast(T("none_here")); return; }
     var pick=shuffle(words.slice()); if(pick.length>5) pick=pick.slice(0,5);
     var queue=pick.map(function(wd){ var p=prog(wd.id); return {word:wd, isNew:(!p||p.st==="new")}; });
-    SESS={ queue:queue, idx:0, favMode:false, phase:(queue[0].isNew?"discover":"quiz"),
+    SESS={ queue:queue, idx:0, favMode:false, phase:"discover",
            size:queue.length, stats:{n:0,r:0,ok:0,total:queue.length} };
     var ov=$("vkSheet"); if(ov) ov.classList.remove("show");
     renderVocab();
@@ -399,7 +399,7 @@
     var skip=el("button","vk-skip",T("skip")); skip.title=T("skip_title"); skip.onclick=function(){ nextCard(); };
     top.appendChild(skip);
     wrap.appendChild(top);
-    if(cur.isNew && SESS.phase==="discover"){ wrap.appendChild(discoverCard(cur.word)); }
+    if(SESS.phase==="discover"){ wrap.appendChild(discoverCard(cur.word)); }
     else {
       var mode=cur.isNew?"image":MODE[Math.max(1,prog(cur.word.id)?prog(cur.word.id).stage:1)];
       wrap.appendChild(quizCard(cur.word, mode, cur.isNew));
