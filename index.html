@@ -519,8 +519,9 @@
   .qhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
   .badge{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px;
     color:#fff; padding:4px 10px; border-radius:20px;}
-  .qhint{font-size:13px; font-weight:700; color:var(--accent2); background:rgba(242,193,78,.12);
-    border:1px solid rgba(242,193,78,.35); border-radius:10px; padding:6px 10px; margin-bottom:10px; text-align:center;}
+  /* Énoncé / consigne : texte ambre FONCÉ sur pastille ambre pour une bonne lisibilité. */
+  .qhint{font-size:13.5px; font-weight:800; color:#8a5510; background:rgba(242,193,78,.24);
+    border:1px solid rgba(242,193,78,.5); border-radius:10px; padding:7px 11px; margin-bottom:10px; text-align:center;}
   .qhint:empty{display:none;}
   /* Bouton « 中文 » + panneau d'énoncé traduit (aide apprenant chinois) */
   .qzh-btn{flex:0 0 auto; border:0; background:linear-gradient(90deg,#e0472f,#ff7a3d); color:#fff;
@@ -533,13 +534,13 @@
   .qzh-panel.open{display:block;}
   .qzh-load{font-size:14px; color:var(--ink-soft);}
   .qzh-phrase{font-size:19px; font-weight:800; color:var(--ink); line-height:1.55;}
-  .qzh-hint{font-size:15px; color:var(--accent2); font-weight:700; margin-top:6px;}
+  .qzh-hint{font-size:15px; color:#a85512; font-weight:800; margin-top:6px;}
   .qzh-tip{font-size:12.5px; color:var(--ink-soft); margin-top:6px;}
   .timer{height:8px; border-radius:6px; background:rgba(0,0,0,.35); overflow:hidden; margin-bottom:10px; display:none;}
   .timer > i{display:block; height:100%; width:100%; background:linear-gradient(90deg,var(--ko),var(--accent)); transition:width .1s linear;}
   .qtext{font-size:18px; line-height:1.5; margin:6px 2px 14px; text-align:center;}
   .qtext .blank{display:inline-block; min-width:56px; border-bottom:3px solid var(--accent); margin:0 3px; color:transparent;}
-  .qtext .fill{color:var(--accent2); font-weight:800; border-bottom:3px solid var(--accent2);}
+  .qtext .fill{color:#c26a08; font-weight:800; border-bottom:3px solid var(--accent);}
   .opts{display:grid; gap:8px;}
   .opt{
     text-align:left; border:2px solid var(--line); background:var(--panel2); color:var(--ink);
