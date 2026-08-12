@@ -1312,6 +1312,7 @@
 <script src="emp_i18n_log.js"></script>
 <script src="empire.js"></script>
 <script src="vocabdata.js"></script>
+<script src="vocab_i18n.js"></script>
 <script src="vocab.js"></script>
 <script>
 "use strict";
@@ -1414,6 +1415,7 @@ function applyLang(lang){
   // Unifie les sous-modules déjà traduits : Empire + badges suivent la langue globale.
   try{ if(window.Empire&&Empire.setLang) Empire.setLang(appLang); }catch(e){}
   try{ if(typeof setBadgeLang==="function"){ setBadgeLang(appLang); if($("badgesScreen")&&$("badgesScreen").classList.contains("active")) renderBadges(); } }catch(e){}
+  try{ if(window.Vocab&&Vocab.setLang) Vocab.setLang(appLang); }catch(e){}
   try{ buildSetup(); }catch(e){}
   try{ if($("histScreen")&&$("histScreen").classList.contains("active")){ if(histSubTab==="voc") renderVocabHistory(); else renderHistory(); } }catch(e){}
   persist();
