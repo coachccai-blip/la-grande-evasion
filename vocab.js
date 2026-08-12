@@ -60,6 +60,7 @@
     return (p.st==="learning"||p.st==="review") && p.next<=now(); }
   function applyResult(wd, correct, isNew){
     var p=ensureProg(wd.id);
+    p.last=correct; p.ts=now();   // dernier résultat + horodatage (historique des mots)
     if(isNew){ // introduction
       p.st="review"; p.stage=1;
       if(correct){ p.succ++; p.next=now()+INTERVALS[1]*dayMs(); }
