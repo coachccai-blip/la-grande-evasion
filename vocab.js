@@ -51,6 +51,12 @@
   function prog(id){ return S.prog[id]||null; }
   function ensureProg(id){ if(!S.prog[id]) S.prog[id]={st:"new",stage:0,next:0,succ:0,fail:0,fav:false,added:false}; return S.prog[id]; }
   function statusZh(st){ return {"new":"未学",learning:"学习中",review:"学习中",mastered:"已掌握"}[st||"new"]||"未学"; }
+  // L'utilisateur déclare qu'il maîtrise déjà le mot : il part direct en « 已掌握 ».
+  function markMastered(id){
+    var p=ensureProg(id); p.st="mastered"; p.stage=MAXSTAGE; p.added=true;
+    p.next = S.settings.recycle ? now()+60*dayMs() : 0;
+    persist();
+  }
   function article(wd){ if(!wd.gender) return wd.word; return (wd.gender==="m"?"un ":"une ")+wd.word; }
   function displayWord(wd){ return article(wd); }
 
@@ -380,6 +386,12 @@
     var fav=el("button","vk-abtn"+((p&&p.fav)?" on":""), (p&&p.fav)?"⭐ 已收藏":"☆ 收藏");
     fav.onclick=function(){ var v=toggleFav(wd.id); fav.textContent=v?"⭐ 已收藏":"☆ 收藏"; fav.classList.toggle("on",v); };
     row.appendChild(fav);
+    // « déjà maîtrisé » : envoie le mot direct dans « 已掌握 » et passe au suivant
+    if(!p || p.st!=="mastered"){
+      var mast=el("button","vk-abtn","✅ 已掌握 · Maîtrisé");
+      mast.onclick=function(){ markMastered(wd.id); toast("已移到「已掌握」✅ · Maîtrisé"); if(SESS){ nextCard(); } else { renderVocab(); } };
+      row.appendChild(mast);
+    }
     return row;
   }
 
@@ -667,6 +679,13 @@
       var fav=el("button","vk-abtn"+((p&&p.fav)?" on":""), (p&&p.fav)?"⭐ 已收藏":"☆ 收藏");
       fav.onclick=function(){ var v=toggleFav(wd.id); fav.textContent=v?"⭐ 已收藏":"☆ 收藏"; fav.classList.toggle("on",v); };
       row.appendChild(fav);
+      // « déjà maîtrisé » : passe le mot direct en « 已掌握 »
+      if(!p || p.st!=="mastered"){
+        var mast=el("button","vk-abtn","✅ 标记已掌握 · Maîtrisé");
+        mast.onclick=function(){ markMastered(wd.id); $("vkSheet").classList.remove("show");
+          toast("已移到「已掌握」✅ · Marqué maîtrisé"); if(!SESS) renderVocab(); };
+        row.appendChild(mast);
+      }
       // ajouter à la file (si pas déjà en apprentissage)
       if(!p || p.st==="new"){
         var add=el("button","vk-abtn primary","➕ 加入学习");
