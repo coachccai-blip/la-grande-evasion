@@ -250,6 +250,18 @@
   .step-title .num{width:22px; height:22px; border-radius:50%; background:var(--accent); color:#241a12;
     font-size:13px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
   .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  /* Curseur de difficulté (barre ajustable) */
+  .diffslider{padding:2px 2px 0;}
+  .diffslider-ends{display:flex; justify-content:space-between; font-size:12px; font-weight:800; color:var(--ink-soft); margin-bottom:4px;}
+  .diffrange{-webkit-appearance:none; appearance:none; width:100%; height:10px; border-radius:8px; outline:none;
+    background:linear-gradient(90deg,#5bbf8a,#f2c14e,#e0574a); cursor:pointer;}
+  .diffrange::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:26px; height:26px; border-radius:50%;
+    background:#fff; border:3px solid var(--blue6); box-shadow:0 2px 6px rgba(0,0,0,.28); cursor:pointer;}
+  .diffrange::-moz-range-thumb{width:26px; height:26px; border-radius:50%; background:#fff; border:3px solid var(--blue6);
+    box-shadow:0 2px 6px rgba(0,0,0,.28); cursor:pointer;}
+  .diffslider-cur{margin-top:8px; font-size:14px; color:var(--ink); text-align:center;}
+  .diffslider-cur b{color:var(--blue-deep);}
+  .diffslider-note{font-size:11px; color:var(--ink-soft); margin-top:3px; line-height:1.4;}
   .chip-btn{
     border:2px solid var(--line); background:var(--panel); color:var(--ink);
     border-radius:12px; padding:9px 13px; font-size:13px; font-weight:700; cursor:pointer;
@@ -1505,45 +1517,53 @@ var Sound=(function(){
    sont épuisés, on ressort la question vue le plus ANCIENNEMENT (ordre LRU) à la
    difficulté cible : une même question ne revient donc qu'en tout dernier recours.
    Résultat : les répétitions sont drastiquement réduites et le contenu tourne. */
+/* Tire une difficulté (1..6) selon une gaussienne centrée sur `center` : toutes
+   les difficultés peuvent sortir, mais celles proches du curseur sont bien plus
+   probables. σ ≈ 1,15 (écart-type d'un peu plus d'un cran). */
+function gaussianDiff(center){
+  var u1=Math.random()||1e-9, u2=Math.random();
+  var z=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);   // N(0,1) (Box-Muller)
+  var d=Math.round(center + z*1.15);
+  if(d<1) d=1; if(d>6) d=6;
+  return d;
+}
 function pickQuestion(pcat, psub, pdiff){
   // Paramètres explicites (jeu 2) ou repli sur la partie en cours (jeu 1).
-  var cat=pcat|| (G&&G.setup.cat), sub=psub|| (G&&G.setup.sub), target=pdiff|| (G&&G.setup.diffVal);
+  var cat=pcat|| (G&&G.setup.cat), sub=psub|| (G&&G.setup.sub), center=pdiff|| (G&&G.setup.diffVal) || 3;
   var seen = store.seen || (store.seen={});
-  var TRIES=140;   // > taille d'un réservoir (~104) : trouve une inédite s'il en reste
+  var TRIES=240;   // large : couvre les 6 réservoirs pour dénicher une inédite s'il en reste
 
   function commit(q, k){
     store.seenN=(store.seenN||0)+1;
     seen[k]=store.seenN;
     var keys=Object.keys(seen);
-    if(keys.length>1500){ keys.sort(function(a,b){ return seen[a]-seen[b]; }); for(var i=0;i<500;i++) delete seen[keys[i]]; }
+    if(keys.length>4000){ keys.sort(function(a,b){ return seen[a]-seen[b]; }); for(var i=0;i<1000;i++) delete seen[keys[i]]; }
     persist();
     return {q:q, cat:q.cat};
   }
 
-  // 1) Question JAMAIS VUE, en descendant de la difficulté cible jusqu'à
-  //    « cible − 2 » AU PLUS (pas en dessous, pour ne pas rendre le jeu trop
-  //    facile) : si le réservoir de la difficulté visée est épuisé, on va puiser
-  //    dans le niveau INFÉRIEUR (même thème) AVANT de reboucler.
-  var floor=Math.max(1, target-2);
-  for(var d=target; d>=floor; d--){
-    for(var t=0;t<TRIES;t++){
-      var q=Questions.generate(cat, sub, d);
-      var k=q.phrase+"§"+q.options[q.answer];
-      if(seen[k]===undefined) return commit(q, k);
-    }
+  // 1) Question JAMAIS VUE : la difficulté est échantillonnée en gaussienne autour
+  //    du curseur, donc TOUTES les difficultés peuvent apparaître. On ne reboucle
+  //    pas tant qu'il reste une question inédite (toutes doivent passer au moins une fois).
+  for(var t=0;t<TRIES;t++){
+    var d=gaussianDiff(center);
+    var q=Questions.generate(cat, sub, d);
+    var k=q.phrase+"§"+q.options[q.answer];
+    if(seen[k]===undefined) return commit(q, k);
   }
 
-  // 2) Tout est épuisé (difficulté cible ET niveaux inférieurs) → on reboucle :
-  //    on ressort la question vue le plus ANCIENNEMENT (ordre LRU) à la difficulté cible.
+  // 2) Plus aucune inédite trouvée → on ressort la question vue le plus ANCIENNEMENT
+  //    (ordre LRU), toujours en échantillonnant la difficulté en gaussienne.
   var best=null, bestKey=null, bestSeenAt=Infinity;
   for(var t2=0;t2<TRIES;t2++){
-    var q2=Questions.generate(cat, sub, target);
+    var d2=gaussianDiff(center);
+    var q2=Questions.generate(cat, sub, d2);
     var k2=q2.phrase+"§"+q2.options[q2.answer];
     var when=seen[k2];
     if(when===undefined) return commit(q2, k2);          // (sécurité : une inédite réapparue)
     if(when<bestSeenAt){ bestSeenAt=when; best=q2; bestKey=k2; }
   }
-  if(!best){ best=Questions.generate(cat, sub, target); bestKey=best.phrase+"§"+best.options[best.answer]; }
+  if(!best){ best=Questions.generate(cat, sub, center); bestKey=best.phrase+"§"+best.options[best.answer]; }
   return commit(best, bestKey);
 }
 
@@ -1623,11 +1643,28 @@ function buildSubChoices(){
 }
 function buildDiffChoices(){
   var box=$("diffChoices"); box.innerHTML="";
-  DIFFS.forEach(function(d){
-    box.appendChild(chipBtn(d.name, setup.diff===d.key, null, null, function(){
-      Sound.click(); setup.diff=d.key; selectedAnimal=null; buildSetup();
-    }));
-  });
+  // Curseur de difficulté : gauche = très facile, droite = extrême. Par défaut « Normal ».
+  if(!setup.diff) setup.diff="normal";
+  var idx=0; for(var i=0;i<DIFFS.length;i++){ if(DIFFS[i].key===setup.diff){ idx=i; break; } }
+  var wrap=document.createElement("div"); wrap.className="diffslider";
+  var ends=document.createElement("div"); ends.className="diffslider-ends";
+  var l=document.createElement("span"); l.textContent="⬅ Très facile";
+  var r=document.createElement("span"); r.textContent="Extrême ➡";
+  ends.appendChild(l); ends.appendChild(r); wrap.appendChild(ends);
+  var input=document.createElement("input");
+  input.type="range"; input.min="1"; input.max=String(DIFFS.length); input.step="1";
+  input.value=String(idx+1); input.className="diffrange"; input.id="diffRange";
+  wrap.appendChild(input);
+  var cur=document.createElement("div"); cur.className="diffslider-cur"; cur.id="diffCur";
+  wrap.appendChild(cur);
+  box.appendChild(wrap);
+  function refl(){
+    var d=DIFFS[parseInt(input.value,10)-1];
+    cur.innerHTML="Difficulté : <b>"+d.name+"</b><div class='diffslider-note'>Toutes les difficultés peuvent tomber — plus souvent autour de ce niveau (répartition en cloche).</div>";
+  }
+  refl();
+  input.oninput=function(){ setup.diff=DIFFS[parseInt(input.value,10)-1].key; refl(); };
+  input.onchange=function(){ Sound.click(); setup.diff=DIFFS[parseInt(input.value,10)-1].key; buildSetup(); };
 }
 /* Statut GLOBAL de l'animal, commun à tous les modes de jeu :
    - libéré (✓) : le joueur a gagné au moins une aventure avec cet animal ;
