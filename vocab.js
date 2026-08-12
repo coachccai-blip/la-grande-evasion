@@ -194,40 +194,85 @@
     root.appendChild(scroll);
   }
 
-  /* --------- Tableau de bord (accueil de l'onglet Vocabulaire) ----------- */
+  /* --------- Tableau de bord (accueil de l'onglet Vocabulaire) -----------
+     Refonte UX : anneau de progression + reprise, tuiles « bento » (dont la
+     révision du jour, actionnable), sélecteur de série et semaine compacte.
+     Aucune fonction retirée : le calendrier mensuel et la courbe 30 jours
+     restent accessibles via « voir le calendrier complet ». */
   function renderDash(){
     var s=stat(S.settings.level), wrap=el("div","vk-dash");
-    // carte progression
-    var card=el("div","vk-card");
     var pct=s.total?Math.round(s.mastered/s.total*100):0;
-    card.innerHTML=
-      "<div class='vk-progtop'><span>掌握进度</span><b>"+s.mastered+" / "+s.total+"</b></div>"+
-      "<div class='vk-bar'><i style='width:"+pct+"%'></i></div>"+
-      "<div class='vk-dist'>"+
-        "<span>🆕 未学 "+s.neu+"</span><span>📖 学习中 "+s.learning+"</span>"+
-        "<span>⏰ 今日待复习 "+s.dueToday+"</span><span>✅ 已掌握 "+s.mastered+"</span>"+
+    var goal=todayLog().goal, dueN=s.dueToday, size=(S.settings.dailyGoal||10);
+
+    // HERO : anneau de progression + bouton « commencer »
+    var hero=el("div","vk-card vkd-hero");
+    var circ=2*Math.PI*45, off=circ*(1-pct/100);
+    var goalTxt=goal? "✅ 今日已完成打卡 · 连续 "+(S.streak||0)+" 天 🔥"
+                    : "🎯 今日目标 · 学一组即可完成打卡（连续 "+(S.streak||0)+" 天）";
+    hero.innerHTML=
+      "<div class='vkd-ring'>"+
+        "<svg width='100' height='100' viewBox='0 0 100 100'>"+
+          "<circle cx='50' cy='50' r='45' fill='none' stroke='rgba(1,114,176,.14)' stroke-width='10'/>"+
+          "<circle cx='50' cy='50' r='45' fill='none' stroke='url(#vkgrad)' stroke-width='10' stroke-linecap='round' stroke-dasharray='"+circ.toFixed(1)+"' stroke-dashoffset='"+off.toFixed(1)+"'/>"+
+          "<defs><linearGradient id='vkgrad' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#4AC2DB'/><stop offset='1' stop-color='#0172B0'/></linearGradient></defs>"+
+        "</svg>"+
+        "<div class='vkd-ringc'><div class='vkd-rp'>"+pct+"%</div><div class='vkd-rl'>已掌握 "+s.mastered+"/"+s.total+"</div></div>"+
+      "</div>"+
+      "<div class='vkd-herod'>"+
+        "<div class='vkd-goal'>"+goalTxt+"</div>"+
+        "<button class='vkd-cta' id='vkdStart'>▶ 开始学习<span class='s'>Commencer · "+size+" 词</span></button>"+
+        "<div class='vkd-mastered'>Maîtrisés · "+s.mastered+" mots sur "+s.total+"</div>"+
       "</div>";
-    wrap.appendChild(card);
-    // choix de la série : 5 / 10 / illimité
-    var t=todayLog();
+    wrap.appendChild(hero);
+    var startBtn=hero.querySelector("#vkdStart"); if(startBtn) startBtn.onclick=function(){ startSession(false); };
+
+    // TUILES « bento » : 4 états, la révision du jour est actionnable
+    var bento=el("div","vkd-bento");
+    function tile(mod, ic, n, zh, fr, edge){
+      var tl=el("div","vkd-tile"+(mod||""));
+      tl.innerHTML=(edge?"<span class='edge' style='background:"+edge+"'></span>":"")+
+        "<div class='ic'>"+ic+"</div><div class='n'>"+n+"</div><div class='l'>"+zh+" · <small>"+fr+"</small></div>";
+      return tl;
+    }
+    bento.appendChild(tile("", "🆕", s.neu, "未学", "À apprendre", "#8598a6"));
+    bento.appendChild(tile("", "📖", s.learning, "学习中", "En cours", "#4AC2DB"));
+    var dueTile=tile(" due"+(dueN>0?" act":""), "⏰", dueN, "今日待复习", "À réviser", null);
+    if(dueN>0){ dueTile.innerHTML+="<span class='go'>复习 ▶</span>"; dueTile.onclick=function(){ startSession(false, dueN); }; }
+    bento.appendChild(dueTile);
+    bento.appendChild(tile("", "✅", s.mastered, "已掌握", "Maîtrisés", "#3fae5a"));
+    wrap.appendChild(bento);
+
+    // SÉRIE : 5 / 10 / illimité (secondaire)
     wrap.appendChild(el("div","vk-playlab","选择学习组 · Choisir une série"));
-    var play=el("div","vk-playrow");
-    [{n:5,lab:"5 词",sub:"快速"},{n:10,lab:"10 词",sub:"标准"},{n:Infinity,lab:"∞ 无限",sub:"全部难度"}].forEach(function(o){
-      var b=el("button","vk-playbtn");
-      b.innerHTML="<span class='vk-pbn'>"+o.lab+"</span><span class='vk-pbs'>"+o.sub+"</span>";
-      b.onclick=function(){ startSession(false, o.n); };
-      play.appendChild(b);
+    var series=el("div","vkd-series");
+    [{n:5,lab:"5 词",sub:"快速 · Rapide"},{n:10,lab:"10 词",sub:"标准 · Standard"},{n:Infinity,lab:"∞",sub:"全部 · Illimité"}].forEach(function(o){
+      var b=el("button","vkd-sbtn"); b.innerHTML="<div class='bn'>"+o.lab+"</div><div class='bs'>"+o.sub+"</div>";
+      b.onclick=function(){ startSession(false, o.n); }; series.appendChild(b);
     });
-    wrap.appendChild(play);
-    // 打卡 aujourd'hui : jouer une fois suffit
-    var chk=el("div","vk-check"+(t.goal?" on":""));
-    chk.innerHTML= t.goal? "✅ 今日已完成 · 连续 "+(S.streak||0)+" 天 🔥" :
-      "🎯 今天学一组即可完成打卡（连续 "+(S.streak||0)+" 天）";
-    wrap.appendChild(chk);
-    // calendrier du mois
-    wrap.appendChild(renderCalendar());
-    // courbe 30 jours (mini barres)
-    wrap.appendChild(renderCurve());
+    wrap.appendChild(series);
+
+    // HABITUDE : semaine en cours + repli vers calendrier complet & courbe
+    var habit=el("div","vk-card");
+    var htop=el("div","vkd-habit-top"); htop.innerHTML="<span class='t'>📅 本周打卡 · Cette semaine</span>";
+    var lnk=el("button","vkd-habit-lnk","查看完整日历 ›"); htop.appendChild(lnk); habit.appendChild(htop);
+    var week=el("div","vkd-week"), names=["日","一","二","三","四","五","六"];
+    var d0=new Date(), dow=d0.getDay(), todayKey=ymd();
+    var sunday=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()-dow);
+    for(var i=0;i<7;i++){
+      var dd=new Date(sunday.getFullYear(),sunday.getMonth(),sunday.getDate()+i);
+      var key=ymd(dd), done=!!(S.logs[key]&&S.logs[key].goal), isToday=(key===todayKey), isFuture=(dd>d0 && !isToday);
+      var wd=el("div","vkd-wd"+(done?" on":"")+(isToday?" today":"")+(isFuture?" future":""));
+      wd.innerHTML="<span class='wl'>"+names[i]+"</span><span class='wc'>"+(done?"✓":"·")+"</span>";
+      week.appendChild(wd);
+    }
+    habit.appendChild(week);
+    var more=el("div","vkd-more");
+    more.appendChild(renderCalendar());
+    more.appendChild(renderCurve());
+    habit.appendChild(more);
+    lnk.onclick=function(){ var open=more.classList.toggle("show"); lnk.textContent=open?"收起日历 ›":"查看完整日历 ›"; };
+    wrap.appendChild(habit);
+
     return wrap;
   }
 

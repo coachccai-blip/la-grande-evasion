@@ -230,6 +230,57 @@
   .vk-stb{font-size:10px; color:var(--ink-soft);}
   .vk-dstatus{font-size:13px; color:var(--ink-soft); margin-top:10px;}
 
+  /* ===== Tableau de bord Vocabulaire repensé (anneau + bento + semaine) ===== */
+  .vk-dash{display:flex; flex-direction:column; gap:11px;}
+  .vkd-hero{display:flex; gap:14px; align-items:center;}
+  .vkd-ring{position:relative; width:100px; height:100px; flex:0 0 auto;}
+  .vkd-ring svg{transform:rotate(-90deg); display:block;}
+  .vkd-ringc{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .vkd-rp{font-size:23px; font-weight:900; color:var(--blue-deep); line-height:1;}
+  .vkd-rl{font-size:10px; font-weight:800; color:var(--ink-soft); margin-top:2px;}
+  .vkd-herod{flex:1; min-width:0; display:flex; flex-direction:column; gap:9px;}
+  .vkd-goal{font-size:12.5px; color:var(--ink-soft); font-weight:700; line-height:1.35;}
+  .vkd-goal b{color:var(--ink);}
+  .vkd-cta{border:0; border-radius:14px; padding:13px; font-family:var(--font); font-weight:900; font-size:16px; color:#241a12;
+    background:linear-gradient(180deg,var(--accent2),var(--accent)); cursor:pointer; text-align:center;
+    box-shadow:0 4px 0 #a9781a, 0 6px 10px rgba(0,0,0,.22); transition:transform .05s, box-shadow .05s;}
+  .vkd-cta:active{transform:translateY(3px); box-shadow:0 1px 0 #a9781a,0 3px 6px rgba(0,0,0,.28);}
+  .vkd-cta .s{display:block; font-size:11px; font-weight:700; opacity:.82; margin-top:1px;}
+  .vkd-mastered{font-size:11px; color:var(--ink-soft); text-align:center;}
+  .vkd-bento{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+  .vkd-tile{position:relative; overflow:hidden; border:1px solid var(--line); background:var(--panel); border-radius:15px;
+    padding:12px 13px; display:flex; flex-direction:column; gap:2px; box-shadow:0 2px 6px var(--shadow); text-align:left; font-family:var(--font);}
+  .vkd-tile.act{cursor:pointer;}
+  .vkd-tile.act:active{transform:scale(.98);}
+  .vkd-tile .ic{font-size:19px; line-height:1;}
+  .vkd-tile .n{font-size:25px; font-weight:900; color:var(--ink); line-height:1.05; font-variant-numeric:tabular-nums;}
+  .vkd-tile .l{font-size:11px; color:var(--ink-soft); font-weight:700;}
+  .vkd-tile .l small{opacity:.72;}
+  .vkd-tile .edge{position:absolute; left:0; top:0; bottom:0; width:4px;}
+  .vkd-tile.due{background:linear-gradient(160deg,#ffe8cd,#ffd696); border-color:rgba(224,128,31,.4);}
+  .vkd-tile.due .n{color:#b5670f;}
+  .vkd-tile.due .go{position:absolute; right:10px; bottom:11px; font-size:11px; font-weight:900; color:#fff;
+    background:linear-gradient(180deg,var(--accent2),var(--accent)); padding:4px 10px; border-radius:20px;}
+  .vkd-series{display:flex; gap:8px;}
+  .vkd-sbtn{flex:1; border:1px solid var(--line); background:var(--panel); border-radius:13px; padding:10px 6px; text-align:center;
+    cursor:pointer; font-family:var(--font); box-shadow:0 2px 5px var(--shadow);}
+  .vkd-sbtn:active{transform:translateY(1px);}
+  .vkd-sbtn .bn{font-size:16px; font-weight:900; color:var(--ink);}
+  .vkd-sbtn .bs{font-size:10.5px; font-weight:700; color:var(--ink-soft);}
+  .vkd-habit-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;}
+  .vkd-habit-top .t{font-size:13px; font-weight:800; color:var(--ink);}
+  .vkd-habit-lnk{border:0; background:transparent; font-family:var(--font); font-size:11.5px; font-weight:800; color:var(--blue6); cursor:pointer;}
+  .vkd-habit-lnk:active{transform:scale(.97);}
+  .vkd-week{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .vkd-wd{display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .vkd-wd .wl{font-size:10px; color:var(--ink-soft);}
+  .vkd-wd .wc{width:100%; aspect-ratio:1; border-radius:9px; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--ink-soft);}
+  .vkd-wd.on .wc{background:linear-gradient(135deg,var(--ok),var(--ok2)); color:#fff; font-weight:900;}
+  .vkd-wd.today .wc{box-shadow:inset 0 0 0 2px var(--accent);}
+  .vkd-wd.future .wc{color:transparent;}
+  .vkd-more{display:none; flex-direction:column; gap:10px; margin-top:10px;}
+  .vkd-more.show{display:flex;}
+
   /* ============================== Boutons ============================== */
   .btn{
     font-family:var(--font); font-weight:700; letter-spacing:.5px;
