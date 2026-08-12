@@ -1,0 +1,181 @@
+/* =====================================================================
+   PISTE 1 — « Verre & profondeur » (glassmorphism)
+   Couche de design NON DESTRUCTIVE : on ne touche ni au HTML, ni aux
+   scripts, ni au gameplay. On ne fait que réhabiller les surfaces —
+   cartes translucides « verre dépoli », profondeur en arrière-plan,
+   bordures lumineuses, ombres douces. Tous les écrans, plateaux,
+   décors et fonctions restent identiques et reconnaissables.
+   ===================================================================== */
+
+/* ---- 1. Profondeur : halos colorés derrière l'appli --------------- */
+body{
+  background:
+    radial-gradient(120% 90% at 12% -8%, rgba(74,194,219,.55) 0%, transparent 46%),
+    radial-gradient(120% 80% at 108% 4%, rgba(1,114,176,.42) 0%, transparent 44%),
+    radial-gradient(90% 70% at 88% 106%, rgba(255,182,77,.30) 0%, transparent 50%),
+    linear-gradient(180deg,#bfe6ff 0%,#dff2e0 26%,var(--bg) 60%) !important;
+}
+#app{
+  box-shadow:0 0 60px rgba(2,60,101,.30), 0 0 0 1px rgba(255,255,255,.35) inset;
+}
+
+/* Halos flottants (statiques) dans chaque écran, sous le contenu. */
+.screen::before{
+  content:""; position:absolute; inset:-10% -20%; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(38% 30% at 20% 14%, rgba(137,214,233,.45) 0%, transparent 70%),
+    radial-gradient(42% 32% at 86% 22%, rgba(1,144,191,.28) 0%, transparent 70%),
+    radial-gradient(46% 34% at 72% 92%, rgba(255,182,77,.22) 0%, transparent 72%);
+  filter:blur(6px); opacity:.9;
+}
+.screen > *{position:relative; z-index:1;}
+
+/* ---- 2. Surfaces « verre dépoli » -------------------------------- */
+/* Cartes, tuiles et boutons secondaires : translucides + flou d'arrière-plan,
+   liseré lumineux, ombre douce en profondeur. Le texte reste net. */
+/* Surfaces claires et LUMINEUSES : on garde une opacité élevée pour que le
+   texte reste parfaitement lisible ; le flou + le liseré donnent l'effet verre. */
+.card, .vk-card, .vk-fiche, .vk-quiz, .vk-recap, .badge-card,
+.hist-item, .voc-hist-item, .trait-box, .duel-op, .vk-check,
+.emp-card, .emp-casecard, .emp-holdcard, .emp-rules, .emp-opa,
+.vk-sheet, .vk-level, .vk-row{
+  background:linear-gradient(160deg, rgba(255,255,255,.94), rgba(255,255,255,.82)) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.2);
+  backdrop-filter:blur(14px) saturate(1.2);
+  border:1px solid rgba(255,255,255,.8) !important;
+  box-shadow:0 10px 30px rgba(2,50,90,.15), inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+
+/* Puces de configuration + cartes animaux : verre clair, texte net. */
+.chip-btn, .animal-card, .vk-abtn, .vk-chip, .vk-hchip, .vk-lvopt, .opt, .vk-opt, .vk-imgopt{
+  background:linear-gradient(160deg, rgba(255,255,255,.9), rgba(255,255,255,.74)) !important;
+  -webkit-backdrop-filter:blur(10px) saturate(1.15);
+  backdrop-filter:blur(10px) saturate(1.15);
+  border:1px solid rgba(255,255,255,.72) !important;
+  box-shadow:0 4px 14px rgba(2,50,90,.10), inset 0 1px 0 rgba(255,255,255,.85) !important;
+}
+
+/* États sélectionnés : on garde la couleur d'accent, on ajoute la lueur. */
+.chip-btn.sel, #selectScreen .chip-btn.sel{
+  background:linear-gradient(160deg, rgba(234,246,251,.9), rgba(210,236,246,.72)) !important;
+  box-shadow:0 0 0 2px var(--blue5) inset, 0 6px 18px rgba(1,114,176,.22) !important;
+}
+.animal-card.selected{
+  box-shadow:0 0 0 2px var(--accent) inset, 0 8px 22px rgba(232,139,42,.28) !important;
+}
+
+/* Barre d'info en jeu : bandeau de verre clair. */
+.infobar{
+  background:rgba(255,255,255,.7) !important;
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,.6) !important;
+}
+
+/* ---- 3. En-tête & navigation : verre teinté bleu ----------------- */
+header{
+  background:linear-gradient(180deg, rgba(3,40,80,.92), rgba(1,114,176,.86)) !important;
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  box-shadow:0 4px 22px rgba(2,60,101,.38), inset 0 1px 0 rgba(255,255,255,.28) !important;
+}
+nav{
+  background:linear-gradient(180deg, rgba(1,114,176,.82), rgba(2,60,101,.92)) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.2); backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:0 -4px 22px rgba(2,60,101,.34), inset 0 1px 0 rgba(255,255,255,.22) !important;
+}
+nav button.active{
+  position:relative;
+}
+nav button.active::after{
+  content:""; position:absolute; top:5px; left:50%; transform:translateX(-50%);
+  width:34px; height:3px; border-radius:3px; background:rgba(255,255,255,.9);
+  box-shadow:0 0 10px rgba(255,255,255,.7);
+}
+.lang-switch button{
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+}
+
+/* ---- 4. Boutons : verre glossy, relief conservé ------------------ */
+.btn{
+  background:linear-gradient(180deg, var(--accent2), var(--accent)) !important;
+  box-shadow:0 5px 0 rgba(169,120,26,.9), 0 10px 22px rgba(200,120,20,.28),
+             inset 0 1px 0 rgba(255,255,255,.55) !important;
+}
+.btn::after{ /* voile brillant translucide en haut du bouton */
+  content:""; position:absolute; inset:1px 1px 40% 1px; border-radius:11px 11px 20px 20px;
+  background:linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,0));
+  pointer-events:none;
+}
+.btn{position:relative; overflow:hidden;}
+#selectScreen .btn:not(.secondary), #histScreen .btn:not(.secondary), #badgesScreen .btn:not(.secondary){
+  background:linear-gradient(180deg, var(--blue4), var(--blue6)) !important;
+  box-shadow:0 5px 0 var(--blue-deep), 0 10px 22px rgba(1,114,176,.3),
+             inset 0 1px 0 rgba(255,255,255,.5) !important;
+}
+.btn.secondary{
+  background:linear-gradient(160deg, rgba(255,255,255,.72), rgba(255,255,255,.5)) !important;
+  color:var(--ink) !important;
+  box-shadow:0 5px 0 rgba(120,140,120,.35), 0 8px 18px rgba(2,50,90,.14),
+             inset 0 1px 0 rgba(255,255,255,.7) !important;
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+}
+.vk-start, .vk-playbtn, .vk-next{
+  box-shadow:0 5px 0 #a9781a, 0 10px 22px rgba(200,120,20,.26),
+             inset 0 1px 0 rgba(255,255,255,.5) !important;
+}
+
+/* ---- 5. Jeu 1 : plateau (décor conservé) + carte question -------- */
+/* Fond du plateau : on garde le vert « safari », on ajoute de la profondeur. */
+#boardWrap{
+  background:
+    radial-gradient(70% 50% at 50% 0%, rgba(255,255,255,.35) 0%, transparent 55%),
+    #cfe9bf !important;
+}
+/* Voile flou derrière la carte de question pour l'effet verre. */
+.overlay{
+  -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+}
+
+/* ---- 6. Jeu 2 : L'Empire — panneaux HUD en verre ---------------- */
+/* Le plateau, ses cases et couleurs de quartier restent identiques. */
+.emp-scroll{
+  background:
+    radial-gradient(circle at 50% 10%, rgba(234,246,255,.9) 0%, transparent 46%),
+    radial-gradient(circle at 84% 90%, rgba(255,242,217,.85) 0%, transparent 48%),
+    linear-gradient(180deg,#e6f2ff,#dfeede) !important;
+}
+.emp-p{
+  background:linear-gradient(160deg, rgba(255,255,255,.92), rgba(255,255,255,.8)) !important;
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  box-shadow:0 2px 8px rgba(2,50,90,.12), inset 0 1px 0 rgba(255,255,255,.85) !important;
+}
+.emp-log{
+  background:rgba(255,255,255,.82) !important;
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+}
+.emp-panel{
+  background:rgba(255,255,255,.62) !important;
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  border-top:1px solid rgba(255,255,255,.6) !important;
+}
+.emp-btn{
+  background:linear-gradient(160deg, rgba(255,255,255,.9), rgba(255,255,255,.74)) !important;
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  box-shadow:0 3px 10px rgba(2,50,90,.14), inset 0 1px 0 rgba(255,255,255,.82) !important;
+}
+.emp-btn.primary{ background:linear-gradient(180deg, var(--accent2), var(--accent)) !important; color:#3a2c10 !important; }
+.emp-btn.warn{ background:linear-gradient(180deg,#ff7a6b,#e0574a) !important; color:#fff !important; }
+.emp-board{
+  box-shadow:0 20px 48px rgba(20,50,25,.36), inset 0 0 0 2px rgba(255,255,255,.16),
+             0 0 0 1px rgba(255,255,255,.4) !important;
+}
+
+/* ---- 7. Module Vocabulaire : fond en profondeur ------------------ */
+#vocabScreen, #dictScreen{
+  background:linear-gradient(180deg,var(--blue1) 0%, #e7f5ef 30%, #f0f8f2 64%) !important;
+}
+.vk-input, .vk-search{
+  background:rgba(255,255,255,.82) !important;
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.72) !important;
+}
+.vk-bar, .vk-sessbar{ box-shadow:inset 0 1px 3px rgba(2,50,90,.12); }

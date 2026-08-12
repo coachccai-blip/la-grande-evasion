@@ -57,6 +57,11 @@
     background:linear-gradient(180deg,var(--blue-deep),var(--blue6));
     box-shadow:0 3px 12px rgba(2,60,101,.35); z-index:5;
   }
+  .lang-switch{position:absolute; top:10px; left:10px; display:flex; gap:3px; z-index:6;}
+  .lang-switch button{border:1px solid rgba(255,255,255,.55); background:rgba(255,255,255,.14); color:#fff;
+    font-family:var(--font); font-weight:800; font-size:11px; padding:4px 7px; border-radius:8px; cursor:pointer; line-height:1;}
+  .lang-switch button.on{background:#fff; color:var(--blue-deep); border-color:#fff;}
+  .lang-switch button:active{transform:scale(.94);}
   #soundBtn{
     position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:11px;
     border:1px solid var(--line); background:var(--panel); color:var(--ink); font-size:19px;
@@ -652,22 +657,23 @@
   .emp-cell .emp-cc{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
     justify-content:center; text-align:center; gap:1px; padding:2px;}
   /* bande de quartier orientée vers l'INTÉRIEUR du plateau (façon Monopoly) */
-  .emp-cell.isprop.top .emp-cc{padding-bottom:36%;}
-  .emp-cell.isprop.bottom .emp-cc{padding-top:36%;}
-  .emp-cell.isprop.left .emp-cc{padding-right:36%;}
-  .emp-cell.isprop.right .emp-cc{padding-left:36%;}
+  .emp-cell.isprop.top .emp-cc{padding-bottom:22%;}
+  .emp-cell.isprop.bottom .emp-cc{padding-top:22%;}
+  .emp-cell.isprop.left .emp-cc{padding-right:22%;}
+  .emp-cell.isprop.right .emp-cc{padding-left:22%;}
   .emp-band{position:absolute; background:var(--qcol,#ccc); display:flex; align-items:center;
     justify-content:center; z-index:2; box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);}
-  .top .emp-band{left:0; right:0; bottom:0; height:34%;}
-  .bottom .emp-band{left:0; right:0; top:0; height:34%;}
-  .left .emp-band{top:0; bottom:0; right:0; width:34%;}
-  .right .emp-band{top:0; bottom:0; left:0; width:34%;}
+  .top .emp-band{left:0; right:0; bottom:0; height:20%;}
+  .bottom .emp-band{left:0; right:0; top:0; height:20%;}
+  .left .emp-band{top:0; bottom:0; right:0; width:20%;}
+  .right .emp-band{top:0; bottom:0; left:0; width:20%;}
   .emp-blds{display:flex; gap:1px; align-items:flex-end; justify-content:center; flex-wrap:wrap; padding:1px;}
   .left .emp-blds, .right .emp-blds{flex-direction:column; align-items:center;}
   .emp-bld{width:11px; height:10px; filter:drop-shadow(0 1px 0 rgba(0,0,0,.2));}
   .emp-bld.emp-pal{width:19px; height:14px;}
-  .emp-nm{font-size:7.5px; line-height:1.06; font-weight:800; color:#4a3a1e; max-height:24px; overflow:hidden;}
-  .emp-pr{font-size:8px; font-weight:900; color:#2c7a4a;}
+  .emp-nm{font-size:9.5px; line-height:1.1; font-weight:800; color:#3a2e18; max-height:28px; overflow:hidden;
+    padding:0 1px; word-break:break-word;}
+  .emp-pr{font-size:9px; font-weight:900; color:#2c7a4a;}
   .emp-ico{font-size:18px; line-height:1;}
   /* coins & cases repères */
   .emp-cornerc{gap:2px;}
@@ -926,12 +932,17 @@
 
   .hidden{display:none !important;}
 </style>
+<!-- Piste 1 « Verre & profondeur » : habillage glassmorphism (surfaces uniquement). -->
+<link rel="stylesheet" href="theme-glass.css">
 </head>
 <body>
 <div id="app">
   <header>
+    <div id="langSwitch" class="lang-switch" aria-label="Langue">
+      <button data-lang="fr">FR</button><button data-lang="en">EN</button><button data-lang="zh">中</button>
+    </div>
     <h1>跟克莱蒙学法语</h1>
-    <div class="sub">Apprends le français avec Clément</div>
+    <div class="sub" data-i18n="tagline">Apprends le français avec Clément</div>
     <button id="soundBtn" title="Activer / couper le son" aria-label="Son">🔊</button>
     <button id="installBtn" title="Installer l'application" aria-label="Installer">📲</button>
   </header>
@@ -941,25 +952,25 @@
     <section id="selectScreen" class="screen active">
       <div class="scroll">
         <div class="setup-step" id="stepGame">
-          <div class="step-title"><span class="num">1</span> Choisis ton jeu</div>
+          <div class="step-title"><span class="num">1</span> <span data-i18n="stepGame">Choisis ton jeu</span></div>
           <div id="gameChoices" class="chips"></div>
         </div>
         <div class="setup-step locked" id="stepCat">
-          <div class="step-title"><span class="num">2</span> Choisis ta matière</div>
+          <div class="step-title"><span class="num">2</span> <span data-i18n="stepCat">Choisis ta matière</span></div>
           <div id="catChoices" class="chips"></div>
         </div>
         <div class="setup-step locked" id="stepSub">
-          <div class="step-title"><span class="num">3</span> Choisis le thème</div>
+          <div class="step-title"><span class="num">3</span> <span data-i18n="stepSub">Choisis le thème</span></div>
           <div id="subChoices" class="chips"></div>
         </div>
         <div class="setup-step locked" id="stepDiff">
-          <div class="step-title"><span class="num">4</span> Choisis la difficulté</div>
+          <div class="step-title"><span class="num">4</span> <span data-i18n="stepDiff">Choisis la difficulté</span></div>
           <div id="diffChoices" class="chips"></div>
         </div>
         <div class="setup-step locked" id="stepAnimal">
-          <div class="step-title"><span class="num">5</span> Choisis ton animal</div>
+          <div class="step-title"><span class="num">5</span> <span data-i18n="stepAnimal">Choisis ton animal</span></div>
           <div id="animalGrid" class="grid"></div>
-          <div id="traitBox" class="trait-box">Touche un animal pour découvrir son caractère.</div>
+          <div id="traitBox" class="trait-box" data-i18n="traitHint">Touche un animal pour découvrir son caractère.</div>
         </div>
         <div id="missionProgress" class="progress"></div>
         <div style="margin:12px 0 24px;">
@@ -987,8 +998,8 @@
       <div class="scroll">
         <!-- Sous-onglets : questions du Jeu / mots du Vocabulaire -->
         <div class="hist-subtabs">
-          <button id="histSubJeu" class="hist-subtab sel">🎮 Jeu</button>
-          <button id="histSubVoc" class="hist-subtab">📚 Vocabulaire</button>
+          <button id="histSubJeu" class="hist-subtab sel"><span data-i18n="histTabGame">🎮 Jeu</span></button>
+          <button id="histSubVoc" class="hist-subtab"><span data-i18n="histTabVoc">📚 Vocabulaire</span></button>
         </div>
         <!-- Vue « Jeu » : historique des questions -->
         <div id="histViewJeu">
@@ -997,7 +1008,7 @@
               <span class="chip ok filterable" id="statOk" title="Afficher seulement les réussites">✓ 0</span>
               <span class="chip ko filterable" id="statKo" title="Afficher seulement les questions ratées">✗ 0</span>
             </div>
-            <button id="clearHist" class="btn secondary small">Effacer</button>
+            <button id="clearHist" class="btn secondary small" data-i18n="clear">Effacer</button>
           </div>
           <div id="histList"></div>
         </div>
@@ -1008,7 +1019,7 @@
               <span class="chip ok filterable" id="statVocOk" title="Mots réussis en dernier">✓ 0</span>
               <span class="chip ko filterable" id="statVocKo" title="Mots ratés en dernier">✗ 0</span>
             </div>
-            <button id="clearHistVoc" class="btn secondary small">Effacer</button>
+            <button id="clearHistVoc" class="btn secondary small" data-i18n="clear">Effacer</button>
           </div>
           <div id="histVocList"></div>
         </div>
@@ -1057,8 +1068,8 @@
         <div id="empEndTitle" class="win" style="font-size:24px;font-weight:900;letter-spacing:1px;margin:6px 0;"></div>
         <div id="empEndBubble"></div>
         <div id="empEndMsg" style="font-size:14px;margin:8px 0 14px;"></div>
-        <button id="empEndAgain" class="btn wide">Rejouer</button>
-        <button id="empEndMenu" class="btn secondary wide" style="margin-top:8px;">Menu</button>
+        <button id="empEndAgain" class="btn wide" data-i18n="replay">Rejouer</button>
+        <button id="empEndMenu" class="btn secondary wide" style="margin-top:8px;" data-i18n="menu">Menu</button>
       </div>
     </div>
     <!-- Règles de l'Empire (bouton ?) -->
@@ -1094,7 +1105,7 @@
       <div class="scroll">
         <div class="badges-head">
           <div id="badgesCount" class="badges-count">🏅 Badges débloqués : <b>0 / 0</b></div>
-          <div id="badgesSub" class="badges-sub">Relève tous les défis pour tous les débloquer !</div>
+          <div id="badgesSub" class="badges-sub" data-i18n="badgesSub">Relève tous les défis pour tous les débloquer !</div>
           <div id="badgeLangSw" class="badge-lang">
             <button type="button" data-lang="fr" class="on">🇫🇷 FR</button>
             <button type="button" data-lang="en">🇬🇧 EN</button>
@@ -1148,8 +1159,8 @@
         <div id="endTitle"></div>
         <div id="endBubbleWrap"></div>
         <div id="endMsg" style="font-size:14px;color:var(--ink-soft);margin-bottom:14px;"></div>
-        <button id="rematchBtn" class="btn wide">Rejouer</button>
-        <button id="backSelectBtn" class="btn secondary wide" style="margin-top:8px;">Changer d'animal</button>
+        <button id="rematchBtn" class="btn wide" data-i18n="replay">Rejouer</button>
+        <button id="backSelectBtn" class="btn secondary wide" style="margin-top:8px;" data-i18n="changeAnimal">Changer d'animal</button>
       </div>
     </div>
 
@@ -1157,7 +1168,7 @@
     <div id="duelChoose" class="overlay">
       <div class="card">
         <div style="font-size:20px;font-weight:800;letter-spacing:1px;text-align:center;margin-bottom:4px;">⚔️ Défier en duel</div>
-        <div style="font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:12px;">Choisis ton adversaire pour un duel de rapidité (20 s). Le gagnant avance de 6, le perdant recule de 6.</div>
+        <div data-l10n style="font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:12px;">Choisis ton adversaire pour un duel de rapidité (20 s). Le gagnant avance de 6, le perdant recule de 6.</div>
         <div id="duelOpponents"></div>
         <button id="duelCancel" class="btn secondary wide" style="margin-top:6px;">Annuler</button>
       </div>
@@ -1232,11 +1243,11 @@
   </main>
 
   <nav>
-    <button id="tabGame" class="active"><span class="ic">🎲</span>Jeu</button>
-    <button id="tabHist"><span class="ic">📜</span>Historique</button>
-    <button id="tabBadges"><span class="ic">🏅</span>Badges</button>
-    <button id="tabVocab"><span class="ic">🥖</span>Vocabulaire</button>
-    <button id="tabDict"><span class="ic">⭐</span>Favoris</button>
+    <button id="tabGame" class="active"><span class="ic">🎲</span><span data-i18n="tabGame">Jeu</span></button>
+    <button id="tabHist"><span class="ic">📜</span><span data-i18n="tabHist">Historique</span></button>
+    <button id="tabBadges"><span class="ic">🏅</span><span data-i18n="tabBadges">Badges</span></button>
+    <button id="tabVocab"><span class="ic">🥖</span><span data-i18n="tabVocab">Vocabulaire</span></button>
+    <button id="tabDict"><span class="ic">⭐</span><span data-i18n="tabDict">Favoris</span></button>
   </nav>
   <div id="badgeToast"></div>
 </div>
@@ -1244,7 +1255,9 @@
 <script src="questions.js"></script>
 <script src="animaux.js"></script>
 <script src="sprites.js"></script>
+<script src="app_l10n.js"></script>
 <script src="emp_i18n.js"></script>
+<script src="emp_i18n_log.js"></script>
 <script src="empire.js"></script>
 <script src="vocabdata.js"></script>
 <script src="vocab.js"></script>
@@ -1299,6 +1312,61 @@ var DIFFS = [
 ];
 function diffByKey(k){ for(var i=0;i<DIFFS.length;i++){ if(DIFFS[i].key===k) return DIFFS[i]; } return DIFFS[2]; }
 
+/* ===================== Langue globale de l'interface ===================== */
+/* Les QUESTIONS restent en français (contenu d'apprentissage) ; c'est l'interface
+   qui se traduit. Le sélecteur (en haut à gauche) pilote aussi l'Empire & les badges. */
+var APP_I18N={
+  en:{ tagline:"Learn French with Clément",
+    stepGame:"Choose your game", stepCat:"Choose a subject", stepSub:"Choose a theme",
+    stepDiff:"Choose the difficulty", stepAnimal:"Choose your animal",
+    traitHint:"Tap an animal to discover its character.",
+    tabGame:"Play", tabHist:"History", tabBadges:"Badges", tabVocab:"Vocabulary", tabDict:"Favorites",
+    histTabGame:"🎮 Game", histTabVoc:"📚 Vocabulary",
+    clear:"Clear", replay:"Play again", menu:"Menu", changeAnimal:"Change animal",
+    badgesSub:"Take on every challenge to unlock them all!",
+    startEvasion:"Let's go!", startEmpire:"👑 Launch my empire!",
+    diffEasy:"⬅ Very easy", diffHard:"Extreme ➡", diffPrefix:"Difficulty:",
+    diffNote:"All difficulties can appear — more often around this level (bell curve).",
+    chooseCatFirst:"Choose a subject first." },
+  zh:{ tagline:"跟克莱蒙一起学法语",
+    stepGame:"选择你的游戏", stepCat:"选择科目", stepSub:"选择主题",
+    stepDiff:"选择难度", stepAnimal:"选择你的动物",
+    traitHint:"点一只动物，了解它的性格。",
+    tabGame:"游戏", tabHist:"历史", tabBadges:"徽章", tabVocab:"词汇", tabDict:"收藏",
+    histTabGame:"🎮 游戏", histTabVoc:"📚 词汇",
+    clear:"清除", replay:"再玩一次", menu:"菜单", changeAnimal:"更换动物",
+    badgesSub:"挑战所有关卡，解锁全部徽章！",
+    startEvasion:"开始！", startEmpire:"👑 建立我的帝国！",
+    diffEasy:"⬅ 很简单", diffHard:"极难 ➡", diffPrefix:"难度：",
+    diffNote:"所有难度都可能出现 —— 在所选难度附近概率更高（钟形分布）。",
+    chooseCatFirst:"请先选择科目。" }
+};
+var appLang="fr";
+var _frI18n=null, _frL10n=null;
+function t(key, fr){ if(appLang==="fr") return fr; var m=APP_I18N[appLang]; return (m&&m[key]!=null)?m[key]:fr; }
+/* Traduit une chaîne de données (matière, thème, difficulté, nom/trait d'animal,
+   retour de jeu) via la table window.APP_L10N (clé = texte FR exact). */
+function tr(s){ if(appLang==="fr"||!s) return s; var m=(window.APP_L10N&&window.APP_L10N[s]); return (m&&m[appLang])||s; }
+function applyLang(lang){
+  appLang=(lang==="en"||lang==="zh")?lang:"fr";
+  store.appLang=appLang;
+  if(!_frI18n){ _frI18n={}; Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"),function(el){ _frI18n[el.getAttribute("data-i18n")]=el.textContent; }); }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"),function(el){
+    var k=el.getAttribute("data-i18n"), fr=(_frI18n[k]!=null?_frI18n[k]:el.textContent);
+    el.textContent=(appLang==="fr")?fr:((APP_I18N[appLang]&&APP_I18N[appLang][k]!=null)?APP_I18N[appLang][k]:fr);
+  });
+  // Chaînes FR complètes (traduites via APP_L10N)
+  if(!_frL10n){ _frL10n=[]; Array.prototype.forEach.call(document.querySelectorAll("[data-l10n]"),function(el){ _frL10n.push([el, el.textContent]); }); }
+  _frL10n.forEach(function(pair){ pair[0].textContent=(appLang==="fr")?pair[1]:tr(pair[1]); });
+  Array.prototype.forEach.call(document.querySelectorAll("#langSwitch button"),function(b){ b.classList.toggle("on", b.getAttribute("data-lang")===appLang); });
+  // Unifie les sous-modules déjà traduits : Empire + badges suivent la langue globale.
+  try{ if(window.Empire&&Empire.setLang) Empire.setLang(appLang); }catch(e){}
+  try{ if(typeof setBadgeLang==="function"){ setBadgeLang(appLang); if($("badgesScreen")&&$("badgesScreen").classList.contains("active")) renderBadges(); } }catch(e){}
+  try{ buildSetup(); }catch(e){}
+  try{ if($("histScreen")&&$("histScreen").classList.contains("active")){ if(histSubTab==="voc") renderVocabHistory(); else renderHistory(); } }catch(e){}
+  persist();
+}
+
 /* Cases spéciales (§4.2) — nombreuses et variées pour plus de fun. */
 var SPECIALS = {
   2:"cadeau", 3:"banane", 5:"ressort", 6:"gardien", 8:"piege", 9:"mystere",
@@ -1339,6 +1407,7 @@ function loadSave(){
       store.empires = o.empires||{}; store.empireGame = o.empireGame||null;
       store.badgeLang = o.badgeLang || "fr";
       store.empLang = o.empLang || "fr";
+      store.appLang = o.appLang || "fr";
       store.vocab = o.vocab || null;
       // complète les champs de stats manquants (compat. anciennes sauvegardes)
       var d={bestStreak:0,curStreak:0,duelWins:0,flawless:0,errViewed:0,errSigs:{}};
@@ -1619,7 +1688,7 @@ function buildCatChoices(){
   var box=$("catChoices"); box.innerHTML="";
   var cats=CATS.concat(["tout"]);
   cats.forEach(function(cat){
-    box.appendChild(chipBtn(CAT_LABEL[cat], setup.cat===cat, CAT_EMOJI[cat], CAT_COLOR[cat], function(){
+    box.appendChild(chipBtn(tr(CAT_LABEL[cat]), setup.cat===cat, CAT_EMOJI[cat], CAT_COLOR[cat], function(){
       Sound.click(); setup.cat=cat; setup.sub=null; setup.diff=null; selectedAnimal=null;
       buildSetup();
     }));
@@ -1630,12 +1699,12 @@ function buildSubChoices(){
   // Jeu 2 (Empire) : pas de thème — on joue sur toutes les questions de la matière.
   if(setup.game==="empire"){ setup.sub="Tout"; $("stepSub").style.display="none"; return; }
   $("stepSub").style.display="";
-  if(!setup.cat){ box.innerHTML="<span style='font-size:13px;color:var(--ink-soft)'>Choisis d'abord une matière.</span>"; return; }
+  if(!setup.cat){ box.innerHTML="<span style='font-size:13px;color:var(--ink-soft)'>"+t("chooseCatFirst","Choisis d'abord une matière.")+"</span>"; return; }
   var subs;
   if(setup.cat==="tout"){ subs=["Tout"]; if(!setup.sub) setup.sub="Tout"; }
   else { subs=["Tout"].concat(SUBCATS[setup.cat]||[]); }
   subs.forEach(function(sub){
-    box.appendChild(chipBtn(sub, setup.sub===sub, null, CAT_COLOR[setup.cat], function(){
+    box.appendChild(chipBtn(tr(sub), setup.sub===sub, null, CAT_COLOR[setup.cat], function(){
       Sound.click(); setup.sub=sub; setup.diff=setup.diff||null; selectedAnimal=null;
       buildSetup();
     }));
@@ -1648,8 +1717,8 @@ function buildDiffChoices(){
   var idx=0; for(var i=0;i<DIFFS.length;i++){ if(DIFFS[i].key===setup.diff){ idx=i; break; } }
   var wrap=document.createElement("div"); wrap.className="diffslider";
   var ends=document.createElement("div"); ends.className="diffslider-ends";
-  var l=document.createElement("span"); l.textContent="⬅ Très facile";
-  var r=document.createElement("span"); r.textContent="Extrême ➡";
+  var l=document.createElement("span"); l.textContent=t("diffEasy","⬅ Très facile");
+  var r=document.createElement("span"); r.textContent=t("diffHard","Extrême ➡");
   ends.appendChild(l); ends.appendChild(r); wrap.appendChild(ends);
   var input=document.createElement("input");
   input.type="range"; input.min="1"; input.max=String(DIFFS.length); input.step="1";
@@ -1660,7 +1729,7 @@ function buildDiffChoices(){
   box.appendChild(wrap);
   function refl(){
     var d=DIFFS[parseInt(input.value,10)-1];
-    cur.innerHTML="Difficulté : <b>"+d.name+"</b><div class='diffslider-note'>Toutes les difficultés peuvent tomber — plus souvent autour de ce niveau (répartition en cloche).</div>";
+    cur.innerHTML=t("diffPrefix","Difficulté :")+" <b>"+tr(d.name)+"</b><div class='diffslider-note'>"+t("diffNote","Toutes les difficultés peuvent tomber — plus souvent autour de ce niveau (répartition en cloche).")+"</div>";
   }
   refl();
   input.oninput=function(){ setup.diff=DIFFS[parseInt(input.value,10)-1].key; refl(); };
@@ -1709,7 +1778,7 @@ function selectAnimal(id){
   var status = (ev&&emp) ? " <span style='color:var(--ok2)'>(complété 🕊️💰 ✅)</span>"
     : (ev ? " <span style='color:var(--ok2)'>(Grande Évasion réussie 🕊️)</span>"
     : (emp ? " <span style='color:#b8860b'>(Empire bâti 💰)</span>" : ""));
-  $("traitBox").innerHTML = "<b>"+a.name+"</b> — "+a.trait + status;
+  $("traitBox").innerHTML = "<b>"+tr(a.name)+"</b> — "+tr(a.trait) + status;
   refreshLocks();
 }
 function refreshLocks(){
@@ -1720,7 +1789,7 @@ function refreshLocks(){
   $("stepAnimal").classList.toggle("locked", !(setup.cat && (empire || setup.sub) && setup.diff));
   var ready = setup.game && setup.cat && (empire || setup.sub) && setup.diff && selectedAnimal;
   $("startBtn").disabled = !ready;
-  $("startBtn").textContent = empire ? "👑 Lancer mon empire !" : "C'est parti !";
+  $("startBtn").textContent = empire ? t("startEmpire","👑 Lancer mon empire !") : t("startEvasion","C'est parti !");
 }
 function updateMissionProgress(){
   var done=Object.keys(store.missions).length;
@@ -2208,7 +2277,7 @@ function askQuestion(opts){
       // remplit le trou avec la bonne réponse
       var bs=$("blankSpot"); if(bs){ bs.textContent=q.options[q.answer]; bs.className="fill"; }
       note.textContent = timedOut ? "⏱ Temps écoulé ! La bonne réponse : "+q.options[q.answer]
-                       : (correct ? "Bravo, c'est juste !" : "Raté ! La bonne réponse : "+q.options[q.answer]);
+                       : (correct ? tr("Bravo, c'est juste !") : tr("Raté ! La bonne réponse :")+" "+q.options[q.answer]);
       note.className="qnote "+(correct?"good":"bad");
       if(correct) Sound.good(); else Sound.bad();
       // suivi des séries de bonnes réponses + fautes de l'aventure (badges)
@@ -3008,18 +3077,18 @@ function renderVocabHistory(){
   $("statVocOk").textContent="✓ "+ok; $("statVocKo").textContent="✗ "+ko;
   $("statVocOk").classList.toggle("on", vocFilter==="ok");
   $("statVocKo").classList.toggle("on", vocFilter==="ko");
-  if(rows.length===0){ list.innerHTML="<div class='empty'>Aucun mot étudié pour l'instant.<br>Va dans l'onglet « Vocabulaire » pour commencer !</div>"; return; }
+  if(rows.length===0){ list.innerHTML="<div class='empty'>"+tr("Aucun mot étudié pour l'instant.")+"<br>"+tr("Va dans l'onglet « Vocabulaire » pour commencer !")+"</div>"; return; }
   if(vocFilter!=="all"){
     var note=document.createElement("div"); note.className="hist-filter-note";
     note.textContent = vocFilter==="ko"
-      ? "🔴 Filtre actif : mots ratés en dernier — touche « ✗ » pour tout revoir."
-      : "🟢 Filtre actif : mots réussis en dernier — touche « ✓ » pour tout revoir.";
+      ? tr("🔴 Filtre actif : mots ratés en dernier — touche « ✗ » pour tout revoir.")
+      : tr("🟢 Filtre actif : mots réussis en dernier — touche « ✓ » pour tout revoir.");
     list.appendChild(note);
   }
   var shown=rows.filter(function(r){ return vocFilter==="all" || (vocFilter==="ko" ? !r.p.last : !!r.p.last); });
   if(shown.length===0){
     var e=document.createElement("div"); e.className="empty";
-    e.innerHTML = vocFilter==="ko" ? "Aucun mot raté. Bravo ! 🎉" : "Aucun mot réussi pour l'instant.";
+    e.innerHTML = vocFilter==="ko" ? tr("Aucun mot raté. Bravo ! 🎉") : tr("Aucun mot réussi pour l'instant.");
     list.appendChild(e); return;
   }
   var LV=(DATA&&DATA.levelLabel)||{};
@@ -3052,13 +3121,13 @@ function renderHistory(){
   $("statOk").textContent="✓ "+ok; $("statKo").textContent="✗ "+ko;
   $("statOk").classList.toggle("on", histFilter==="ok");
   $("statKo").classList.toggle("on", histFilter==="ko");
-  if(store.history.length===0){ list.innerHTML="<div class='empty'>Aucune question jouée pour l'instant.<br>Lance une partie pour remplir ton carnet de révision !</div>"; return; }
+  if(store.history.length===0){ list.innerHTML="<div class='empty'>"+tr("Aucune question jouée pour l'instant.")+"<br>"+tr("Lance une partie pour remplir ton carnet de révision !")+"</div>"; return; }
   // bandeau indiquant le filtre actif
   if(histFilter!=="all"){
     var note=document.createElement("div"); note.className="hist-filter-note";
     note.textContent = histFilter==="ko"
-      ? "🔴 Filtre actif : questions ratées uniquement — touche « ✗ » pour tout revoir."
-      : "🟢 Filtre actif : réussites uniquement — touche « ✓ » pour tout revoir.";
+      ? tr("🔴 Filtre actif : questions ratées uniquement — touche « ✗ » pour tout revoir.")
+      : tr("🟢 Filtre actif : réussites uniquement — touche « ✓ » pour tout revoir.");
     list.appendChild(note);
   }
   var shown=store.history.filter(function(h){
@@ -3066,7 +3135,7 @@ function renderHistory(){
   });
   if(shown.length===0){
     var e=document.createElement("div"); e.className="empty";
-    e.innerHTML = histFilter==="ko" ? "Aucune question ratée. Bravo ! 🎉" : "Aucune réussite pour l'instant.";
+    e.innerHTML = histFilter==="ko" ? tr("Aucune question ratée. Bravo ! 🎉") : tr("Aucune réussite pour l'instant.");
     list.appendChild(e); return;
   }
   shown.forEach(function(h){
@@ -3074,7 +3143,7 @@ function renderHistory(){
     var res=document.createElement("div"); res.className="hist-res "+(h.result?"ok":"ko"); res.textContent=h.result?"✓":"✗";
     var main=document.createElement("div"); main.className="hist-main";
     var cat=document.createElement("span"); cat.className="hist-cat";
-    cat.textContent=(CAT_LABEL[h.cat]||h.cat)+(h.sub&&h.sub!=="Tout"?" · "+h.sub:"");
+    cat.textContent=tr(CAT_LABEL[h.cat]||h.cat)+(h.sub&&h.sub!=="Tout"?" · "+tr(h.sub):"");
     cat.style.background=CAT_COLOR[h.cat]||"#888";
     main.appendChild(cat);
     if(h.context){ var ctx=document.createElement("span"); ctx.className="hist-ctx"; ctx.textContent="👑 "+h.context; main.appendChild(ctx); }
@@ -3084,21 +3153,21 @@ function renderHistory(){
     if(h.hint){ var hn=document.createElement("div"); hn.style.cssText="font-size:11px;color:var(--ink-soft);margin-top:2px;"; hn.textContent="👉 "+h.hint; main.appendChild(hn); }
     if(!h.result){
       var w=document.createElement("div"); w.className="hist-wrong";
-      w.textContent = (h.chosen==null) ? "Ta réponse : (temps écoulé)" : "Ta réponse : "+h.options[h.chosen];
+      w.textContent = (h.chosen==null) ? tr("Ta réponse :")+" "+tr("(temps écoulé)") : tr("Ta réponse :")+" "+h.options[h.chosen];
       main.appendChild(w);
     }
     // explication (rappel de la règle) — dépliable au clic sur la carte
     var explain = h.explain || histExplain(h);
     if(explain){
       var toggle=document.createElement("div"); toggle.className="hist-toggle";
-      toggle.textContent="💡 Voir l'explication";
+      toggle.textContent=tr("💡 Voir l'explication");
       var exp=document.createElement("div"); exp.className="hist-explain";
-      exp.innerHTML="<b>Bonne réponse :</b> "+escapeHtml(h.options[h.answer])+"<br><b>Règle :</b> "+escapeHtml(explain);
+      exp.innerHTML="<b>"+tr("Bonne réponse :")+"</b> "+escapeHtml(h.options[h.answer])+"<br><b>"+tr("Règle :")+"</b> "+escapeHtml(explain);
       main.appendChild(toggle); main.appendChild(exp);
       it.classList.add("clickable");
       it.onclick=function(){
         var open=it.classList.toggle("open");
-        toggle.textContent = open ? "🔽 Masquer l'explication" : "💡 Voir l'explication";
+        toggle.textContent = open ? tr("🔽 Masquer l'explication") : tr("💡 Voir l'explication");
         if(open){
           Sound.click();
           // badge « consulter ses erreurs » : compte les erreurs distinctes consultées
@@ -3114,11 +3183,11 @@ function renderHistory(){
     // --- Bouton de traduction (Anglais natif · Chinois natif) sur CHAQUE carte ---
     var trWrap=document.createElement("div"); trWrap.className="hist-tr-wrap";
     var trBtn=document.createElement("button"); trBtn.type="button"; trBtn.className="hist-tr-btn";
-    trBtn.textContent="🌐 Traduire (EN · 中文)";
+    trBtn.textContent=tr("🌐 Traduire (EN · 中文)");
     var trPanel=document.createElement("div"); trPanel.className="hist-tr";
     trBtn.onclick=function(ev){ ev.stopPropagation();
       var open=trPanel.classList.toggle("open");
-      trBtn.textContent = open ? "🔽 Masquer la traduction" : "🌐 Traduire (EN · 中文)";
+      trBtn.textContent = open ? tr("🔽 Masquer la traduction") : tr("🌐 Traduire (EN · 中文)");
       if(open && trPanel.getAttribute("data-loaded")!=="1"){
         trPanel.setAttribute("data-loaded","1"); Sound.click&&Sound.click();
         fillTranslations(h, trPanel);
@@ -3205,7 +3274,7 @@ function presentQuestion(cat, sub, diff, contextLabel){
         if(oi===q.answer) btns[i].classList.add("correct");
         if(!correct && oi===chosen && oi!==q.answer) btns[i].classList.add("wrong"); }
       var bs=$("blankSpot"); if(bs){ bs.textContent=q.options[q.answer]; bs.className="fill"; }
-      note.textContent = correct ? "Bravo, c'est juste !" : "Raté ! La bonne réponse : "+q.options[q.answer];
+      note.textContent = correct ? tr("Bravo, c'est juste !") : tr("Raté ! La bonne réponse :")+" "+q.options[q.answer];
       note.className="qnote "+(correct?"good":"bad");
       if(correct) Sound.good(); else Sound.bad();
       noteAnswer(correct, false);
@@ -3449,6 +3518,13 @@ function init(){
     btn.onclick=function(){ try{ Sound.click(); }catch(e){} setBadgeLang(btn.getAttribute("data-lang")); };
     btn.classList.toggle("on", btn.getAttribute("data-lang")===badgeLang);
   }); }
+
+  // Sélecteur de langue GLOBAL (en haut à gauche) : pilote menus + jeux + badges.
+  var _lsw=$("langSwitch");
+  if(_lsw){ Array.prototype.forEach.call(_lsw.querySelectorAll("button"), function(btn){
+    btn.onclick=function(){ try{ Sound.click(); }catch(e){} applyLang(btn.getAttribute("data-lang")); };
+  }); }
+  applyLang((store.appLang==="en"||store.appLang==="zh")?store.appLang:"fr");
 
   $("startBtn").onclick=function(){ Sound.click(); if(!selectedAnimal) return;
     if(setup.game==="empire") launchEmpire(selectedAnimal); else startGame(selectedAnimal); };
