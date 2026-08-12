@@ -1307,6 +1307,7 @@
   <div id="badgeToast"></div>
 </div>
 
+<script src="phrase_parts_i18n.js"></script>
 <script src="questions.js"></script>
 <script src="animaux.js"></script>
 <script src="sprites.js"></script>
@@ -3173,8 +3174,10 @@ function applyQuestionLang(q, realCat){
     var showP=function(t){ if(panel && t && /_{2,}/.test(t)){
         panel.innerHTML="<div class='qzh-phrase'>"+escapeHtml(t)+"</div><div class='qzh-tip'>"+tip+"</div>";
         panel.classList.add("open"); } };
+    var comp=(q.tr && q.tr[appLang]) ? q.tr[appLang] : null;   // compositionnel hors-ligne (exact)
     var cached=(window.PHRASE_TR && window.PHRASE_TR[frP]) ? window.PHRASE_TR[frP][appLang] : null;
-    if(cached){ showP(cached); }
+    if(comp){ showP(comp); }
+    else if(cached){ showP(cached); }
     else { trField(frP, tl).then(showP).catch(function(){ /* hors-ligne : la consigne suffit */ }); }
   }
 }

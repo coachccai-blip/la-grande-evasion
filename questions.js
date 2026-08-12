@@ -53,6 +53,18 @@
     return out;
   }
 
+  // Traduction COMPOSITIONNELLE hors-ligne de l'énoncé (EN/中). Si les tables
+  // (phrase_parts_i18n.js) sont chargées, on assemble la phrase traduite à partir
+  // de ses briques (préfixe, sujet, complément). Sinon on ne fait rien (repli
+  // cache/en ligne côté index.html). Le trou « ___ » est toujours conservé.
+  function attachTr(q, kind, pre, subj, comp){
+    var P = global.PHRASE_PARTS; if(!P || !P.compose) return q;
+    var parts = { kind:kind, pre:pre||"", subj:(subj==null?"":subj), comp:comp||"" };
+    var en = P.compose(parts, "en"), zh = P.compose(parts, "zh");
+    if(en || zh){ q.tr = {}; if(en) q.tr.en = en; if(zh) q.tr.zh = zh; }
+    return q;
+  }
+
   /* ======================================================================= */
   /*                           CONJUGAISON                                   */
   /* ======================================================================= */
@@ -522,18 +534,19 @@
     else if(tense==="subj"){ pool.unshift(v.pres[pi]); pool.push(v.fut[pi]); }
     else if(tense==="present"){ pool.push(v.inf); pool.push(v.imp[pi]); }
 
-    var phrase;
-    if(tense==="subj"){ phrase = subjHead(pick(SUBJ_TRIG), S.d)+" ___"+ (comp?" "+comp:"")+"."; }
-    else if(tense==="cond"){ phrase = pick(COND_HEAD)+" "+subjBlank(S,correct)+(comp?" "+comp:"")+"."; }
+    var phrase, trKind="simple", trPre="";
+    if(tense==="subj"){ var _st=pick(SUBJ_TRIG); phrase = subjHead(_st, S.d)+" ___"+ (comp?" "+comp:"")+"."; trKind="subj"; trPre=_st; }
+    else if(tense==="cond"){ var _ch=pick(COND_HEAD); phrase = _ch+" "+subjBlank(S,correct)+(comp?" "+comp:"")+"."; trKind="cond"; trPre=_ch; }
     else {
       // marqueur de temps facultatif (~70 %) : sinon la phrase commence par le sujet
       var tm=(TIME[tense] && rint(100)<70) ? pick(TIME[tense]) : "";
       var body = subjBlank(S,correct)+(comp?" "+comp:"")+".";
       var sep = /[,]$/.test(tm) ? " " : ", ";   // certains marqueurs finissent déjà par une virgule
       phrase = tm ? (tm+sep+body) : cap(body);
+      trPre=tm;
     }
     phrase=cap(phrase);
-    return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 };
+    return attachTr({ cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 }, trKind, trPre, S.d, comp);
   }
 
   // Tournures d'impératif : base (trou en tête, majuscule) ou amorce neutre (minuscule).
@@ -563,8 +576,9 @@
     var f = pick(IMPER_FRAMES);
     var phrase = f.pre + "___ " + (comp?comp+" ":"") + "!";
     var opts = f.cap ? build(cap(correct), pool.map(cap)) : build(correct, pool.slice());
-    return { cat:cat, sub:sub, tense:"imper", phrase:phrase,
-      hint:"Conjugue « "+v.inf+" » à l'impératif "+whoLabel, options:opts, answer:0 };
+    return attachTr({ cat:cat, sub:sub, tense:"imper", phrase:phrase,
+      hint:"Conjugue « "+v.inf+" » à l'impératif "+whoLabel, options:opts, answer:0 },
+      "imper", f.pre.trim(), null, comp);
   }
 
   // Passé composé : options 100 % « temps composés » (auxiliaire + participe).
@@ -593,7 +607,7 @@
     }
     var tm=pick(TIME.passe), pcc=pcComp(v);
     var phrase=cap(tm+", "+subjBlank(S,correct)+(pcc?" "+pcc:"")+".");
-    return { cat:cat, sub:sub, tense:"passe", phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 };
+    return attachTr({ cat:cat, sub:sub, tense:"passe", phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 }, "simple", tm, S.d, pcc);
   }
 
   // Temps composés « avancés » (C1) : plus-que-parfait, conditionnel passé,
@@ -622,15 +636,16 @@
       pool.push(aux[ak][pi]+" "+v.pp+(S.n==="p"?"s":"e"));              // faux accord avec avoir
       if(v.pp!==v.inf) pool.push(aux[ak][pi]+" "+v.inf);               // participe = infinitif (é/er)
     }
-    var phrase;
+    var phrase, trKind="simple", trPre="";
     if(tense==="subjp"){
-      phrase = subjHead(pick(TRIG_SUBJP), S.d)+" ___"+(comp?" "+comp:"")+".";
+      var _sp=pick(TRIG_SUBJP);
+      phrase = subjHead(_sp, S.d)+" ___"+(comp?" "+comp:"")+"."; trKind="subjp"; trPre=_sp;
     } else {
       var head = tense==="pqp" ? pick(HEAD_PQP) : (tense==="condp" ? pick(HEAD_CONDP) : pick(HEAD_FUTA));
-      phrase = head+" "+subjBlank(S,correct)+(comp?" "+comp:"")+".";
+      phrase = head+" "+subjBlank(S,correct)+(comp?" "+comp:"")+"."; trPre=head;
     }
     phrase=cap(phrase);
-    return { cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 };
+    return attachTr({ cat:cat, sub:sub, tense:tense, phrase:phrase, hint:hint+" ("+S.d+")", options:build(correct,pool), answer:0 }, trKind, trPre, S.d, comp);
   }
 
   // Choisit un item d'une banque en visant la difficulté. On élargit la bande
