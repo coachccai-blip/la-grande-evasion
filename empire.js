@@ -10,6 +10,24 @@
   var E=null;               // état de la partie en cours
   var busy=false;
   var speed=1;              // ×2 pendant le tour des autres animaux (parties plus rapides)
+  var empLang="fr";         // langue des cartes & règles : "fr" | "en" | "zh"
+  var _frRulesHTML=null;    // cache du corps FR des règles (pour restaurer)
+
+  /* --------------------- TRADUCTIONS (cartes & règles) -------------------- */
+  // Renvoie la table EMP_I18N si une langue étrangère est active, sinon null (=FR d'origine).
+  function LZ(){ return (typeof window!=="undefined" && window.EMP_I18N && (empLang==="en"||empLang==="zh")) ? window.EMP_I18N : null; }
+  function tUI(key, fr){ var I=LZ(); return (I&&I.ui[empLang]&&I.ui[empLang][key])||fr; }
+  function tStatus(key, fr){ var I=LZ(); return (I&&I.status[empLang]&&I.status[empLang][key])||fr; }
+  function tType(key, fr){ var I=LZ(); return (I&&I.types[empLang]&&I.types[empLang][key])||fr; }
+  function tBuildLbl(idx){ var I=LZ(); return (I&&I.build[empLang]&&I.build[empLang][idx])||BUILD_LABEL[idx]; }
+  function tCard(fr){ var I=LZ(); return (I&&I.cards[fr]&&I.cards[fr][empLang])||fr; }
+  function setEmpLang(lang){
+    empLang=(lang==="en"||lang==="zh")?lang:"fr";
+    if(EB&&EB.store){ EB.store.empLang=empLang; EB.persist&&EB.persist(); }
+    // Si les règles sont ouvertes, on les recharge dans la nouvelle langue.
+    var ov=$("empRulesOv"); if(ov&&ov.classList.contains("show")) fillRules();
+    renderPanel();
+  }
 
   /* ----------------------------- DONNÉES ---------------------------------- */
   // 8 quartiers de 2 propriétés. Prix croissants (60 → 400 ₵).
@@ -416,11 +434,32 @@
     var help=el("button","emp-btn ghost","❓ Règles"); help.id="empHelp";
     help.onclick=function(){ showRules(); };
     pn.appendChild(help);
+    // Sélecteur de langue des cartes & règles (FR / EN / 中).
+    var langRow=el("div","emp-langsw");
+    [["fr","FR"],["en","EN"],["zh","中"]].forEach(function(pair){
+      var b=el("button","emp-langbtn"+(empLang===pair[0]?" on":""),pair[1]);
+      b.onclick=function(){ setEmpLang(pair[0]); };
+      langRow.appendChild(b);
+    });
+    pn.appendChild(langRow);
     var ab=el("button","emp-btn ghost","Abandonner"); ab.onclick=quit;
     pn.appendChild(ab);
   }
+  // Remplit le corps/le titre/le bouton des règles selon la langue active.
+  function fillRules(){
+    var ov=$("empRulesOv"); if(!ov) return;
+    var body=ov.querySelector(".emp-rules-body");
+    var title=ov.querySelector(".emp-rules-t");
+    var ok=$("empRulesOk");
+    if(body && _frRulesHTML===null) _frRulesHTML=body.innerHTML;   // mémorise le FR d'origine
+    var I=LZ();
+    if(body) body.innerHTML = I ? I.rulesHTML[empLang] : _frRulesHTML;
+    if(title) title.textContent = I ? I.rulesTitle[empLang] : "📜 Règles de l'Empire";
+    if(ok) ok.textContent = I ? I.rulesOk[empLang] : "J'ai compris";
+  }
   function showRules(){
     var ov=$("empRulesOv"); if(!ov) return;
+    fillRules();
     ov.classList.add("show"); EB.Sound.step&&EB.Sound.step();
     var ok=$("empRulesOk"); if(ok) ok.onclick=function(){ ov.classList.remove("show"); };
   }
@@ -488,36 +527,39 @@
     var big=c.emoji||"•", bg="linear-gradient(160deg,#eef4ff,#fff)", name=c.name, desc="";
     if(c.type==="prop"){
       bg="linear-gradient(160deg,"+QUARTIERS[c.q].col+" 0%, #fff8ec 70%)";
-      var status=c.owner<0?"<b>Propriété LIBRE</b> — à acheter !":(c.owner===0?"C'est <b>ta</b> propriété.":"Propriété de <b>"+ownerName(c)+"</b>.");
+      var status=c.owner<0
+        ? "<b>"+tStatus("libre","Propriété LIBRE — à acheter !")+"</b>"
+        : (c.owner===0 ? "<b>"+tStatus("mine","C'est ta propriété.")+"</b>"
+                       : tStatus("other","Propriété de {owner}").replace("{owner}","<b>"+ownerName(c)+"</b>"));
       var rb=c.rentBase;
-      var lvls=BUILD_LABEL.map(function(l,k){ return l+" <b>₵"+(rb*RENT_MULT[k])+"</b>"; }).join(" · ");
+      var lvls=RENT_MULT.map(function(m,k){ return tBuildLbl(k)+" <b>₵"+(rb*m)+"</b>"; }).join(" · ");
       desc="<b>"+QUARTIERS[c.q].name+"</b><br>"+status
         +"<div class='emp-caseinfo'>"
-        +"<div class='emp-caserow'><span>💵 Prix d'achat</span><b>₵"+c.price+"</b></div>"
-        +"<div class='emp-caserow'><span>🏗️ Construction</span><b>₵"+c.build+" / niveau</b></div>"
-        +"<div class='emp-caserow'><span>🏷️ Loyer terrain nu</span><b>₵"+rb+"</b> <span class='emp-casemut'>(₵"+(rb*2)+" quartier complet)</span></div>"
+        +"<div class='emp-caserow'><span>💵 "+tUI("prixAchat","Prix d'achat")+"</span><b>₵"+c.price+"</b></div>"
+        +"<div class='emp-caserow'><span>🏗️ "+tUI("construction","Construction")+"</span><b>₵"+c.build+" "+tUI("parNiveau","/ niveau")+"</b></div>"
+        +"<div class='emp-caserow'><span>🏷️ "+tUI("loyerNu","Loyer terrain nu")+"</span><b>₵"+rb+"</b> <span class='emp-casemut'>(₵"+(rb*2)+" "+tUI("quartierComplet","quartier complet")+")</span></div>"
         +"<div class='emp-caserent'>🏠 "+lvls+"</div>"
         +"</div>"
-        +(c.level>0?"<div class='emp-casenow'>Niveau actuel : <b>"+BUILD_LABEL[c.level-1]+"</b> → loyer dû <b>₵"+(rb*RENT_MULT[c.level-1])+"</b></div>"
-                   :"<div class='emp-casenow'>Terrain nu (aucun bâtiment)</div>");
+        +(c.level>0?"<div class='emp-casenow'>"+tUI("niveauActuel","Niveau actuel")+" : <b>"+tBuildLbl(c.level-1)+"</b> → "+tUI("loyerDu","loyer dû")+" <b>₵"+(rb*RENT_MULT[c.level-1])+"</b></div>"
+                   :"<div class='emp-casenow'>"+tUI("terrainNu","Terrain nu (aucun bâtiment)")+"</div>");
     } else if(c.type==="transport"){ bg="linear-gradient(160deg,#cfe0ff,#fff)";
-      desc="<b>Route migratoire</b> — Transport à acheter (<b>₵200</b>).<br>Le loyer grimpe avec le nombre de lignes possédées (100 → 400 ₵)."; }
+      desc=tType("transport","<b>Route migratoire</b> — Transport à acheter (<b>₵200</b>).<br>Le loyer grimpe avec le nombre de lignes possédées (100 → 400 ₵)."); }
     else if(c.type==="service"){ bg="linear-gradient(160deg,#d5f0e0,#fff)";
-      desc="<b>Service de la vallée</b> — À acheter (<b>₵150</b>).<br>Loyer = <b>10 × le total des dés</b> du visiteur (× 20 avec les deux services)."; }
+      desc=tType("service","<b>Service de la vallée</b> — À acheter (<b>₵150</b>).<br>Loyer = <b>10 × le total des dés</b> du visiteur (× 20 avec les deux services)."); }
     else if(c.type==="depart"){ bg="linear-gradient(160deg,#dcf3b6,#fff)";
-      desc="<b>Grand Baobab (Départ)</b><br>Touche <b>200 ₵</b> de salaire à chaque passage. Tente la <b>Prime de la Jungle</b> pour le doubler !"; }
+      desc=tType("depart","<b>Grand Baobab (Départ)</b><br>Touche <b>200 ₵</b> de salaire à chaque passage. Tente la <b>Prime de la Jungle</b> pour le doubler !"); }
     else if(c.type==="impot"){ bg="linear-gradient(160deg,#ffd9d0,#fff)";
-      desc="<b>Impôt sur les croquettes</b><br>Paie <b>100 ₵</b> à la banque."; }
+      desc=tType("impot","<b>Impôt sur les croquettes</b><br>Paie <b>100 ₵</b> à la banque."); }
     else if(c.type==="patte"){ bg="linear-gradient(160deg,#ffe6b0,#fff)";
-      desc="<b>Coup de Patte</b><br>Tire une carte : <b>bonne ou mauvaise</b> surprise !"; }
+      desc=tType("patte","<b>Coup de Patte</b><br>Tire une carte : <b>bonne ou mauvaise</b> surprise !"); }
     else if(c.type==="cagnotte"){ bg="linear-gradient(160deg,#d8e6ff,#fff)";
-      desc="<b>Cagnotte de la Meute</b><br>Tire une carte de la caisse commune, <b>plutôt favorable</b>."; }
+      desc=tType("cagnotte","<b>Cagnotte de la Meute</b><br>Tire une carte de la caisse commune, <b>plutôt favorable</b>."); }
     else if(c.type==="fourriere"){ bg="linear-gradient(160deg,#e6eaee,#fff)";
-      desc="<b>Fourrière (visite)</b><br>Simple visite : rien ne se passe… sauf si tu y es enfermé !"; }
+      desc=tType("fourriere","<b>Fourrière (visite)</b><br>Simple visite : rien ne se passe… sauf si tu y es enfermé !"); }
     else if(c.type==="gardien"){ bg="linear-gradient(160deg,#ffd0d0,#fff)";
-      desc="<b>Le Gardien !</b><br>Il te repère : direction la <b>Fourrière</b>, sans salaire au passage."; }
+      desc=tType("gardien","<b>Le Gardien !</b><br>Il te repère : direction la <b>Fourrière</b>, sans salaire au passage."); }
     else if(c.type==="repos"){ bg="linear-gradient(160deg,#cdeeff,#fff)";
-      desc="<b>Le Point d'Eau</b><br>Case repos : on souffle, rien ne se passe."; }
+      desc=tType("repos","<b>Le Point d'Eau</b><br>Case repos : on souffle, rien ne se passe."); }
     return {big:big, bg:bg, name:name, desc:desc};
   }
   // Consultation libre d'une case (clic du joueur) : même belle carte, tap pour fermer.
@@ -710,6 +752,33 @@
     }}
     return qs;
   }
+  // Nombre de « maisons » (niveaux) encore constructibles dans un quartier possédé.
+  function maxHousesIn(pi,q){ var s=0; levelsOf(pi,q).forEach(function(l){ s+=(4-l); }); return s; }
+  // Compteur : le joueur choisit combien de maisons construire, avec estimation du coût.
+  function buildCounter(q, maxN, cost){
+    return new Promise(function(resolve){
+      var pn=$("empPanel"); pn.innerHTML="";
+      var n=1;
+      var box=el("div","emp-choice");
+      box.appendChild(el("div","emp-ctext","🏗️ Construire dans "+QUARTIERS[q].name+"　·　₵"+cost+" / maison　·　max "+maxN));
+      var counter=el("div","emp-counter");
+      var minus=el("button","emp-cbtn","−");
+      var cnt=el("div","emp-cnum","1");
+      var plus=el("button","emp-cbtn","+");
+      counter.appendChild(minus); counter.appendChild(cnt); counter.appendChild(plus);
+      box.appendChild(counter);
+      var est=el("div","emp-cest"); box.appendChild(est);
+      function upd(){ cnt.textContent=String(n); est.innerHTML="Coût total estimé : <b>₵"+(n*cost)+"</b>"; }
+      upd();
+      minus.onclick=function(){ if(n>1){ n--; upd(); EB.Sound.click&&EB.Sound.click(); } };
+      plus.onclick=function(){ if(n<maxN){ n++; upd(); EB.Sound.click&&EB.Sound.click(); } };
+      var row=el("div","emp-crow");
+      var go=el("button","emp-btn primary","Construire"); go.onclick=function(){ renderPanel(); resolve(n); };
+      var cancel=el("button","emp-btn ghost","Annuler"); cancel.onclick=function(){ renderPanel(); resolve(0); };
+      row.appendChild(go); row.appendChild(cancel); box.appendChild(row);
+      pn.appendChild(box);
+    });
+  }
   async function buildFlow(pi){
     var opts=buildableQuartiers(pi);
     if(!opts.length){
@@ -719,21 +788,27 @@
       else say("Tu ne peux construire que si tu possèdes tout un quartier : les 2 cases de la même couleur. Achète-les d'abord !");
       await sleep(200); return;
     }
-    // choisir un quartier (menu simple)
+    // choisir un quartier
     var choice=await chooseFrom("Construire dans quel quartier ?", opts.map(function(o){
-      return {label:QUARTIERS[o.q].name+" → "+BUILD_LABEL[o.level]+" (₵"+QUARTIERS[o.q].build+")", val:o.q, cost:QUARTIERS[o.q].build}; }));
+      return {label:QUARTIERS[o.q].name+" (₵"+QUARTIERS[o.q].build+" / maison, jusqu'à "+maxHousesIn(pi,o.q)+")", val:o.q}; }));
     if(choice==null) return;
-    var q=choice, cost=QUARTIERS[q].build;
-    if(E.players[pi].cash<cost){ say("Fonds insuffisants pour construire."); return; }
-    var ok=await ask("Construction dans "+QUARTIERS[q].name+" — ₵"+cost);
-    if(ok){ transfer(pi,-1,cost);
-      E.board.forEach(function(c){ if(c.type==="prop"&&c.q===q&&c.owner===pi){ var lv=Math.min.apply(null,levelsOf(pi,q)); } });
-      // monte d'un niveau la (les) propriété(s) au niveau minimum
-      var minL=Math.min.apply(null,levelsOf(pi,q));
-      var done=false;
-      E.board.forEach(function(c){ if(!done&&c.type==="prop"&&c.q===q&&c.owner===pi&&c.level===minL){ c.level++; done=true; } });
-      EB.Sound.special&&EB.Sound.special(); say("Chantier terminé : "+QUARTIERS[q].name+" monte en gamme !");
-    } else { transfer(pi,-1,Math.round(cost*0.1)); say("Chantier reporté : les castors gardent 10 % d'acompte."); }
+    var q=choice, cost=QUARTIERS[q].build, cash=E.players[pi].cash;
+    var maxN=Math.min(maxHousesIn(pi,q), Math.floor(cash/cost));
+    if(maxN<1){ say("Fonds insuffisants pour construire ici (₵"+cost+" / maison)."); await sleep(200); return; }
+    // combien de maisons ?
+    var count=await buildCounter(q, maxN, cost);
+    if(count<1) return;
+    var total=count*cost;
+    var ok=await ask("Construction : "+count+" maison"+(count>1?"s":"")+" dans "+QUARTIERS[q].name+" — ₵"+total);
+    if(ok){
+      transfer(pi,-1,total);
+      for(var k=0;k<count;k++){
+        var minL=Math.min.apply(null,levelsOf(pi,q));
+        var done=false;
+        E.board.forEach(function(c){ if(!done&&c.type==="prop"&&c.q===q&&c.owner===pi&&c.level===minL&&c.level<4){ c.level++; done=true; } });
+      }
+      EB.Sound.special&&EB.Sound.special(); say("Chantier terminé : "+count+" maison"+(count>1?"s":"")+" à "+QUARTIERS[q].name+" !");
+    } else { transfer(pi,-1,Math.round(total*0.1)); say("Chantier reporté : les castors gardent 10 % d'acompte."); }
     renderTokens(); renderCenter(); await sleep(400);
   }
   function levelsOf(pi,q){ var a=[]; E.board.forEach(function(c){ if(c.type==="prop"&&c.q===q&&c.owner===pi) a.push(c.level); }); return a; }
@@ -743,7 +818,7 @@
   /* ------------------------------ CARTES ---------------------------------- */
   async function drawCard(pi, deck, title, human){
     var card=deck[rint(deck.length)];
-    if(human){ await showCard(title, card.t); }
+    if(human){ await showCard(title, tCard(card.t)); }
     else botSay(pi,"— "+title+" : "+card.t);
     // effets
     if(card.d) transfer(pi,-1,-card.d);                 // gain (+) ou perte (−)
@@ -874,12 +949,16 @@
   // défend avec 3 bonnes réponses ; s'il réussit, le bot paie plein tarif.
   async function negotiateVsPlayer(attacker, c, rent){
     var aname=EB.animalById(E.players[attacker].animalId).name, half=Math.round(rent/2);
-    await showChallenge(attacker, c, {
-      banner:"🤝 NÉGOCIATION",
-      html:"<b>"+aname+"</b> veut négocier un <b>loyer divisé par 2</b> sur <b>« "+c.name+" »</b>.<br>Refuse le rabais : <b>1 bonne réponse</b> et il paie plein tarif.",
-      btn:"🛡️ Tenir bon" });
+    // Le joueur peut ACCEPTER le rabais tout de suite, ou TENIR BON (1 question) pour le plein tarif.
+    var defend=await confirmAction(
+      aname+" veut négocier un loyer ÷2 sur « "+c.name+" » (₵"+rent+" → ₵"+half+"). Tenir bon (1 bonne réponse) pour le plein tarif, ou accepter le rabais ?",
+      "🛡️ Tenir bon", "🤝 Accepter le ÷2");
+    if(!defend){ // le joueur accepte le rabais
+      transfer(attacker,0,half); say("Tu acceptes le rabais : "+aname+" te paie ₵"+half+" (loyer ÷2)."); EB.Sound.coin&&EB.Sound.coin();
+      await sleep(300); return;
+    }
     say("Négociation : réussis 1 question pour lui faire payer le plein tarif.");
-    await sleep(300);
+    await sleep(200);
     var held=await ask("🤝 Négociation — tiens ton loyer sur « "+c.name+" »");
     if(held){ transfer(attacker,0,rent); say("Négociation refusée ! "+aname+" paie le plein tarif : +₵"+rent+"."); EB.Sound.coin&&EB.Sound.coin(); }
     else { transfer(attacker,0,half); say(aname+" négocie : loyer ÷2, tu ne touches que ₵"+half+"."); EB.Sound.bad&&EB.Sound.bad(); }
@@ -899,15 +978,22 @@
       if(go) go.onclick=function(){ ov.classList.remove("show"); resolve(); };
     });
   }
+  // Les bots améliorent AU MAXIMUM leurs quartiers complets dès qu'ils en ont les
+  // moyens (en gardant une petite réserve), pour faire grimper les loyers.
   async function botBuild(pi){
-    var opts=buildableQuartiers(pi), p=E.players[pi];
-    for(var k=0;k<opts.length;k++){ var q=opts[k].q, cost=QUARTIERS[q].build;
-      if(p.cash-cost>=250 && botAnswers()){ transfer(pi,-1,cost);
-        var minL=Math.min.apply(null,levelsOf(pi,q)); var done=false;
-        E.board.forEach(function(c){ if(!done&&c.type==="prop"&&c.q===q&&c.owner===pi&&c.level===minL){ c.level++; done=true; } });
-        botSay(pi,"a construit dans "+QUARTIERS[q].name+"."); renderTokens(); renderCenter(); await sleep(300);
-      }
+    var p=E.players[pi], built=0, guard=0;
+    while(guard++<40){
+      var opts=buildableQuartiers(pi);            // quartiers complets encore constructibles (niveau < 4)
+      if(!opts.length) break;
+      opts.sort(function(a,b){ return QUARTIERS[a.q].build-QUARTIERS[b.q].build; });  // le moins cher d'abord
+      var q=opts[0].q, cost=QUARTIERS[q].build;
+      if(p.cash-cost < 200) break;                // garde une réserve de sécurité
+      transfer(pi,-1,cost);
+      var minL=Math.min.apply(null,levelsOf(pi,q)), done=false;
+      E.board.forEach(function(c){ if(!done&&c.type==="prop"&&c.q===q&&c.owner===pi&&c.level===minL&&c.level<4){ c.level++; done=true; } });
+      built++;
     }
+    if(built>0){ botSay(pi,"améliore ses quartiers ("+built+" niveau"+(built>1?"x":"")+")."); EB.Sound.special&&EB.Sound.special(); renderTokens(); renderCenter(); await sleep(300); }
   }
 
   /* ------------------------ SOLVABILITÉ / FAILLITE ------------------------ */
@@ -1054,7 +1140,7 @@
   }
 
   window.Empire={
-    init:function(bridge){ EB=bridge; },
+    init:function(bridge){ EB=bridge; if(EB&&EB.store&&(EB.store.empLang==="en"||EB.store.empLang==="zh")) empLang=EB.store.empLang; },
     start:function(setup){ newGame(setup); mount(); attachManage(); saveState(); },
     resume:function(){ var s=EB.store.empireGame; if(!s) return false; deserialize(s); mount(); attachManage(); return true; },
     hasSave:function(){ return !!EB.store.empireGame; },

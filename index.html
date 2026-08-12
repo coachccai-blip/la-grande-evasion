@@ -713,9 +713,23 @@
   .emp-btn.primary{background:var(--accent); color:#3a2c10;}
   .emp-btn.warn{background:#e0574a; color:#fff;}
   .emp-btn.ghost{background:transparent; box-shadow:none; color:var(--ink-soft); font-weight:700;}
+  /* Sélecteur de langue des cartes & règles (FR / EN / 中) */
+  .emp-langsw{display:flex; gap:5px; justify-content:center; margin:2px 0;}
+  .emp-langbtn{border:1.5px solid var(--blue4); background:var(--panel); color:var(--blue7);
+    font-family:var(--font); font-weight:800; font-size:12px; padding:5px 12px; border-radius:9px; cursor:pointer;}
+  .emp-langbtn.on{background:linear-gradient(180deg,var(--blue5),var(--blue6)); color:#fff; border-color:var(--blue6);}
+  .emp-langbtn:active{transform:scale(.96);}
   .emp-choice{width:100%;}
   .emp-ctext{font-size:13px; text-align:center; margin-bottom:8px; line-height:1.4;}
   .emp-crow{display:flex; gap:6px; flex-wrap:wrap; justify-content:center;}
+  /* Compteur de construction (nombre de maisons) */
+  .emp-counter{display:flex; align-items:center; justify-content:center; gap:16px; margin:6px 0 4px;}
+  .emp-cbtn{width:44px; height:44px; border-radius:12px; border:0; background:var(--accent); color:#3a2c10;
+    font-size:24px; font-weight:900; cursor:pointer; line-height:1;}
+  .emp-cbtn:active{transform:translateY(1px);}
+  .emp-cnum{min-width:52px; text-align:center; font-size:26px; font-weight:900; color:var(--ink);}
+  .emp-cest{text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:8px;}
+  .emp-cest b{color:var(--ink); font-size:15px;}
   .emp-card{max-width:360px; text-align:center;}
   .emp-card .emp-card-t{font-size:16px; font-weight:900; color:var(--accent2); margin-bottom:8px;}
   .emp-card .emp-card-x{font-size:15px; line-height:1.5;}
@@ -1046,6 +1060,7 @@
           <p><b>⚔️ OPA</b><br>Sur un terrain adverse, tu peux tenter une <b>OPA</b> (rachat forcé) : réussis <b>3 questions</b> pour l'arracher à son propriétaire. <b>Gros risque :</b> si tu rates une seule question, l'OPA échoue et tu paies <b>5 fois le loyer</b>. Une seule OPA par tour. Attention : un animal peut lancer une <b>OPA hostile contre toi</b> — défends-toi avec <b>3 bonnes réponses</b> pour garder ta propriété.</p>
           <p><b>🔒 Fourrière</b><br>Deux doubles de suite, ou la case Gardien 🚓, t'envoient à la Fourrière. Tu en sors en payant ou en répondant juste.</p>
           <p><b>❓ Questions</b><br>La plupart des actions (achats, OPA, sortie de Fourrière) se gagnent en répondant correctement aux questions de français.</p>
+          <p><b>🤝 Offre d'achat</b><br>Depuis la fiche d'un bien adverse, propose un prix de rachat. Plus ton offre est basse, plus il faut enchaîner de bonnes réponses (jusqu'à la moitié du prix d'origine). Une offre généreuse est plus facile à faire accepter.</p>
         </div>
         <button id="empRulesOk" class="btn wide" style="margin-top:12px;">J'ai compris</button>
       </div>
@@ -1215,6 +1230,7 @@
 <script src="questions.js"></script>
 <script src="animaux.js"></script>
 <script src="sprites.js"></script>
+<script src="emp_i18n.js"></script>
 <script src="empire.js"></script>
 <script src="vocabdata.js"></script>
 <script src="vocab.js"></script>
@@ -1308,6 +1324,7 @@ function loadSave(){
       store.stats = o.stats||store.stats; store.badges = o.badges||{};
       store.empires = o.empires||{}; store.empireGame = o.empireGame||null;
       store.badgeLang = o.badgeLang || "fr";
+      store.empLang = o.empLang || "fr";
       store.vocab = o.vocab || null;
       // complète les champs de stats manquants (compat. anciennes sauvegardes)
       var d={bestStreak:0,curStreak:0,duelWins:0,flawless:0,errViewed:0,errSigs:{}};
