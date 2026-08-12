@@ -236,7 +236,7 @@
           "<circle cx='50' cy='50' r='45' fill='none' stroke='url(#vkgrad)' stroke-width='10' stroke-linecap='round' stroke-dasharray='"+circ.toFixed(1)+"' stroke-dashoffset='"+off.toFixed(1)+"'/>"+
           "<defs><linearGradient id='vkgrad' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#4AC2DB'/><stop offset='1' stop-color='#0172B0'/></linearGradient></defs>"+
         "</svg>"+
-        "<div class='vkd-ringc'><div class='vkd-rp'>"+pct+"%</div><div class='vkd-rl'>"+T("ring_mastered",{n:s.mastered,total:s.total})+"</div></div>"+
+        "<div class='vkd-ringc'><div class='vkd-rp'>"+pct+"%</div></div>"+
       "</div>"+
       "<div class='vkd-herod'>"+
         "<div class='vkd-goal'>"+goalTxt+"</div>"+
