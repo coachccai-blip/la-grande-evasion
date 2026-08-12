@@ -167,6 +167,7 @@
   .vk-imgopt:active{transform:translateY(1px);}
   .vk-opts{display:flex; flex-direction:column; gap:8px;}
   .vk-opt{border:2px solid var(--line); background:var(--panel2); color:var(--ink); font-family:var(--font); font-weight:700; font-size:17px; padding:14px; border-radius:12px; cursor:pointer; text-align:center;}
+  .vk-opt.bi{font-size:15px; line-height:1.35;}
   .vk-opt:active{transform:translateY(1px);}
   .vk-imgopt.ok,.vk-opt.ok{border-color:var(--ok2); background:rgba(63,174,90,.22);}
   .vk-imgopt.ko,.vk-opt.ko{border-color:var(--ko2); background:rgba(224,87,74,.22);}
@@ -760,6 +761,36 @@
   .emp-caserent b{color:var(--blue7);}
   .emp-casenow{font-size:12px; color:var(--ink); margin:8px 18px 2px; font-weight:600;}
   .emp-casehint{font-size:11px; color:var(--ink-soft); opacity:.7; padding:12px 0 15px;}
+  /* Portefeuille d'un joueur (clic sur une ligne du HUD central) */
+  .emp-p.clik{cursor:pointer; transition:transform .08s, box-shadow .12s;}
+  .emp-p.clik:active{transform:scale(.97);}
+  #empHoldOv .emp-holdcard{position:relative; width:100%; max-width:360px; background:var(--panel);
+    border-radius:20px; overflow:hidden; box-shadow:0 18px 48px rgba(0,0,0,.45);
+    max-height:82vh; display:flex; flex-direction:column;
+    animation:empCasePop .3s cubic-bezier(.2,1.35,.5,1);}
+  .emp-hold-x{position:absolute; top:9px; right:11px; z-index:2; border:0; background:rgba(0,0,0,.12);
+    color:var(--ink); width:28px; height:28px; border-radius:50%; font-size:14px; font-weight:900; cursor:pointer;}
+  .emp-hold-head{display:flex; align-items:center; gap:12px; padding:18px 18px 12px;
+    background:linear-gradient(180deg,var(--blue-deep),var(--blue6)); color:#fff;}
+  .emp-hold-emoji{font-size:40px; width:58px; height:58px; border-radius:50%; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,.25);}
+  .emp-hold-id{flex:1; min-width:0; text-align:left;}
+  .emp-hold-name{font-size:18px; font-weight:900; line-height:1.15;}
+  .emp-hold-meta{font-size:11.5px; opacity:.95; margin-top:4px; line-height:1.5;}
+  .emp-hold-meta b{color:#fff;}
+  .emp-hold-ko{color:#ffd0c8; font-weight:800;}
+  .emp-hold-body{padding:12px 14px 4px; overflow-y:auto; text-align:left;}
+  .emp-hold-empty{text-align:center; color:var(--ink-soft); font-size:13.5px; padding:26px 10px;}
+  .emp-hold-grp{display:flex; align-items:center; gap:7px; margin:10px 2px 5px; font-weight:800;
+    font-size:12.5px; color:var(--ink);}
+  .emp-hold-grp:first-child{margin-top:2px;}
+  .emp-hold-dot{width:12px; height:12px; border-radius:50%; flex:0 0 auto; box-shadow:0 0 0 2px rgba(0,0,0,.08) inset;}
+  .emp-hold-item{background:rgba(1,114,176,.06); border:1px solid rgba(1,114,176,.16);
+    border-radius:11px; padding:8px 11px; margin-bottom:7px;}
+  .emp-hold-item.mort{opacity:.6;}
+  .emp-hold-iname{font-size:13.5px; font-weight:800; color:var(--ink);}
+  .emp-hold-isub{font-size:11.5px; color:var(--ink-soft); margin-top:2px; line-height:1.4;}
+  .emp-casehint{font-size:11px; color:var(--ink-soft); opacity:.7; padding:12px 0 15px; text-align:center;}
 
   /* ============================= Nav du bas ========================== */
   nav{
@@ -970,6 +1001,21 @@
         <button id="empCardOk" class="btn wide" style="margin-top:12px;">Continuer</button>
       </div>
     </div>
+    <!-- Portefeuille d'un joueur : ses propriétés (clic sur le HUD central) -->
+    <div id="empHoldOv" class="overlay">
+      <div class="emp-holdcard">
+        <button id="empHoldClose" class="emp-hold-x" aria-label="Fermer">✕</button>
+        <div class="emp-hold-head">
+          <span id="empHoldEmoji" class="emp-hold-emoji"></span>
+          <div class="emp-hold-id">
+            <div id="empHoldName" class="emp-hold-name"></div>
+            <div id="empHoldMeta" class="emp-hold-meta"></div>
+          </div>
+        </div>
+        <div id="empHoldBody" class="emp-hold-body"></div>
+        <div class="emp-casehint">👆 Touche en dehors pour fermer</div>
+      </div>
+    </div>
     <!-- Fin de partie Empire -->
     <div id="empEndOv" class="overlay">
       <div class="card" style="text-align:center;">
@@ -990,8 +1036,8 @@
           <p><b>🎲 Se déplacer</b><br>Lance les dés et avance sur l'anneau. Repasser par le Grand Baobab 🌳 rapporte ₵200.</p>
           <p><b>🏠 Acheter</b><br>En tombant sur un terrain libre, tu peux l'acheter. Sur un terrain adverse, tu paies un loyer.</p>
           <p><b>🏗️ Construire</b><br>Tu ne peux construire que si tu possèdes <b>tout un quartier</b> : les <b>deux cases de la même couleur</b>. Chaque niveau (Stand → Boutique → Grand Magasin → Palais) fait grimper les loyers. Le bouton <b>« 🏗️ Construire »</b> reste affiché, mais il ne propose un chantier que si un quartier est complet.</p>
-          <p><b>💰 Loyer &amp; négociation</b><br>Sur un terrain adverse, tu paies un loyer. Tu peux <b>négocier ÷2</b> en réussissant <b>3 questions</b>. Les animaux peuvent aussi te réclamer une négociation : défends ton plein tarif avec <b>3 bonnes réponses</b>.</p>
-          <p><b>⚔️ OPA</b><br>Sur un terrain adverse, tu peux tenter une <b>OPA</b> (rachat forcé) : réussis <b>5 questions</b> pour l'arracher à son propriétaire. Une seule OPA par tour. Attention : un animal peut lancer une <b>OPA hostile contre toi</b> — défends-toi avec <b>5 bonnes réponses</b> pour garder ta propriété.</p>
+          <p><b>💰 Loyer &amp; négociation</b><br>Sur un terrain adverse, tu paies un loyer. Tu peux <b>négocier ÷2</b> en réussissant <b>1 question</b> — mais si tu la rates, le <b>loyer est triplé</b> ! Les animaux peuvent aussi te réclamer une négociation : défends ton plein tarif avec <b>1 bonne réponse</b>.</p>
+          <p><b>⚔️ OPA</b><br>Sur un terrain adverse, tu peux tenter une <b>OPA</b> (rachat forcé) : réussis <b>3 questions</b> pour l'arracher à son propriétaire. <b>Gros risque :</b> si tu rates une seule question, l'OPA échoue et tu paies <b>5 fois le loyer</b>. Une seule OPA par tour. Attention : un animal peut lancer une <b>OPA hostile contre toi</b> — défends-toi avec <b>3 bonnes réponses</b> pour garder ta propriété.</p>
           <p><b>🔒 Fourrière</b><br>Deux doubles de suite, ou la case Gardien 🚓, t'envoient à la Fourrière. Tu en sors en payant ou en répondant juste.</p>
           <p><b>❓ Questions</b><br>La plupart des actions (achats, OPA, sortie de Fourrière) se gagnent en répondant correctement aux questions de français.</p>
         </div>

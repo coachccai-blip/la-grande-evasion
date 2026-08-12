@@ -288,6 +288,66 @@
   }
   function propCount(pi){ var n=0; E.board.forEach(function(c){ if(isProp(c)&&c.owner===pi) n++; }); return n; }
   function leaderIndex(){ var best=-1,bw=-1; E.players.forEach(function(p,pi){ if(p.bankrupt) return; var w=netWorth(p); if(w>bw){ bw=w; best=pi; } }); return best; }
+  /* Menu « portefeuille » d'un joueur : la liste de ses propriétés (clic sur le HUD). */
+  function showHoldings(pi){
+    var ov=$("empHoldOv"); if(!ov || ov.classList.contains("show")) return;
+    var p=E.players[pi]; if(!p) return;
+    var a=EB.animalById(p.animalId), lead=leaderIndex();
+    $("empHoldEmoji").textContent=EB.EMOJI[p.animalId]||"🦁";
+    $("empHoldEmoji").style.background="radial-gradient(circle at 50% 40%, #fff, "+tokenColor(pi)+" 130%)";
+    $("empHoldName").textContent=(pi===lead&&!p.bankrupt?"👑 ":"")+a.name+(pi===0?" (toi)":"")+(p.jail>0?" 🔒":"");
+    $("empHoldMeta").innerHTML = p.bankrupt
+      ? "<span class='emp-hold-ko'>✖ Ruiné</span>"
+      : "💰 <b>₵"+p.cash+"</b> en caisse &nbsp;·&nbsp; 📊 Valeur totale <b>₵"+netWorth(p)+"</b> &nbsp;·&nbsp; 🏠 <b>"+propCount(pi)+"</b> terrain(s)";
+    // Propriétés possédées, regroupées : quartiers, puis transports, puis services.
+    var owned=E.board.filter(function(c){ return (c.type==="prop"||c.type==="transport"||c.type==="service") && c.owner===pi; });
+    var body=$("empHoldBody"); body.innerHTML="";
+    if(!owned.length){
+      body.innerHTML="<div class='emp-hold-empty'>Aucune propriété pour l'instant.<br>Achète des terrains en tombant dessus !</div>";
+    } else {
+      // regrouper les propriétés par quartier
+      var groups={}, order=[];
+      owned.forEach(function(c){
+        var key = c.type==="prop" ? ("q"+c.q) : c.type;
+        if(!groups[key]){ groups[key]=[]; order.push(key); }
+        groups[key].push(c);
+      });
+      order.forEach(function(key){
+        var list=groups[key], first=list[0];
+        var head=el("div","emp-hold-grp");
+        if(key.charAt(0)==="q"){
+          var q=first.q, complete=quartierComplete(pi,q);
+          var dot=el("span","emp-hold-dot"); dot.style.background=QUARTIERS[q].col;
+          head.appendChild(dot);
+          head.appendChild(el("span","emp-hold-grpn",QUARTIERS[q].emoji+" "+QUARTIERS[q].name+(complete?" ✅ complet":"")));
+        } else {
+          head.appendChild(el("span","emp-hold-grpn",(key==="transport"?"🚌 Routes migratoires":"⚙️ Services de la vallée")));
+        }
+        body.appendChild(head);
+        list.forEach(function(c){
+          var it=el("div","emp-hold-item"+(c.mortgaged?" mort":""));
+          var nm=el("div","emp-hold-iname",c.emoji+" "+c.name);
+          var sub;
+          if(c.type==="prop"){
+            var lvl = c.level>0 ? BUILD_LABEL[c.level-1] : "terrain nu";
+            sub="Niveau : "+lvl+" · Loyer dû : ₵"+rentOf(c,7);
+          } else if(c.type==="transport"){
+            sub="Loyer selon le nombre de routes possédées (₵"+rentOf(c,7)+" actuellement)";
+          } else {
+            sub="Loyer = "+(countType(pi,"service")>=2?"20":"10")+" × total des dés du visiteur";
+          }
+          var sb=el("div","emp-hold-isub", (c.mortgaged?"⚠️ Hypothéquée · ":"")+sub);
+          it.appendChild(nm); it.appendChild(sb);
+          body.appendChild(it);
+        });
+      });
+    }
+    ov.classList.add("show"); EB.Sound.click&&EB.Sound.click();
+    var done=false;
+    function close(){ if(done) return; done=true; ov.onclick=null; ov.classList.remove("show"); }
+    ov.onclick=function(e){ if(e.target===ov) close(); };
+    var xb=$("empHoldClose"); if(xb) xb.onclick=close;
+  }
   function renderCenter(){
     var c=$("empCenter"); if(!c) return; c.innerHTML=SCENE_SVG;
     var cover=el("div","emp-cover");
@@ -303,6 +363,8 @@
       var props=el("span","emp-pk","🏠"+propCount(pi));
       var cash=el("span","emp-pc"); cash.id="empPC"+pi; cash.textContent=p.bankrupt?"✖ ruiné":("₵"+p.cash);
       row.appendChild(em); row.appendChild(nm); row.appendChild(props); row.appendChild(cash);
+      row.classList.add("clik");
+      (function(idx){ row.onclick=function(){ showHoldings(idx); }; })(pi);
       hud.appendChild(row);
     });
     cover.appendChild(hud);
@@ -516,12 +578,17 @@
   /* ------------------------------ ACHAT ----------------------------------- */
   async function buyFlow(pi){
     var c=cell(E.players[pi].pos);
-    var canAfford=E.players[pi].cash>=c.price;
-    var yes=await confirmAction("« "+c.name+" » est libre (₵"+c.price+"). Répondre juste pour l'acheter ?", canAfford?"Acheter":"Acheter (fonds justes)", "Passer");
+    var cash=E.players[pi].cash, canAfford=cash>=c.price;
+    var yes=await confirmAction(
+      canAfford
+        ? "« "+c.name+" » est libre (₵"+c.price+"). Répondre juste pour l'acheter ?"
+        : "« "+c.name+" » est libre (₵"+c.price+"), mais tu n'as que ₵"+cash+" : fonds insuffisants pour l'acheter.",
+      canAfford ? "Acheter" : "Acheter (₵"+c.price+")",
+      "Passer",
+      canAfford ? null : { yesDisabled:true, yesHint:"Il te manque ₵"+(c.price-cash) });
     if(!yes){ return; }
     var ok=await ask("Achat de « "+c.name+" » — ₵"+c.price);
-    if(ok && canAfford){ c.owner=pi; transfer(pi,-1,c.price); paintBuy(pi); say(pName(pi)+" a acheté « "+c.name+" » (₵"+c.price+")."); }
-    else if(ok && !canAfford){ say("Réponse juste, mais fonds insuffisants."); }
+    if(ok){ c.owner=pi; transfer(pi,-1,c.price); paintBuy(pi); say(pName(pi)+" a acheté « "+c.name+" » (₵"+c.price+")."); }
     else { say("Le vendeur doute… l'affaire part en enchère éclair !"); await sleep(700); await auctionFlow(pi); }
     renderTokens(); renderCenter(); await sleep(500);
   }
@@ -545,16 +612,15 @@
   async function rentFlow(pi, diceTotal){
     var c=cell(E.players[pi].pos), rent=rentOf(c, diceTotal), owner=c.owner;
     var choice=await threeWay("« "+c.name+" » appartient à "+ownerName(c)+". Loyer à payer : ₵"+rent+".",
-      "Négocier ÷2 (3 bonnes réponses)","OPA : racheter de force (5 bonnes réponses)","Payer ₵"+rent);
+      "Négocier ÷2 (1 question — raté = loyer ×3)","OPA : rachat forcé (3 réponses — raté = loyer ×5)","Payer ₵"+rent);
     if(choice==="pay"){ transfer(pi,owner,rent); say(pName(pi)+" a payé ₵"+rent+" de loyer à "+ownerName(c)+"."); EB.Sound.bad&&EB.Sound.bad(); }
     else if(choice==="negotiate"){
-      // Loyer ÷2 seulement si les 3 réponses sont justes.
-      say("Négociation : réussis 3 questions pour diviser le loyer par 2.");
+      // 1 question : réussie → loyer ÷2 ; ratée → loyer ×3.
+      say("Négociation : réussis 1 question pour diviser le loyer par 2 (raté = loyer ×3).");
       await sleep(200);
-      var ok=true;
-      for(var nn=0;nn<3;nn++){ if(!await ask("Négociation "+(nn+1)+"/3 — loyer ÷2 sur « "+c.name+" »")){ ok=false; break; } }
-      var due=ok?Math.round(rent/2):rent;
-      transfer(pi,owner,due); say(ok?(pName(pi)+" négocie : loyer ÷2, il paie ₵"+due+" à "+ownerName(c)+"."):(pName(pi)+" rate la négociation : ₵"+due+" à "+ownerName(c)+"."));
+      var ok=await ask("Négociation — loyer ÷2 sur « "+c.name+" » (raté : loyer ×3)");
+      var due=ok?Math.round(rent/2):rent*3;
+      transfer(pi,owner,due); say(ok?(pName(pi)+" négocie : loyer ÷2, il paie ₵"+due+" à "+ownerName(c)+"."):(pName(pi)+" rate la négociation : loyer ×3, ₵"+due+" à "+ownerName(c)+"."));
     } else { // OPA
       await opaFlow(pi);
     }
@@ -563,12 +629,12 @@
   }
   async function opaFlow(pi){
     var c=cell(E.players[pi].pos), owner=c.owner, price150=Math.round(c.price*1.5), rent=rentOf(c,E.lastDice);
-    say("OPA sauvage (rachat forcé) sur « "+c.name+" » : réussis 5 questions d'affilée !");
+    say("OPA sauvage (rachat forcé) sur « "+c.name+" » : réussis 3 questions d'affilée !");
     EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(500);
-    for(var n=0;n<5;n++){
-      var ok=await ask("OPA "+(n+1)+"/5 — rachat forcé de « "+c.name+" »");
-      if(!ok){ // échec : loyer ×2
-        transfer(pi,owner,rent*2); say("OPA ratée ! Loyer doublé : −₵"+(rent*2)+".");
+    for(var n=0;n<3;n++){
+      var ok=await ask("OPA "+(n+1)+"/3 — rachat forcé de « "+c.name+" »");
+      if(!ok){ // échec : loyer ×5 (lourde pénalité du rachat forcé raté)
+        transfer(pi,owner,rent*5); say("OPA ratée ! Loyer ×5 : −₵"+(rent*5)+".");
         E.players[pi].opaUsed=true; return;
       }
       EB.Sound.lock&&EB.Sound.lock();
@@ -730,13 +796,13 @@
     var rent=rentOf(c,E.lastDice), price150=Math.round(c.price*1.5), aname=EB.animalById(E.players[attacker].animalId).name;
     await showChallenge(attacker, c, {
       banner:"⚔️ OPA HOSTILE !",
-      html:"<b>"+aname+"</b> lance une <b>OPA hostile</b> pour t'arracher <b>« "+c.name+" »</b> !<br>Défends-toi : <b>5 bonnes réponses</b> et l'attaque échoue.",
+      html:"<b>"+aname+"</b> lance une <b>OPA hostile</b> pour t'arracher <b>« "+c.name+" »</b> !<br>Défends-toi : <b>3 bonnes réponses</b> et l'attaque échoue.",
       btn:"🛡️ Me défendre" });
-    say("Défense OPA : réussis 5 questions pour conserver « "+c.name+" ».");
+    say("Défense OPA : réussis 3 questions pour conserver « "+c.name+" ».");
     EB.Sound.duelStart&&EB.Sound.duelStart(); await sleep(300);
     var defended=true;
-    for(var n=0;n<5;n++){
-      var ok=await ask("🛡️ Défense OPA "+(n+1)+"/5 — protège « "+c.name+" »");
+    for(var n=0;n<3;n++){
+      var ok=await ask("🛡️ Défense OPA "+(n+1)+"/3 — protège « "+c.name+" »");
       if(!ok){ defended=false; break; }
       EB.Sound.lock&&EB.Sound.lock();
     }
@@ -757,15 +823,11 @@
     var aname=EB.animalById(E.players[attacker].animalId).name, half=Math.round(rent/2);
     await showChallenge(attacker, c, {
       banner:"🤝 NÉGOCIATION",
-      html:"<b>"+aname+"</b> veut négocier un <b>loyer divisé par 2</b> sur <b>« "+c.name+" »</b>.<br>Refuse le rabais : <b>3 bonnes réponses</b> et il paie plein tarif.",
+      html:"<b>"+aname+"</b> veut négocier un <b>loyer divisé par 2</b> sur <b>« "+c.name+" »</b>.<br>Refuse le rabais : <b>1 bonne réponse</b> et il paie plein tarif.",
       btn:"🛡️ Tenir bon" });
-    say("Négociation : réussis 3 questions pour lui faire payer le plein tarif.");
+    say("Négociation : réussis 1 question pour lui faire payer le plein tarif.");
     await sleep(300);
-    var held=true;
-    for(var n=0;n<3;n++){
-      var ok=await ask("🤝 Négociation "+(n+1)+"/3 — tiens ton loyer sur « "+c.name+" »");
-      if(!ok){ held=false; break; }
-    }
+    var held=await ask("🤝 Négociation — tiens ton loyer sur « "+c.name+" »");
     if(held){ transfer(attacker,0,rent); say("Négociation refusée ! "+aname+" paie le plein tarif : +₵"+rent+"."); EB.Sound.coin&&EB.Sound.coin(); }
     else { transfer(attacker,0,half); say(aname+" négocie : loyer ÷2, tu ne touches que ₵"+half+"."); EB.Sound.bad&&EB.Sound.bad(); }
     await sleep(400);
@@ -848,12 +910,15 @@
 
   /* --------------------------- UI QUESTIONS ------------------------------- */
   // Confirmation OUI/NON (renvoie Promise<bool>)
-  function confirmAction(text, yes, no){
+  function confirmAction(text, yes, no, opts){
+    opts=opts||{};
     return new Promise(function(resolve){
       var pn=$("empPanel"); pn.innerHTML="";
       var box=el("div","emp-choice"); box.appendChild(el("div","emp-ctext",text));
       var row=el("div","emp-crow");
-      var y=el("button","emp-btn primary",yes); y.onclick=function(){ renderPanel(); resolve(true); };
+      var y=el("button","emp-btn primary",yes);
+      if(opts.yesDisabled){ y.disabled=true; if(opts.yesHint) y.title=opts.yesHint; }
+      else { y.onclick=function(){ renderPanel(); resolve(true); }; }
       var n=el("button","emp-btn ghost",no); n.onclick=function(){ renderPanel(); resolve(false); };
       row.appendChild(y); row.appendChild(n); box.appendChild(row); pn.appendChild(box);
     });

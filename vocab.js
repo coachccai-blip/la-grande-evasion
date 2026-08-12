@@ -365,8 +365,12 @@
       box.appendChild(pr);
       var choices=fourChoices(wd,keyFn);
       var g2=el("div","vk-opts");
-      choices.forEach(function(o){ var txt=(mode==="fr2zh")?o.wd.zh[0]:displayWord(o.wd);
-        var b=el("button","vk-opt",txt);
+      choices.forEach(function(o){
+        // fr2zh : la réponse est en chinois → on montre aussi l'anglais à côté.
+        var txt;
+        if(mode==="fr2zh"){ var en=(o.wd.en&&o.wd.en.length)?o.wd.en[0]:""; txt=o.wd.zh[0]+(en?("　·　"+en):""); }
+        else txt=displayWord(o.wd);
+        var b=el("button","vk-opt"+(mode==="fr2zh"?" bi":""),txt);
         b.onclick=function(){ if(done)return; grade(o.correct); markOpt(g2,choices,o,mode); afterAnswer(box,o.correct,wd); };
         g2.appendChild(b); });
       box.appendChild(g2);

@@ -2016,12 +2016,14 @@
     return { cat:cat, sub:sub, phrase:"Quel mot signifie « "+sens+" » ?", hint:"Choisis le mot juste",
              options:opts, answer:0, note:"« "+wd.word+" » = "+sens+".", tense:null };
   }
-  // C) Sens du mot — mot français donné, choisir la traduction chinoise
+  // C) Sens du mot — mot français donné, choisir la traduction chinoise.
+  //    La réponse est en chinois : on affiche l'anglais à côté du mot chinois.
+  function zhEn(x){ var z=zh0(x), e=en0(x); return z + (e?("  ·  "+e):""); }
   function genVocSens(diff,cat,sub){
     var pool=vocPool(diff).filter(function(w){ return zh0(w); }); if(pool.length<4) return null;
     var wd=pick(pool);
-    var opts=fourFrom(pool, wd, function(x){return zh0(x);}); if(!opts) return null;
-    return { cat:cat, sub:sub, phrase:"Que signifie « "+wd.word+" » ?", hint:"Sens du mot",
+    var opts=fourFrom(pool, wd, zhEn); if(!opts) return null;
+    return { cat:cat, sub:sub, phrase:"Que signifie « "+wd.word+" » ?", hint:"Sens du mot (中文 · English)",
              options:opts, answer:0, note:"« "+wd.word+" » : "+zh0(wd)+(en0(wd)?(" · "+en0(wd)):"")+".", tense:null };
   }
 
