@@ -1311,6 +1311,7 @@
 <script src="animaux.js"></script>
 <script src="sprites.js"></script>
 <script src="app_l10n.js"></script>
+<script src="hint_i18n.js"></script>
 <script src="emp_i18n.js"></script>
 <script src="emp_i18n_log.js"></script>
 <script src="empire.js"></script>
@@ -3115,11 +3116,32 @@ function catLabelLang(cat){
   if(appLang==="zh") return CAT_ZH[cat]||CAT_LABEL[cat]||cat;
   return CAT_LABEL[cat]||cat;
 }
+/* Traduit une CONSIGNE hors-ligne (table + motif de conjugaison). null si inconnu. */
+function trHintOffline(fr, lang){
+  if(!fr || lang==="fr") return fr;
+  var H=window.HINT_I18N; if(!H) return null;
+  var m=H.map[fr]; if(m && m[lang]) return m[lang];   // consigne fixe
+  // « Conjugue « verbe » temps (sujet) » — verbe & prénoms propres conservés
+  var cm=/^Conjugue « (.+) » (.+?)(?: \((.+)\))?$/.exec(fr);
+  if(cm){
+    var t=H.tense[cm[2]];
+    if(t){
+      var verb=cm[1], subjFr=cm[3]||"", subjTxt="";
+      if(subjFr){ var sj=H.subj[subjFr]; subjTxt = sj ? sj[lang] : subjFr; }
+      if(lang==="en") return "Conjugate « "+verb+" » in "+t.en+(subjTxt?(" ("+subjTxt+")"):"");
+      return "用"+t.zh+"变位 « "+verb+" »"+(subjTxt?("（"+subjTxt+"）"):"");
+    }
+  }
+  for(var pfx in H.prefix){ if(fr.indexOf(pfx)===0) return H.prefix[pfx][lang]+fr.slice(pfx.length); }
+  var hm=/^Homophones \((.+)\)$/.exec(fr);
+  if(hm) return (lang==="en"?"Homophones (":"同音词（")+hm[1]+(lang==="en"?")":"）");
+  return null;
+}
 /* Pose l'énoncé de la question dans la langue choisie.
    - FR : comportement d'origine (consigne FR + bouton « 中文 » à la demande).
-   - EN / 中 : la CONSIGNE est traduite automatiquement, et la phrase traduite
-     s'affiche sous l'énoncé. Les OPTIONS restent en français (c'est la réponse
-     à apprendre). Traduction en ligne, mise en cache (offline ensuite). */
+   - EN / 中 : la CONSIGNE est traduite HORS-LIGNE (repli en ligne si motif inconnu).
+     La phrase traduite s'affiche en bonus si le réseau répond. Les OPTIONS restent
+     en français (c'est la réponse à apprendre). */
 function applyQuestionLang(q, realCat){
   var badge=$("qBadge"); if(badge) badge.textContent=catLabelLang(realCat);
   var btn=$("qZhBtn"), panel=$("qZhPanel");
@@ -3132,22 +3154,21 @@ function applyQuestionLang(q, realCat){
   }
   if(btn){ btn.style.display="none"; btn.onclick=null; btn.classList.remove("on"); }
   var tl = (appLang==="zh") ? "zh-CN" : "en";
-  $("qHint").textContent = hintFR;   // repli FR le temps de charger la traduction
-  if(panel){ panel.classList.add("open"); panel.setAttribute("data-loaded","1");
-    panel.innerHTML="<div class='qzh-load'>⏳ …</div>"; }
-  Promise.all([ trField(q.hint||"", tl), trField(String(q.phrase||""), tl) ]).then(function(v){
-    if(v[0]) $("qHint").textContent = "👉 "+v[0];
-    if(panel){
+  // 1) CONSIGNE — hors-ligne d'abord (instantané, sans réseau)
+  var off = q.hint ? trHintOffline(q.hint, appLang) : "";
+  if(q.hint && off){ $("qHint").textContent = "👉 "+off; }
+  else if(q.hint){ $("qHint").textContent = hintFR;   // motif inconnu : repli FR puis tente en ligne
+    trField(q.hint, tl).then(function(t){ if(t) $("qHint").textContent = "👉 "+t; }).catch(function(){}); }
+  else { $("qHint").textContent = ""; }
+  // 2) PHRASE — bonus en ligne (mise en cache) ; panneau masqué si indisponible
+  if(panel){ panel.classList.remove("open"); panel.innerHTML=""; panel.removeAttribute("data-loaded"); }
+  trField(String(q.phrase||""), tl).then(function(t){
+    if(panel && t){
       var tip=(appLang==="zh") ? "看懂题目后，请选择正确的法语答案。" : "Read the sentence, then choose the correct French answer.";
-      var html="";
-      if(v[1]) html+="<div class='qzh-phrase'>"+escapeHtml(v[1])+"</div>";
-      html+="<div class='qzh-tip'>"+tip+"</div>";
-      panel.innerHTML=html;
+      panel.innerHTML="<div class='qzh-phrase'>"+escapeHtml(t)+"</div><div class='qzh-tip'>"+tip+"</div>";
+      panel.classList.add("open");
     }
-  }).catch(function(){
-    if(panel){ var msg=(appLang==="zh") ? "⚠️ 需要联网翻译，请连网后重试。" : "⚠️ Translation needs an Internet connection.";
-      panel.innerHTML="<div class='qzh-load'>"+msg+"</div>"; }
-  });
+  }).catch(function(){ /* hors-ligne : la consigne traduite suffit */ });
 }
 
 var histFilter="all";   // "all" | "ok" | "ko" : filtre de l'historique JEU (pastilles ✓/✗)
