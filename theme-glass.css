@@ -47,7 +47,9 @@ body{
 }
 
 /* Puces de configuration + cartes animaux : verre clair, texte net. */
-.chip-btn, .animal-card, .vk-abtn, .vk-chip, .vk-hchip, .vk-lvopt, .opt, .vk-opt, .vk-imgopt{
+/* (.vkd-tile:not(.due) et .vkd-sbtn = tuiles & séries du tableau de bord Vocabulaire) */
+.chip-btn, .animal-card, .vk-abtn, .vk-chip, .vk-hchip, .vk-lvopt, .opt, .vk-opt, .vk-imgopt,
+.vkd-tile:not(.due), .vkd-sbtn{
   background:linear-gradient(160deg, rgba(255,255,255,.9), rgba(255,255,255,.74)) !important;
   -webkit-backdrop-filter:blur(10px) saturate(1.15);
   backdrop-filter:blur(10px) saturate(1.15);
