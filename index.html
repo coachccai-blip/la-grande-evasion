@@ -1166,7 +1166,7 @@
     <div id="duelChoose" class="overlay">
       <div class="card">
         <div style="font-size:20px;font-weight:800;letter-spacing:1px;text-align:center;margin-bottom:4px;">⚔️ Défier en duel</div>
-        <div style="font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:12px;">Choisis ton adversaire pour un duel de rapidité (20 s). Le gagnant avance de 6, le perdant recule de 6.</div>
+        <div data-l10n style="font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:12px;">Choisis ton adversaire pour un duel de rapidité (20 s). Le gagnant avance de 6, le perdant recule de 6.</div>
         <div id="duelOpponents"></div>
         <button id="duelCancel" class="btn secondary wide" style="margin-top:6px;">Annuler</button>
       </div>
@@ -1253,6 +1253,7 @@
 <script src="questions.js"></script>
 <script src="animaux.js"></script>
 <script src="sprites.js"></script>
+<script src="app_l10n.js"></script>
 <script src="emp_i18n.js"></script>
 <script src="emp_i18n_log.js"></script>
 <script src="empire.js"></script>
@@ -1339,8 +1340,11 @@ var APP_I18N={
     chooseCatFirst:"请先选择科目。" }
 };
 var appLang="fr";
-var _frI18n=null;
+var _frI18n=null, _frL10n=null;
 function t(key, fr){ if(appLang==="fr") return fr; var m=APP_I18N[appLang]; return (m&&m[key]!=null)?m[key]:fr; }
+/* Traduit une chaîne de données (matière, thème, difficulté, nom/trait d'animal,
+   retour de jeu) via la table window.APP_L10N (clé = texte FR exact). */
+function tr(s){ if(appLang==="fr"||!s) return s; var m=(window.APP_L10N&&window.APP_L10N[s]); return (m&&m[appLang])||s; }
 function applyLang(lang){
   appLang=(lang==="en"||lang==="zh")?lang:"fr";
   store.appLang=appLang;
@@ -1349,11 +1353,15 @@ function applyLang(lang){
     var k=el.getAttribute("data-i18n"), fr=(_frI18n[k]!=null?_frI18n[k]:el.textContent);
     el.textContent=(appLang==="fr")?fr:((APP_I18N[appLang]&&APP_I18N[appLang][k]!=null)?APP_I18N[appLang][k]:fr);
   });
+  // Chaînes FR complètes (traduites via APP_L10N)
+  if(!_frL10n){ _frL10n=[]; Array.prototype.forEach.call(document.querySelectorAll("[data-l10n]"),function(el){ _frL10n.push([el, el.textContent]); }); }
+  _frL10n.forEach(function(pair){ pair[0].textContent=(appLang==="fr")?pair[1]:tr(pair[1]); });
   Array.prototype.forEach.call(document.querySelectorAll("#langSwitch button"),function(b){ b.classList.toggle("on", b.getAttribute("data-lang")===appLang); });
   // Unifie les sous-modules déjà traduits : Empire + badges suivent la langue globale.
   try{ if(window.Empire&&Empire.setLang) Empire.setLang(appLang); }catch(e){}
   try{ if(typeof setBadgeLang==="function"){ setBadgeLang(appLang); if($("badgesScreen")&&$("badgesScreen").classList.contains("active")) renderBadges(); } }catch(e){}
   try{ buildSetup(); }catch(e){}
+  try{ if($("histScreen")&&$("histScreen").classList.contains("active")){ if(histSubTab==="voc") renderVocabHistory(); else renderHistory(); } }catch(e){}
   persist();
 }
 
@@ -1678,7 +1686,7 @@ function buildCatChoices(){
   var box=$("catChoices"); box.innerHTML="";
   var cats=CATS.concat(["tout"]);
   cats.forEach(function(cat){
-    box.appendChild(chipBtn(CAT_LABEL[cat], setup.cat===cat, CAT_EMOJI[cat], CAT_COLOR[cat], function(){
+    box.appendChild(chipBtn(tr(CAT_LABEL[cat]), setup.cat===cat, CAT_EMOJI[cat], CAT_COLOR[cat], function(){
       Sound.click(); setup.cat=cat; setup.sub=null; setup.diff=null; selectedAnimal=null;
       buildSetup();
     }));
@@ -1694,7 +1702,7 @@ function buildSubChoices(){
   if(setup.cat==="tout"){ subs=["Tout"]; if(!setup.sub) setup.sub="Tout"; }
   else { subs=["Tout"].concat(SUBCATS[setup.cat]||[]); }
   subs.forEach(function(sub){
-    box.appendChild(chipBtn(sub, setup.sub===sub, null, CAT_COLOR[setup.cat], function(){
+    box.appendChild(chipBtn(tr(sub), setup.sub===sub, null, CAT_COLOR[setup.cat], function(){
       Sound.click(); setup.sub=sub; setup.diff=setup.diff||null; selectedAnimal=null;
       buildSetup();
     }));
@@ -1719,7 +1727,7 @@ function buildDiffChoices(){
   box.appendChild(wrap);
   function refl(){
     var d=DIFFS[parseInt(input.value,10)-1];
-    cur.innerHTML=t("diffPrefix","Difficulté :")+" <b>"+d.name+"</b><div class='diffslider-note'>"+t("diffNote","Toutes les difficultés peuvent tomber — plus souvent autour de ce niveau (répartition en cloche).")+"</div>";
+    cur.innerHTML=t("diffPrefix","Difficulté :")+" <b>"+tr(d.name)+"</b><div class='diffslider-note'>"+t("diffNote","Toutes les difficultés peuvent tomber — plus souvent autour de ce niveau (répartition en cloche).")+"</div>";
   }
   refl();
   input.oninput=function(){ setup.diff=DIFFS[parseInt(input.value,10)-1].key; refl(); };
@@ -1768,7 +1776,7 @@ function selectAnimal(id){
   var status = (ev&&emp) ? " <span style='color:var(--ok2)'>(complété 🕊️💰 ✅)</span>"
     : (ev ? " <span style='color:var(--ok2)'>(Grande Évasion réussie 🕊️)</span>"
     : (emp ? " <span style='color:#b8860b'>(Empire bâti 💰)</span>" : ""));
-  $("traitBox").innerHTML = "<b>"+a.name+"</b> — "+a.trait + status;
+  $("traitBox").innerHTML = "<b>"+tr(a.name)+"</b> — "+tr(a.trait) + status;
   refreshLocks();
 }
 function refreshLocks(){
@@ -2267,7 +2275,7 @@ function askQuestion(opts){
       // remplit le trou avec la bonne réponse
       var bs=$("blankSpot"); if(bs){ bs.textContent=q.options[q.answer]; bs.className="fill"; }
       note.textContent = timedOut ? "⏱ Temps écoulé ! La bonne réponse : "+q.options[q.answer]
-                       : (correct ? "Bravo, c'est juste !" : "Raté ! La bonne réponse : "+q.options[q.answer]);
+                       : (correct ? tr("Bravo, c'est juste !") : tr("Raté ! La bonne réponse :")+" "+q.options[q.answer]);
       note.className="qnote "+(correct?"good":"bad");
       if(correct) Sound.good(); else Sound.bad();
       // suivi des séries de bonnes réponses + fautes de l'aventure (badges)
@@ -3067,18 +3075,18 @@ function renderVocabHistory(){
   $("statVocOk").textContent="✓ "+ok; $("statVocKo").textContent="✗ "+ko;
   $("statVocOk").classList.toggle("on", vocFilter==="ok");
   $("statVocKo").classList.toggle("on", vocFilter==="ko");
-  if(rows.length===0){ list.innerHTML="<div class='empty'>Aucun mot étudié pour l'instant.<br>Va dans l'onglet « Vocabulaire » pour commencer !</div>"; return; }
+  if(rows.length===0){ list.innerHTML="<div class='empty'>"+tr("Aucun mot étudié pour l'instant.")+"<br>"+tr("Va dans l'onglet « Vocabulaire » pour commencer !")+"</div>"; return; }
   if(vocFilter!=="all"){
     var note=document.createElement("div"); note.className="hist-filter-note";
     note.textContent = vocFilter==="ko"
-      ? "🔴 Filtre actif : mots ratés en dernier — touche « ✗ » pour tout revoir."
-      : "🟢 Filtre actif : mots réussis en dernier — touche « ✓ » pour tout revoir.";
+      ? tr("🔴 Filtre actif : mots ratés en dernier — touche « ✗ » pour tout revoir.")
+      : tr("🟢 Filtre actif : mots réussis en dernier — touche « ✓ » pour tout revoir.");
     list.appendChild(note);
   }
   var shown=rows.filter(function(r){ return vocFilter==="all" || (vocFilter==="ko" ? !r.p.last : !!r.p.last); });
   if(shown.length===0){
     var e=document.createElement("div"); e.className="empty";
-    e.innerHTML = vocFilter==="ko" ? "Aucun mot raté. Bravo ! 🎉" : "Aucun mot réussi pour l'instant.";
+    e.innerHTML = vocFilter==="ko" ? tr("Aucun mot raté. Bravo ! 🎉") : tr("Aucun mot réussi pour l'instant.");
     list.appendChild(e); return;
   }
   var LV=(DATA&&DATA.levelLabel)||{};
@@ -3111,13 +3119,13 @@ function renderHistory(){
   $("statOk").textContent="✓ "+ok; $("statKo").textContent="✗ "+ko;
   $("statOk").classList.toggle("on", histFilter==="ok");
   $("statKo").classList.toggle("on", histFilter==="ko");
-  if(store.history.length===0){ list.innerHTML="<div class='empty'>Aucune question jouée pour l'instant.<br>Lance une partie pour remplir ton carnet de révision !</div>"; return; }
+  if(store.history.length===0){ list.innerHTML="<div class='empty'>"+tr("Aucune question jouée pour l'instant.")+"<br>"+tr("Lance une partie pour remplir ton carnet de révision !")+"</div>"; return; }
   // bandeau indiquant le filtre actif
   if(histFilter!=="all"){
     var note=document.createElement("div"); note.className="hist-filter-note";
     note.textContent = histFilter==="ko"
-      ? "🔴 Filtre actif : questions ratées uniquement — touche « ✗ » pour tout revoir."
-      : "🟢 Filtre actif : réussites uniquement — touche « ✓ » pour tout revoir.";
+      ? tr("🔴 Filtre actif : questions ratées uniquement — touche « ✗ » pour tout revoir.")
+      : tr("🟢 Filtre actif : réussites uniquement — touche « ✓ » pour tout revoir.");
     list.appendChild(note);
   }
   var shown=store.history.filter(function(h){
@@ -3125,7 +3133,7 @@ function renderHistory(){
   });
   if(shown.length===0){
     var e=document.createElement("div"); e.className="empty";
-    e.innerHTML = histFilter==="ko" ? "Aucune question ratée. Bravo ! 🎉" : "Aucune réussite pour l'instant.";
+    e.innerHTML = histFilter==="ko" ? tr("Aucune question ratée. Bravo ! 🎉") : tr("Aucune réussite pour l'instant.");
     list.appendChild(e); return;
   }
   shown.forEach(function(h){
@@ -3133,7 +3141,7 @@ function renderHistory(){
     var res=document.createElement("div"); res.className="hist-res "+(h.result?"ok":"ko"); res.textContent=h.result?"✓":"✗";
     var main=document.createElement("div"); main.className="hist-main";
     var cat=document.createElement("span"); cat.className="hist-cat";
-    cat.textContent=(CAT_LABEL[h.cat]||h.cat)+(h.sub&&h.sub!=="Tout"?" · "+h.sub:"");
+    cat.textContent=tr(CAT_LABEL[h.cat]||h.cat)+(h.sub&&h.sub!=="Tout"?" · "+tr(h.sub):"");
     cat.style.background=CAT_COLOR[h.cat]||"#888";
     main.appendChild(cat);
     if(h.context){ var ctx=document.createElement("span"); ctx.className="hist-ctx"; ctx.textContent="👑 "+h.context; main.appendChild(ctx); }
@@ -3143,21 +3151,21 @@ function renderHistory(){
     if(h.hint){ var hn=document.createElement("div"); hn.style.cssText="font-size:11px;color:var(--ink-soft);margin-top:2px;"; hn.textContent="👉 "+h.hint; main.appendChild(hn); }
     if(!h.result){
       var w=document.createElement("div"); w.className="hist-wrong";
-      w.textContent = (h.chosen==null) ? "Ta réponse : (temps écoulé)" : "Ta réponse : "+h.options[h.chosen];
+      w.textContent = (h.chosen==null) ? tr("Ta réponse :")+" "+tr("(temps écoulé)") : tr("Ta réponse :")+" "+h.options[h.chosen];
       main.appendChild(w);
     }
     // explication (rappel de la règle) — dépliable au clic sur la carte
     var explain = h.explain || histExplain(h);
     if(explain){
       var toggle=document.createElement("div"); toggle.className="hist-toggle";
-      toggle.textContent="💡 Voir l'explication";
+      toggle.textContent=tr("💡 Voir l'explication");
       var exp=document.createElement("div"); exp.className="hist-explain";
-      exp.innerHTML="<b>Bonne réponse :</b> "+escapeHtml(h.options[h.answer])+"<br><b>Règle :</b> "+escapeHtml(explain);
+      exp.innerHTML="<b>"+tr("Bonne réponse :")+"</b> "+escapeHtml(h.options[h.answer])+"<br><b>"+tr("Règle :")+"</b> "+escapeHtml(explain);
       main.appendChild(toggle); main.appendChild(exp);
       it.classList.add("clickable");
       it.onclick=function(){
         var open=it.classList.toggle("open");
-        toggle.textContent = open ? "🔽 Masquer l'explication" : "💡 Voir l'explication";
+        toggle.textContent = open ? tr("🔽 Masquer l'explication") : tr("💡 Voir l'explication");
         if(open){
           Sound.click();
           // badge « consulter ses erreurs » : compte les erreurs distinctes consultées
@@ -3173,11 +3181,11 @@ function renderHistory(){
     // --- Bouton de traduction (Anglais natif · Chinois natif) sur CHAQUE carte ---
     var trWrap=document.createElement("div"); trWrap.className="hist-tr-wrap";
     var trBtn=document.createElement("button"); trBtn.type="button"; trBtn.className="hist-tr-btn";
-    trBtn.textContent="🌐 Traduire (EN · 中文)";
+    trBtn.textContent=tr("🌐 Traduire (EN · 中文)");
     var trPanel=document.createElement("div"); trPanel.className="hist-tr";
     trBtn.onclick=function(ev){ ev.stopPropagation();
       var open=trPanel.classList.toggle("open");
-      trBtn.textContent = open ? "🔽 Masquer la traduction" : "🌐 Traduire (EN · 中文)";
+      trBtn.textContent = open ? tr("🔽 Masquer la traduction") : tr("🌐 Traduire (EN · 中文)");
       if(open && trPanel.getAttribute("data-loaded")!=="1"){
         trPanel.setAttribute("data-loaded","1"); Sound.click&&Sound.click();
         fillTranslations(h, trPanel);
@@ -3264,7 +3272,7 @@ function presentQuestion(cat, sub, diff, contextLabel){
         if(oi===q.answer) btns[i].classList.add("correct");
         if(!correct && oi===chosen && oi!==q.answer) btns[i].classList.add("wrong"); }
       var bs=$("blankSpot"); if(bs){ bs.textContent=q.options[q.answer]; bs.className="fill"; }
-      note.textContent = correct ? "Bravo, c'est juste !" : "Raté ! La bonne réponse : "+q.options[q.answer];
+      note.textContent = correct ? tr("Bravo, c'est juste !") : tr("Raté ! La bonne réponse :")+" "+q.options[q.answer];
       note.className="qnote "+(correct?"good":"bad");
       if(correct) Sound.good(); else Sound.bad();
       noteAnswer(correct, false);
