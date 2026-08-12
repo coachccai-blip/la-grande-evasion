@@ -98,7 +98,7 @@
   function todayLog(){ var k=ymd(); S.logs[k]=S.logs[k]||{n:0,r:0,goal:false}; return S.logs[k]; }
 
   /* ============================ SESSION ================================== */
-  /* size : 5, 10 ou Infinity (illimité). Illimité = toutes les difficultés. */
+  /* size : 5, 10 ou Infinity (illimité). Illimité = tout le niveau sélectionné. */
   function buildSession(favMode, size){
     var lvl=S.settings.level;
     var due=[], neu=[];
@@ -109,11 +109,13 @@
     }
     if(size===undefined) size=(S.settings.dailyGoal||10);
     var unlimited=!isFinite(size);
-    // révisions dues (tous niveaux — les mots ajoutés manuellement comptent), les plus urgentes d'abord
-    DATA.words.forEach(function(wd){ if(isDue(wd.id)) due.push({word:wd,isNew:false}); });
+    // révisions dues, les plus urgentes d'abord. En illimité on reste sur le niveau
+    // sélectionné ; en 5/10 on inclut aussi les mots ajoutés manuellement (autres niveaux).
+    var dueSrc=unlimited? wordsOf(lvl) : DATA.words;
+    dueSrc.forEach(function(wd){ if(isDue(wd.id)) due.push({word:wd,isNew:false}); });
     due.sort(function(a,b){ return (prog(a.word.id).next)-(prog(b.word.id).next); });
-    // nouveaux mots : niveau courant en 5/10, TOUTES les difficultés en illimité
-    var pool=unlimited? DATA.words.slice() : wordsOf(lvl);
+    // nouveaux mots : toujours le niveau sélectionné (ex. les 1000 mots du DELF B1).
+    var pool=wordsOf(lvl);
     var candidates=pool.filter(function(wd){ var p=prog(wd.id); return !p||p.st==="new"; });
     shuffle(candidates);
     var queue;
@@ -298,10 +300,10 @@
       return p && st!=="new" && st!=="mastered";   // « en cours »
     });
   }
-  // Démarre une session ciblée à partir d'une liste de mots précise (batch de 20).
+  // Démarre une session ciblée à partir d'une liste de mots précise (batch de 5).
   function startWordsSession(words){
     if(!words||!words.length){ toast("这里暂时没有单词 🎉"); return; }
-    var pick=shuffle(words.slice()); if(pick.length>20) pick=pick.slice(0,20);
+    var pick=shuffle(words.slice()); if(pick.length>5) pick=pick.slice(0,5);
     var queue=pick.map(function(wd){ var p=prog(wd.id); return {word:wd, isNew:(!p||p.st==="new")}; });
     SESS={ queue:queue, idx:0, favMode:false, phase:(queue[0].isNew?"discover":"quiz"),
            size:queue.length, stats:{n:0,r:0,ok:0,total:queue.length} };
@@ -321,11 +323,16 @@
     sheet(meta.t, function(card){
       card.appendChild(el("div","vk-sugt", words.length+" 个词 · "+words.length+" mots"));
       if(words.length){
-        var go=el("button","vk-revbtn", meta.cta+"（"+Math.min(20,words.length)+"）");
+        var go=el("button","vk-revbtn", meta.cta+"（"+Math.min(5,words.length)+"）");
         go.onclick=function(){ startWordsSession(words); };
         card.appendChild(go);
         var list=el("div","vk-results");
-        words.slice(0,80).forEach(function(wd){ list.appendChild(resultRow(wd)); });
+        // Clic sur un mot → sa fiche ; après « Maîtrisé » on revient à cette liste (à jour).
+        words.slice(0,80).forEach(function(wd){
+          var r=resultRow(wd);
+          r.onclick=function(){ openWordSheet(wd, function(){ openTileSheet(kind); }); };
+          list.appendChild(r);
+        });
         card.appendChild(list);
         if(words.length>80) card.appendChild(el("div","vk-dstatus","… 仅显示前 80 个 · encore "+(words.length-80)));
       } else {
@@ -524,6 +531,8 @@
     // rappel court : mot + sens
     var rec=el("div","vk-recall"); rec.innerHTML="<b>"+esc(displayWord(wd))+"</b>　"+esc(wd.zh.join("；"));
     box.appendChild(rec);
+    // Actions (favori + « Maîtrisé ») juste au-dessus de « 下一个 », comme en découverte.
+    box.appendChild(actionRow(wd));
     var nx=el("button","vk-next","下一个 →"); nx.onclick=nextCard; box.appendChild(nx);
   }
 
@@ -669,11 +678,14 @@
     row.onclick=function(){ openWordSheet(wd); };
     return row;
   }
-  function openWordSheet(wd){
+  // onAfter (optionnel) : appelé après « Maîtrisé » / « Ajouter » pour revenir à la
+  // liste d'origine (tuile) au lieu de fermer — pratique pour traiter plusieurs mots.
+  function openWordSheet(wd, onAfter){
     sheet(DATA.levelLabel[wd.level], function(card){
       card.appendChild(fiche(wd));
       var p=prog(wd.id);
       var st=el("div","vk-dstatus","学习状态：<b>"+statusZh(p&&p.st)+"</b>"); st.innerHTML="学习状态：<b>"+statusZh(p&&p.st)+"</b>"; card.appendChild(st);
+      function done(){ if(!SESS) renderVocab(); if(onAfter){ onAfter(); } else { $("vkSheet").classList.remove("show"); } }
       var row=el("div","vk-actions");
       // favori
       var fav=el("button","vk-abtn"+((p&&p.fav)?" on":""), (p&&p.fav)?"⭐ 已收藏":"☆ 收藏");
@@ -682,15 +694,14 @@
       // « déjà maîtrisé » : passe le mot direct en « 已掌握 »
       if(!p || p.st!=="mastered"){
         var mast=el("button","vk-abtn","✅ 标记已掌握 · Maîtrisé");
-        mast.onclick=function(){ markMastered(wd.id); $("vkSheet").classList.remove("show");
-          toast("已移到「已掌握」✅ · Marqué maîtrisé"); if(!SESS) renderVocab(); };
+        mast.onclick=function(){ markMastered(wd.id); toast("已移到「已掌握」✅ · Marqué maîtrisé"); done(); };
         row.appendChild(mast);
       }
       // ajouter à la file (si pas déjà en apprentissage)
       if(!p || p.st==="new"){
         var add=el("button","vk-abtn primary","➕ 加入学习");
         add.onclick=function(){ var pp=ensureProg(wd.id); pp.added=true; pp.st="review"; pp.stage=1; pp.next=now(); persist();
-          $("vkSheet").classList.remove("show"); toast("已加入学习队列"); };
+          toast("已加入学习队列"); done(); };
         row.appendChild(add);
       }
       card.appendChild(row);
