@@ -64,6 +64,13 @@
     if(en || zh){ q.tr = {}; if(en) q.tr.en = en; if(zh) q.tr.zh = zh; }
     return q;
   }
+  // Idem pour les frames grammaire/vocab/ortho : squelette FR + slots {clé: valeurFR}.
+  function attachFrame(q, frameFR, slots){
+    var P = global.PHRASE_PARTS; if(!P || !P.frame) return q;
+    var en = P.frame(frameFR, slots, "en"), zh = P.frame(frameFR, slots, "zh");
+    if(en || zh){ q.tr = {}; if(en) q.tr.en = en; if(zh) q.tr.zh = zh; }
+    return q;
+  }
 
   /* ======================================================================= */
   /*                           CONJUGAISON                                   */
@@ -932,9 +939,9 @@
     var pool=NOUNS_DET.filter(function(n){return n.d===diff;});   // STRICT → niveaux disjoints
     if(pool.length<3){ for(var w=1;w<=5 && pool.length<3;w++) pool=NOUNS_DET.filter(function(n){return Math.abs(n.d-diff)<=w;}); }
     var n=pick(pool), fr=pick(DET_FRAMES), o=detOptions(fr.k,n);
-    return { cat:cat, sub:sub, phrase:fr.ph.replace("{N}",n.w), hint:"Choisis le bon déterminant",
+    return attachFrame({ cat:cat, sub:sub, phrase:fr.ph.replace("{N}",n.w), hint:"Choisis le bon déterminant",
       note:"Le déterminant s'accorde en genre et en nombre avec le nom (le/la/l', un/une, ce/cet/cette, mon/ma…).",
-      options:build(o.good,o.bad.slice()), answer:0 };
+      options:build(o.good,o.bad.slice()), answer:0 }, fr.ph, {N:n.w});
   }
 
   /* --- Nature des mots : générateur PARTITIONNÉ par difficulté --- */
@@ -980,10 +987,11 @@
     if(pool.length<3){ for(var w=1;w<=5 && pool.length<3;w++) pool=NATURE_WORDS.filter(function(x){return Math.abs(x.d-diff)<=w;}); }
     var it=pick(pool), art=(it.n==="préposition"||it.n==="conjonction")?"une":"un";
     var bad=shuffle(NATURE_OPTS.filter(function(o){return o!==it.n;})).slice(0,3);
-    return { cat:cat, sub:sub, phrase:pick(NAT_FRAMES).replace("{W}",it.w).replace("{A}",art),
+    var _nf=pick(NAT_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_nf.replace("{W}",it.w).replace("{A}",art),
       hint:"Donne la nature (classe) du mot",
       note:"La nature d'un mot : nom, verbe, adjectif, adverbe, déterminant, pronom, préposition ou conjonction.",
-      options:build(it.n,bad), answer:0 };
+      options:build(it.n,bad), answer:0 }, _nf, {W:it.w, A:art});
   }
 
   /* --- Accords : générateur PARTITIONNÉ par difficulté (noms partitionnés) --- */
@@ -1025,10 +1033,10 @@
       [adj.ms,adj.fs,adj.mp,adj.fp].forEach(function(f){ if(!seen[norm(f)]){ seen[norm(f)]=1; bad.push(f); } });
       if(bad.length>=3) break;
     }
-    var phrase=cap(pick(ACC_FRAMES).replace("{W}",nn.w).replace("{V}",V));
-    return { cat:cat, sub:sub, phrase:phrase, hint:"Accorde l'adjectif (genre et nombre)",
+    var _af=pick(ACC_FRAMES), phrase=cap(_af.replace("{W}",nn.w).replace("{V}",V));
+    return attachFrame({ cat:cat, sub:sub, phrase:phrase, hint:"Accorde l'adjectif (genre et nombre)",
       note:"L'adjectif s'accorde en genre (masculin/féminin) et en nombre (singulier/pluriel) avec le nom.",
-      options:build(good,bad), answer:0 };
+      options:build(good,bad), answer:0 }, _af, {W:nn.w, V:V});
   }
 
   /* --- Accord du participe passé (formes accordées calculées par règle) --- */
@@ -1080,9 +1088,9 @@
     var it=pick(bandFilter(PASSIVE_ITEMS,diff,"d")), F=ppForms(it.pp);
     var good=ppAgree(it.pp,it.g,it.n), fr=pick(PASS_FRAMES), aux=(it.n==="s"?fr.s:fr.p);
     var bad=[F.ms,F.fs,F.mp,F.fp,it.inf].filter(function(x){return x!==good;});
-    return { cat:cat, sub:sub, phrase:cap(it.s+" "+aux+" ___ par "+it.ag+"."), hint:"Accorde le participe (voix passive)",
+    return attachFrame({ cat:cat, sub:sub, phrase:cap(it.s+" "+aux+" ___ par "+it.ag+"."), hint:"Accorde le participe (voix passive)",
       note:"Voix passive : « être » (au temps voulu) + participe passé accordé avec le SUJET (Le chat mange la souris → La souris est mangée par le chat).",
-      options:build(good,bad), answer:0 };
+      options:build(good,bad), answer:0 }, "{S} {X} ___ par {AG}.", {S:it.s, X:aux, AG:it.ag});
   }
 
   /* --- Accord du participe passé : générateur PARTITIONNÉ (être = accord sujet ; avoir = invariable si COD après) --- */
@@ -1139,17 +1147,19 @@
     if(it.k==="e"){
       var good=ppAgree(it.pp,it.g,it.n), aux=(it.n==="s"?"est":"sont");
       var bad=[F.ms,F.fs,F.mp,F.fp,it.inf].filter(function(x){return x!==good;});
-      return { cat:cat, sub:sub, phrase:cap(pick(PPA_ETRE_FR).replace("{S}",it.s).replace("{X}",aux)),
+      var _pe=pick(PPA_ETRE_FR);
+      return attachFrame({ cat:cat, sub:sub, phrase:cap(_pe.replace("{S}",it.s).replace("{X}",aux)),
         hint:"Accorde le participe passé (auxiliaire être)",
         note:"Avec l'auxiliaire ÊTRE, le participe passé s'accorde en genre et en nombre avec le SUJET.",
-        options:build(good,bad), answer:0 };
+        options:build(good,bad), answer:0 }, _pe, {S:it.s, X:aux});
     }
     var g2=it.pp, aux2=(it.n==="s"?"a":"ont");
     var bad2=[F.fs,F.mp,F.fp,it.inf].filter(function(x){return x!==g2;});
-    return { cat:cat, sub:sub, phrase:cap(pick(PPA_AVOIR_FR).replace("{S}",it.s).replace("{X}",aux2).replace("{C}",it.cod)),
+    var _pa=pick(PPA_AVOIR_FR);
+    return attachFrame({ cat:cat, sub:sub, phrase:cap(_pa.replace("{S}",it.s).replace("{X}",aux2).replace("{C}",it.cod)),
       hint:"Accorde le participe passé (auxiliaire avoir)",
       note:"Avec l'auxiliaire AVOIR, si le COD est placé APRÈS le verbe, le participe reste INVARIABLE.",
-      options:build(g2,bad2), answer:0 };
+      options:build(g2,bad2), answer:0 }, _pa, {S:it.s, X:aux2, C:it.cod});
   }
 
   /* --- Types de phrases : générateur PARTITIONNÉ (exemple = contenu unique) --- */
@@ -1184,9 +1194,10 @@
     "Type de phrase : « {EX} » → ___.","« {EX} » : c'est une phrase de type ___.","Identifie : « {EX} » est ___.","« {EX} ». Cette phrase est ___."];
   function genTypes(diff,cat,sub){
     var it=pick(bandFilter(TYPE_ITEMS,diff,"d"));
-    return { cat:cat, sub:sub, phrase:pick(TYPE_FRAMES).replace("{EX}",it.ex), hint:"Quel type de phrase ?",
+    var _tf=pick(TYPE_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_tf.replace("{EX}",it.ex), hint:"Quel type de phrase ?",
       note:"Types : déclarative (elle affirme .), interrogative (elle questionne ?), exclamative (elle s'exclame !), impérative (elle ordonne).",
-      options:build(it.t, TYPE_ALL.filter(function(x){return x!==it.t;})), answer:0 };
+      options:build(it.t, TYPE_ALL.filter(function(x){return x!==it.t;})), answer:0 }, _tf, {EX:it.ex});
   }
 
   /* --- Prépositions (de lieu) : générateur PARTITIONNÉ --- */
@@ -1216,9 +1227,10 @@
   function genPrep(diff,cat,sub){
     var it=pick(bandFilter(PREP_PLACES,diff,"d"));
     var bad=shuffle(PREP_POOL.filter(function(x){return x!==it.prep;})).slice(0,3);
-    return { cat:cat, sub:sub, phrase:cap(pick(PREP_FRAMES).replace("{P}",it.place)), hint:"Choisis la bonne préposition (lieu)",
+    var _prf=pick(PREP_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:cap(_prf.replace("{P}",it.place)), hint:"Choisis la bonne préposition (lieu)",
       note:"Lieu : ville → à (à Paris) ; pays féminin → en (en France) ; pays masculin → au (au Portugal) ; pays pluriel → aux (aux États-Unis) ; personne → chez ; sinon à la / à l' / au selon le nom.",
-      options:build(it.prep,bad), answer:0 };
+      options:build(it.prep,bad), answer:0 }, _prf, {P:it.place});
   }
 
   /* --- Pronoms relatifs : générateur PARTITIONNÉ --- */
@@ -1266,10 +1278,11 @@
   function genPronoms(diff,cat,sub){
     var it=pick(bandFilter(PRON_ITEMS,diff,"d"));
     var bad=it.bad?it.bad.slice():shuffle(PRON_POOL.filter(function(x){return x!==it.good;})).slice(0,3);
-    return { cat:cat, sub:sub, phrase:cap(pick(PRON_FRAMES).replace("{ANT}",it.ant).replace("{R}",it.rest)),
+    var _pnf=pick(PRON_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:cap(_pnf.replace("{ANT}",it.ant).replace("{R}",it.rest)),
       hint:"Choisis le bon pronom relatif",
       note:"Pronoms relatifs : qui (sujet), que/qu' (COD), où (lieu/temps), dont (complément avec « de »), lequel/auquel/duquel… après une préposition.",
-      options:build(it.good,bad), answer:0 };
+      options:build(it.good,bad), answer:0 }, _pnf, {ANT:it.ant, R:it.rest});
   }
 
   /* --- Connecteurs logiques : générateur PARTITIONNÉ --- */
@@ -1315,10 +1328,11 @@
     "Relie les idées : {C1} ___ {C2}.","Quel mot de liaison ? {C1} ___ {C2}.","{C1} … ___ … {C2}.","Le bon connecteur : {C1} ___ {C2}."];
   function genConnecteurs(diff,cat,sub){
     var it=pick(bandFilter(CONN_ITEMS,diff,"d"));
-    return { cat:cat, sub:sub, phrase:pick(CONN_FRAMES).replace("{C1}",it.c1).replace("{C2}",it.c2),
+    var _cnf=pick(CONN_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_cnf.replace("{C1}",it.c1).replace("{C2}",it.c2),
       hint:"Choisis le bon connecteur logique",
       note:"Connecteurs : cause (car, parce que), conséquence (donc, par conséquent, c'est pourquoi), opposition (mais, cependant, pourtant), but (afin de, pour que), condition (si, à condition que), concession (bien que, malgré).",
-      options:build(it.good,it.bad.slice()), answer:0 };
+      options:build(it.good,it.bad.slice()), answer:0 }, _cnf, {C1:it.c1, C2:it.c2});
   }
 
   function genGram(sub, diff, cat){
@@ -1894,9 +1908,10 @@
     "De quoi s'agit-il ? {C} → ___.","{C}. C'est… ___.","Quel objet ? {C} → ___.","Complète : {C} → ___."];
   function genQuotidien(diff,cat,sub){
     var it=pick(bandFilter(QUO_ITEMS,diff,"d"));
-    return { cat:cat, sub:sub, phrase:pick(QUO_FRAMES).replace("{C}",it.c), hint:"Mot du quotidien",
+    var _qf=pick(QUO_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_qf.replace("{C}",it.c), hint:"Mot du quotidien",
       note:"Vocabulaire courant : choisis le mot qui correspond exactement à la définition.",
-      options:build(it.good,it.bad.slice()), answer:0 };
+      options:build(it.good,it.bad.slice()), answer:0 }, _qf, {C:it.c});
   }
 
   /* --- Familles de mots : générateur PARTITIONNÉ (dérivation) --- */
@@ -1956,14 +1971,16 @@
 
   function genIdiomes(diff,cat,sub){
     var it=pick(bandFilter(IDIOM_ITEMS,diff,"d"));
-    return { cat:cat, sub:sub, phrase:pick(IDIOM_FRAMES).replace("{PH}",it.ph), hint:"Complète l'expression imagée",
-      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+    var _idf=pick(IDIOM_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_idf.replace("{PH}",it.ph), hint:"Complète l'expression imagée",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 }, _idf, {PH:it.ph});
   }
 
   function genRegistres(diff,cat,sub){
     var it=pick(bandFilter(REG_ITEMS,diff,"d"));
-    return { cat:cat, sub:sub, phrase:pick(REG_FRAMES).replace("{PH}",it.ph), hint:"Registre de langue",
-      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+    var _rgf=pick(REG_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_rgf.replace("{PH}",it.ph), hint:"Registre de langue",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 }, _rgf, {PH:it.ph});
   }
 
   function genParonymes(diff,cat,sub){
@@ -2003,12 +2020,29 @@
     for(var k=0;k<same.length && opts.length<4;k++){ var v=keyFn(same[k]); if(!seen[norm(v)]){ seen[norm(v)]=1; opts.push(v); } }
     return opts.length>=4 ? opts : null;
   }
+  // Masque la traduction du mot-cible dans une phrase déjà traduite (garde « ___ »).
+  // latin=true : anglais (frontières de mot + suffixes fléchis) ; sinon chinois (sous-chaîne).
+  function blankTr(sentence, forms, latin){
+    sentence=String(sentence||""); if(!sentence || !forms || !forms.length) return null;
+    for(var i=0;i<forms.length;i++){
+      var f=String(forms[i]||"").trim(); if(!f) continue;
+      if(latin){
+        f=f.replace(/^(to|an|a|the)\s+/i,"");   // « to improve » → « improve »
+        if(!f) continue;
+        var re=new RegExp("\\b"+reEsc(f)+"(?:s|es|ed|d|ing)?\\b","i");
+        if(re.test(sentence)) return sentence.replace(re,"___");
+      } else {
+        if(sentence.indexOf(f)>=0) return sentence.replace(f,"___");
+      }
+    }
+    return null;
+  }
   // A) Compléter la phrase — phrase d'exemple avec le mot-cible masqué (réponse française)
   function genVocComplete(diff,cat,sub){
     var pool=vocPool(diff); if(pool.length<4) return null;
     for(var t=0;t<60;t++){
       var wd=pick(pool);
-      var exs=[]; if(wd.ex_fr) exs.push({fr:wd.ex_fr,zh:wd.ex_zh}); if(wd.ex2_fr) exs.push({fr:wd.ex2_fr,zh:wd.ex2_zh});
+      var exs=[]; if(wd.ex_fr) exs.push({fr:wd.ex_fr,zh:wd.ex_zh,en:wd.ex_en}); if(wd.ex2_fr) exs.push({fr:wd.ex2_fr,zh:wd.ex2_zh,en:wd.ex2_en});
       shuffle(exs);
       for(var e=0;e<exs.length;e++){
         var re=new RegExp("(^|[^0-9A-Za-zÀ-ÿ])("+reEsc(wd.word)+")([^0-9A-Za-zÀ-ÿ]|$)","i");
@@ -2016,8 +2050,13 @@
         var opts=fourFrom(pool, wd, function(x){return x.word;}); if(!opts) continue;
         var phrase=exs[e].fr.replace(re, function(all,a,b,c){ return a+"___"+c; });
         var sens=zh0(wd)+(en0(wd)?(" · "+en0(wd)):"");
-        return { cat:cat, sub:sub, phrase:phrase, hint:"Complète avec le bon mot",
+        // Aide traduite HORS-LIGNE : on masque la traduction du mot-cible dans
+        // l'exemple déjà traduit (vocabdata). Le trou « ___ » ne dévoile rien.
+        var trEn=blankTr(exs[e].en, wd.en, true), trZh=blankTr(exs[e].zh, wd.zh, false);
+        var q={ cat:cat, sub:sub, phrase:phrase, hint:"Complète avec le bon mot",
                  options:opts, answer:0, note:"« "+wd.word+" » : "+sens+".", tense:null };
+        if(trEn||trZh){ q.tr={}; if(trEn)q.tr.en=trEn; if(trZh)q.tr.zh=trZh; }
+        return q;
       }
     }
     return null;
@@ -2500,9 +2539,10 @@
   function genPluriels(diff,cat,sub){
     var it=pick(bandFilter(PLUR_WORDS,diff,"d"));
     var bad=it.bad?it.bad.slice():plurBad(it.s,it.p);
-    return { cat:cat, sub:sub, phrase:pick(PLUR_FRAMES).replace("{S}",it.s), hint:"Écris le bon pluriel",
+    var _plf=pick(PLUR_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_plf.replace("{S}",it.s), hint:"Écris le bon pluriel",
       note:"Pluriels : -al→-aux, -eau/-eu→-x, -ou→-s (sauf bijou, caillou, chou, genou, hibou, joujou, pou → -x), -ail→-ails (sauf travail, vitrail, corail… → -aux).",
-      options:build(it.p, bad), answer:0 };
+      options:build(it.p, bad), answer:0 }, _plf, {S:it.s});
   }
 
   /* --- Adverbes en -ment : générateur PARTITIONNÉ par difficulté --- */
@@ -2555,9 +2595,10 @@
   function genAdverbes(diff,cat,sub){
     var it=pick(bandFilter(ADV_WORDS,diff,"d"));
     var bad=it.bad?it.bad.slice():advBad(it.a,it.v);
-    return { cat:cat, sub:sub, phrase:pick(ADV_FRAMES).replace("{A}",it.a), hint:"Forme l'adverbe en -ment",
+    var _avf=pick(ADV_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_avf.replace("{A}",it.a), hint:"Forme l'adverbe en -ment",
       note:"Adverbe en -ment : adjectif au féminin + -ment (lente→lentement). En -ant → -amment, en -ent → -emment, terminé par une voyelle → + -ment (vrai→vraiment).",
-      options:build(it.v, bad), answer:0 };
+      options:build(it.v, bad), answer:0 }, _avf, {A:it.a});
   }
 
   /* --- « é ou er » : générateur PARTITIONNÉ (verbe + complément par difficulté) --- */
@@ -2594,36 +2635,41 @@
     var it=pick(bandFilter(ER_ITEMS,diff,"d")), base=it.inf.slice(0,-2);
     var forms={er:it.inf, part:base+"é", ez:base+"ez", ait:base+"ait"};
     var infMode=(rint(2)===0), S=pick(ERE_SUBJ);
-    var frame=pick(infMode?ERE_INF:ERE_PART).replace("{S}",S).replace("{O}",it.o);
+    var _eref=pick(infMode?ERE_INF:ERE_PART);
+    var frame=_eref.replace("{S}",S).replace("{O}",it.o);
     var good=infMode?forms.er:forms.part;
     var bad=[forms.er,forms.part,forms.ez,forms.ait].filter(function(x){return x!==good;});
-    return { cat:cat, sub:sub, phrase:cap(frame), hint:"« -er » (infinitif) ou « -é » (participe) ?",
+    return attachFrame({ cat:cat, sub:sub, phrase:cap(frame), hint:"« -er » (infinitif) ou « -é » (participe) ?",
       note:"Après un auxiliaire (a, est…) → participe en -é ; après un autre verbe (va, doit, veut) → infinitif en -er. Test : remplace par « vendu » (-é) ou « vendre » (-er).",
-      options:build(good,bad), answer:0 };
+      options:build(good,bad), answer:0 }, _eref, {S:S, O:it.o});
   }
 
   function genMbp(diff,cat,sub){
     var it=pick(bandFilter(MBP_ITEMS,diff,"d"));
-    return { cat:cat, sub:sub, phrase:pick(MBP_FRAMES).replace("{PH}",it.ph), hint:"Règle m devant m, b, p",
-      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+    var _mbf=pick(MBP_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_mbf.replace("{PH}",it.ph), hint:"Règle m devant m, b, p",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 }, _mbf, {PH:it.ph});
   }
 
   function genAccents(diff,cat,sub){
     var it=pick(bandFilter(ACC_ITEMS,diff,"d"));
-    return { cat:cat, sub:sub, phrase:pick(ACCENT_FRAMES).replace("{PH}",it.ph), hint:"Orthographe : "+it.note,
-      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+    var _acf=pick(ACCENT_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_acf.replace("{PH}",it.ph), hint:"Orthographe : "+it.note,
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 }, _acf, {PH:it.ph});
   }
 
   function genHomophones(diff,cat,sub){
     var it=pick(bandFilter(HOMOPH_ITEMS,diff,"d"));
-    return { cat:cat, sub:sub, phrase:pick(HP_FRAMES).replace("{PH}",it.ph), hint:"Homophones ("+it.note+")",
-      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+    var _hpf=pick(HP_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_hpf.replace("{PH}",it.ph), hint:"Homophones ("+it.note+")",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 }, _hpf, {PH:it.ph});
   }
 
   function genHomogram(diff,cat,sub){
     var it=pick(bandFilter(HOMOG_ITEMS,diff,"d"));
-    return { cat:cat, sub:sub, phrase:pick(HG_FRAMES).replace("{PH}",it.ph), hint:"Homophones grammaticaux",
-      note:it.note, options:build(it.good,it.bad.slice()), answer:0 };
+    var _hgf=pick(HG_FRAMES);
+    return attachFrame({ cat:cat, sub:sub, phrase:_hgf.replace("{PH}",it.ph), hint:"Homophones grammaticaux",
+      note:it.note, options:build(it.good,it.bad.slice()), answer:0 }, _hgf, {PH:it.ph});
   }
 
   function genOrt(sub, diff, cat){
