@@ -235,7 +235,7 @@
       cellEl.style.gridRow=gp[0]; cellEl.style.gridColumn=gp[1];
       if(c.type==="prop") cellEl.style.setProperty("--qcol",QUARTIERS[c.q].col);
       cellEl.appendChild(renderCellContent(c,i));
-      cellEl.onclick=function(){ showPropInfo(i); };
+      cellEl.onclick=function(){ inspectCase(i); };
       boardWrap.appendChild(cellEl);
     });
     var center=el("div","emp-center"); center.style.gridRow="2 / 9"; center.style.gridColumn="2 / 9"; center.id="empCenter";
@@ -424,8 +424,17 @@
     if(c.type==="prop"){
       bg="linear-gradient(160deg,"+QUARTIERS[c.q].col+" 0%, #fff8ec 70%)";
       var status=c.owner<0?"<b>Propriété LIBRE</b> — à acheter !":(c.owner===0?"C'est <b>ta</b> propriété.":"Propriété de <b>"+ownerName(c)+"</b>.");
-      desc="<b>"+QUARTIERS[c.q].name+"</b><br>Prix : <b>₵"+c.price+"</b> · Loyer de base : ₵"+c.rentBase+" (×2 si quartier complet)<br>"+status
-        +(c.level>0?"<br>🏠 Niveau : <b>"+BUILD_LABEL[c.level-1]+"</b>":"");
+      var rb=c.rentBase;
+      var lvls=BUILD_LABEL.map(function(l,k){ return l+" <b>₵"+(rb*RENT_MULT[k])+"</b>"; }).join(" · ");
+      desc="<b>"+QUARTIERS[c.q].name+"</b><br>"+status
+        +"<div class='emp-caseinfo'>"
+        +"<div class='emp-caserow'><span>💵 Prix d'achat</span><b>₵"+c.price+"</b></div>"
+        +"<div class='emp-caserow'><span>🏗️ Construction</span><b>₵"+c.build+" / niveau</b></div>"
+        +"<div class='emp-caserow'><span>🏷️ Loyer terrain nu</span><b>₵"+rb+"</b> <span class='emp-casemut'>(₵"+(rb*2)+" quartier complet)</span></div>"
+        +"<div class='emp-caserent'>🏠 "+lvls+"</div>"
+        +"</div>"
+        +(c.level>0?"<div class='emp-casenow'>Niveau actuel : <b>"+BUILD_LABEL[c.level-1]+"</b> → loyer dû <b>₵"+(rb*RENT_MULT[c.level-1])+"</b></div>"
+                   :"<div class='emp-casenow'>Terrain nu (aucun bâtiment)</div>");
     } else if(c.type==="transport"){ bg="linear-gradient(160deg,#cfe0ff,#fff)";
       desc="<b>Route migratoire</b> — Transport à acheter (<b>₵200</b>).<br>Le loyer grimpe avec le nombre de lignes possédées (100 → 400 ₵)."; }
     else if(c.type==="service"){ bg="linear-gradient(160deg,#d5f0e0,#fff)";
@@ -446,6 +455,17 @@
       desc="<b>Le Point d'Eau</b><br>Case repos : on souffle, rien ne se passe."; }
     return {big:big, bg:bg, name:name, desc:desc};
   }
+  // Consultation libre d'une case (clic du joueur) : même belle carte, tap pour fermer.
+  function inspectCase(i){
+    var ov=$("empCaseOv"); if(!ov || ov.classList.contains("show")) return;
+    var info=caseInfo(cell(i));
+    $("empCaseArt").textContent=info.big; $("empCaseArt").style.background=info.bg;
+    $("empCaseName").textContent=info.name; $("empCaseDesc").innerHTML=info.desc;
+    ov.classList.add("show"); EB.Sound.click&&EB.Sound.click();
+    var done=false;
+    function close(){ if(done) return; done=true; ov.onclick=null; ov.classList.remove("show"); }
+    ov.onclick=close;
+  }
   function showCaseCard(i){
     return new Promise(function(res){
       var ov=$("empCaseOv"); if(!ov){ res(); return; }
@@ -453,8 +473,9 @@
       $("empCaseArt").textContent=info.big; $("empCaseArt").style.background=info.bg;
       $("empCaseName").textContent=info.name; $("empCaseDesc").innerHTML=info.desc;
       ov.classList.add("show"); EB.Sound.whoosh&&EB.Sound.whoosh();
-      var done=false, t=setTimeout(close,2600);
-      function close(){ if(done) return; done=true; clearTimeout(t); ov.onclick=null; ov.classList.remove("show"); setTimeout(res,160); }
+      // La carte reste affichée tant que le joueur ne touche pas l'écran (pas de fermeture auto).
+      var done=false;
+      function close(){ if(done) return; done=true; ov.onclick=null; ov.classList.remove("show"); setTimeout(res,160); }
       ov.onclick=close;
     });
   }
