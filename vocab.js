@@ -226,20 +226,25 @@
     wrap.appendChild(hero);
     var startBtn=hero.querySelector("#vkdStart"); if(startBtn) startBtn.onclick=function(){ startSession(false); };
 
-    // TUILES « bento » : 4 états, la révision du jour est actionnable
+    // TUILES « bento » : 4 états. Chaque tuile est cliquable et ouvre la liste
+    // des mots correspondants (consulter), avec un bouton pour les apprendre /
+    // réviser de façon ciblée. La tuile « à réviser » garde un raccourci direct.
     var bento=el("div","vkd-bento");
-    function tile(mod, ic, n, zh, fr, edge){
-      var tl=el("div","vkd-tile"+(mod||""));
+    function tile(kind, mod, ic, n, zh, fr, edge){
+      var tl=el("div","vkd-tile act"+(mod||""));
       tl.innerHTML=(edge?"<span class='edge' style='background:"+edge+"'></span>":"")+
         "<div class='ic'>"+ic+"</div><div class='n'>"+n+"</div><div class='l'>"+zh+" · <small>"+fr+"</small></div>";
+      tl.onclick=function(){ openTileSheet(kind); };
       return tl;
     }
-    bento.appendChild(tile("", "🆕", s.neu, "未学", "À apprendre", "#8598a6"));
-    bento.appendChild(tile("", "📖", s.learning, "学习中", "En cours", "#4AC2DB"));
-    var dueTile=tile(" due"+(dueN>0?" act":""), "⏰", dueN, "今日待复习", "À réviser", null);
-    if(dueN>0){ dueTile.innerHTML+="<span class='go'>复习 ▶</span>"; dueTile.onclick=function(){ startSession(false, dueN); }; }
+    bento.appendChild(tile("new", "", "🆕", s.neu, "未学", "À apprendre", "#8598a6"));
+    bento.appendChild(tile("learning", "", "📖", s.learning, "学习中", "En cours", "#4AC2DB"));
+    var dueTile=tile("due", " due", "⏰", dueN, "今日待复习", "À réviser", null);
+    if(dueN>0){ var pill=el("span","go","复习 ▶");
+      pill.onclick=function(e){ e.stopPropagation(); startWordsSession(tileWords("due")); };
+      dueTile.appendChild(pill); }
     bento.appendChild(dueTile);
-    bento.appendChild(tile("", "✅", s.mastered, "已掌握", "Maîtrisés", "#3fae5a"));
+    bento.appendChild(tile("mastered", "", "✅", s.mastered, "已掌握", "Maîtrisés", "#3fae5a"));
     wrap.appendChild(bento);
 
     // SÉRIE : 5 / 10 / illimité (secondaire)
@@ -274,6 +279,53 @@
     wrap.appendChild(habit);
 
     return wrap;
+  }
+
+  /* --- Tuiles bento : consulter les mots d'un état, puis les étudier --- */
+  // Mots du niveau courant correspondant à un état donné.
+  function tileWords(kind){
+    return wordsOf(S.settings.level).filter(function(wd){
+      var p=prog(wd.id), st=p&&p.st;
+      if(kind==="new")      return !p||st==="new";
+      if(kind==="mastered") return st==="mastered";
+      if(kind==="due")      return isDue(wd.id);
+      return p && st!=="new" && st!=="mastered";   // « en cours »
+    });
+  }
+  // Démarre une session ciblée à partir d'une liste de mots précise (batch de 20).
+  function startWordsSession(words){
+    if(!words||!words.length){ toast("这里暂时没有单词 🎉"); return; }
+    var pick=shuffle(words.slice()); if(pick.length>20) pick=pick.slice(0,20);
+    var queue=pick.map(function(wd){ var p=prog(wd.id); return {word:wd, isNew:(!p||p.st==="new")}; });
+    SESS={ queue:queue, idx:0, favMode:false, phase:(queue[0].isNew?"discover":"quiz"),
+           size:queue.length, stats:{n:0,r:0,ok:0,total:queue.length} };
+    var ov=$("vkSheet"); if(ov) ov.classList.remove("show");
+    renderVocab();
+  }
+  // Feuille listant les mots d'une tuile : on peut les consulter (clic sur un mot)
+  // et lancer une série ciblée « apprendre / réviser ».
+  function openTileSheet(kind){
+    var meta={
+      "new":      {t:"🆕 未学 · À apprendre",   cta:"▶ 开始学习 · Apprendre"},
+      "learning": {t:"📖 学习中 · En cours",     cta:"▶ 复习这些词 · Réviser"},
+      "due":      {t:"⏰ 今日待复习 · À réviser", cta:"▶ 开始复习 · Réviser"},
+      "mastered": {t:"✅ 已掌握 · Maîtrisés",     cta:"▶ 复习巩固 · Réviser"}
+    }[kind]||{t:"单词 · Mots", cta:"▶ 学习 · Étudier"};
+    var words=tileWords(kind);
+    sheet(meta.t, function(card){
+      card.appendChild(el("div","vk-sugt", words.length+" 个词 · "+words.length+" mots"));
+      if(words.length){
+        var go=el("button","vk-revbtn", meta.cta+"（"+Math.min(20,words.length)+"）");
+        go.onclick=function(){ startWordsSession(words); };
+        card.appendChild(go);
+        var list=el("div","vk-results");
+        words.slice(0,80).forEach(function(wd){ list.appendChild(resultRow(wd)); });
+        card.appendChild(list);
+        if(words.length>80) card.appendChild(el("div","vk-dstatus","… 仅显示前 80 个 · encore "+(words.length-80)));
+      } else {
+        card.appendChild(el("div","vk-empty","这里暂时没有单词 🎉 · aucun mot ici"));
+      }
+    });
   }
 
   function renderCalendar(){
