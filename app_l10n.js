@@ -46,7 +46,7 @@ window.APP_L10N = {
   "Familles de mots": {en:"Word families", zh:"词族"},
   "Mots du quotidien": {en:"Everyday words", zh:"日常词汇"},
   "Expressions idiomatiques": {en:"Idiomatic expressions", zh:"习语"},
-  "Registres de langue": {en:"Registers of language", zh:"语言语域"},
+  "Registres de langue": {en:"Language registers", zh:"语域"},
   "Paronymes": {en:"Paronyms", zh:"近形词"},
   "Compléter la phrase": {en:"Complete the sentence", zh:"补全句子"},
   "Le mot juste": {en:"The right word", zh:"恰当的词"},

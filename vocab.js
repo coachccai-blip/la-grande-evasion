@@ -69,6 +69,9 @@
     var p=ensureProg(id); p.st="mastered"; p.stage=MAXSTAGE; p.added=true;
     p.next = S.settings.recycle ? now()+60*dayMs() : 0;
     persist();
+    // bruitage satisfaisant (fonctionne aussi hors de l'onglet Jeu)
+    try{ if(B.Sound&&B.Sound.mastered) B.Sound.mastered(); }catch(e){}
+    if(navigator.vibrate){ try{ navigator.vibrate([12,30,12]); }catch(e){} }
   }
   function article(wd){ if(!wd.gender) return wd.word; return (wd.gender==="m"?"un ":"une ")+wd.word; }
   function displayWord(wd){ return article(wd); }

@@ -1608,6 +1608,11 @@ var Sound=(function(){
     tick:function(){ tone(760,0.04,"square",0.06); },
     // Badge débloqué : arpège brillant ascendant
     badge:function(){ seqAt([[0,659,0.10,"square",0.2],[90,880,0.10,"square",0.2],[180,1047,0.12,"square",0.22],[300,1319,0.30,"square",0.24]]); },
+    // Mot marqué « Maîtrisé » : petit carillon montant satisfaisant (+ étincelle).
+    // Appelle ensure()/resume() pour fonctionner hors de l'onglet Jeu (geste utilisateur).
+    mastered:function(){ ensure(); if(actx&&actx.state==="suspended") actx.resume();
+      seqAt([[0,659,0.09,"triangle",0.20],[80,988,0.10,"triangle",0.20],[170,1319,0.16,"triangle",0.22]]);
+      setTimeout(function(){ tone(1976,0.20,"sine",0.13,null,2637); },175); },
     // Moteur de voiture (grondement grave) quand la voiture des gardiens bouge
     engine:function(){
       ensure(); if(!actx||muted) return;
