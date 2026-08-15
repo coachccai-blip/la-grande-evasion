@@ -1,7 +1,7 @@
 {
-  "name": "La Grande Évasion",
-  "short_name": "Évasion",
-  "description": "Jeu de plateau pour apprendre le français : aide ton animal à s'échapper du zoo en répondant juste !",
+  "name": "跟克莱蒙学法语",
+  "short_name": "学法语",
+  "description": "Apprends le français avec Clément : jeux, vocabulaire et quiz (FR · EN · 中), 100 % hors-ligne.",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "./index.html",
@@ -9,8 +9,8 @@
   "display": "standalone",
   "display_override": ["standalone", "fullscreen", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#eef6e2",
-  "theme_color": "#cfe9b8",
+  "background_color": "#0a3d91",
+  "theme_color": "#0a3d91",
   "categories": ["education", "games", "kids"],
   "icons": [
     {
